@@ -1,6 +1,6 @@
 # 📘 Đặc Tả Sản Phẩm — Vocab App (Phiên bản Web)
 
-> Stack: **Next.js** (App Router) + **Supabase** (Postgres, Auth, Edge Functions, Storage) + **Tailwind CSS** + **shadcn/ui** + **Zustand** + **TanStack Query** + **React Hook Form** + **Zod** — Deploy trên **Vercel**
+> Stack: **Next.js** (App Router) + **Supabase** (Postgres, Auth, Edge Functions, Storage) + **Tailwind CSS** + **Motion (Framer Motion)** + **Zustand** + **TanStack Query** + **React Hook Form** + **Zod** — Deploy trên **Vercel**
 > Ngôn ngữ học: **Tiếng Anh**
 > Mục tiêu: Sản phẩm nghiêm túc, launch public, ưu tiên tối đa chi phí **$0**
 
@@ -30,15 +30,15 @@ Mục tiêu: tối, chuyên nghiệp, nhưng có điểm nhấn sinh động —
 | `--border` | `#232B3A` | Viền, divider |
 | `--text-primary` | `#E7EAF0` | Chữ chính |
 | `--text-secondary` | `#8B94A7` | Chữ phụ |
-| `--brand-primary` | `#6366F1` (Indigo 500) | Accent chính: nút, link, highlight |
-| `--brand-primary-hover` | `#818CF8` | Hover của primary |
+| `--brand-primary` | `#F97316` (Electric Orange) | Accent chính: nút, link, highlight |
+| `--brand-primary-hover` | `#EA580C` | Hover của primary |
 | `--success` | `#10B981` (Emerald) | Trả lời đúng, từ đã thành thạo |
 | `--warning` | `#F59E0B` (Amber) | Từ khó / leech / sắp quên |
-| `--danger` | `#F43F5E` (Rose) | Trả lời sai, cảnh báo |
-| `--info` | `#38BDF8` (Sky) | Thông báo, tip |
+| `--danger` | `#EF4444` (Rose/Red) | Trả lời sai, cảnh báo |
+| `--info` | `#0284C7` (Sky/Blue) | Thông báo, tip |
 
 Gradient điểm nhấn (dùng cho hero, streak badge, nút CTA quan trọng):
-`linear-gradient(135deg, #6366F1 0%, #38BDF8 100%)`
+`linear-gradient(135deg, #F97316 0%, #FB923C 100%)`
 
 ### 2.2 Typography
 

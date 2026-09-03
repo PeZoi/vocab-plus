@@ -48,10 +48,11 @@ Dự án áp dụng Next.js App Router với đường dẫn alias `@/*` ánh x�
 ```
 vocab-app-plus/
 ├── app/                               # Next.js App Router (Chỉ chứa routing & layout wrappers)
-│   ├── (auth)/                        # Route group: Xác thực (login, register, forgot-password)
+│   ├── (auth)/                        # Route group: Xác thực (Đăng nhập duy nhất bằng Google OAuth)
 │   │   ├── layout.tsx
-│   │   ├── login/page.tsx
-│   │   └── register/page.tsx
+│   │   └── login/page.tsx             # Màn hình đăng nhập Google
+│   ├── auth/
+│   │   └── callback/route.ts          # Route Handler xử lý OAuth PKCE callback (exchangeCodeForSession)
 │   ├── (main)/                        # Route group: Giao diện chính của người dùng
 │   │   ├── layout.tsx                 # Main layout: AppSidebar, AppHeader, BottomNav
 │   │   ├── page.tsx                   # Dashboard
@@ -204,6 +205,16 @@ vocab-app-plus/
   - Bắt sự kiện người dùng (`onClick`, `onChange`, `onSubmit`).
   - Dùng Web APIs (`speechSynthesis`, `localStorage`, `window`).
 - **Quy tắc lá cây (Leaf Nodes)**: Đẩy `'use client'` xuống component nhỏ nhất có thể, không đánh dấu `'use client'` ở cả trang lớn nếu chỉ có 1 nút bấm cần tương tác.
+
+### 3.3 Quy Tắc Bắt Buộc Đăng Nhập (Strict Authentication Gate)
+- **Bảo vệ 100% ứng dụng**: Toàn bộ các trang (kể cả trang chủ `/`, `/review`, `/add`, `/settings`, v.v.) đều nằm sau cánh cổng xác thực.
+- **Middleware Interceptor**:
+  - Người dùng **chưa đăng nhập** truy cập bất kỳ trang nào (ngoại trừ `/login`, `/auth/callback`, và tài nguyên tĩnh) sẽ bị Middleware chặn ngay lập tức và chuyển hướng sang `/login?redirect=<current_path>`.
+  - Người dùng **đã đăng nhập** nếu truy cập lại vào `/login` sẽ được tự động chuyển hướng về trang chủ `/`.
+- **Public Routes duy nhất**:
+  - `/login`: Trang đăng nhập Google duy nhất.
+  - `/auth/callback`: Route Handler xử lý xác thực OAuth.
+  - Static files: `favicon.ico`, `_next/*`, `public/*`.
 
 ---
 
@@ -376,16 +387,45 @@ Tuân thủ nghiêm ngặt mô hình SSR của `@supabase/ssr`:
 - Màu sắc phải sử dụng chính xác các token được định nghĩa:
   - Nền chính: `bg-base` (`#0B0F17`)
   - Nền khối card/panel: `bg-surface` (`#131A26`), hover: `bg-surface-hover` (`#1B2333`)
-  - Viền: `border-border` (`#232B3A`)
-  - Chữ: `text-text-primary` (`#E7EAF0`), phụ: `text-text-secondary` (`#8B94A7`)
-  - Accent chính: `brand` (`#6366F1`), hover: `brand-hover` (`#818CF8`)
-  - Trạng thái: `success` (`#10B981`), `warning` (`#F59E0B`), `danger` (`#F43F5E`), `info` (`#38BDF8`)
+  - Viền: `border-border` (`#202736`)
+  - Chữ: `text-text-primary` (`#EEF2F6`), phụ: `text-text-secondary` (`#94A3B8`)
+  - Accent chính: `brand` (`#EA580C` - Warm Sunset Orange), hover: `brand-hover` (`#C2410C`)
+  - Trạng thái: `success` (`#10B981`), `warning` (`#F59E0B`), `danger` (`#EF4444`), `info` (`#0284C7`)
 - Bo góc: `rounded-2xl` cho card, `rounded-xl` cho input/button.
+- Triệt tiêu outline viền trắng mặc định: Toàn bộ thẻ tương tác (button, link, input) đã được cấu hình loại bỏ viền outline/focus trắng mặc định của trình duyệt tại `globals.css`. Khi cần focus state, chỉ dùng `focus:border-brand` hoặc `focus:ring-brand`.
 - Kết hợp class động bằng hàm `cn(...)` từ `@/lib/utils`.
 
 ### 6.7 Spaced Repetition (ts-fsrs) & Timezone (date-fns-tz)
 - Khởi tạo thuật toán FSRS tập trung tại `lib/fsrs.ts`.
 - Mọi xử lý tính toán ngày kế tiếp, "Giờ vàng" (Golden Hours) phải đi qua `utils/datetime.ts`, luôn đính kèm timezone người dùng (`user.timezone || 'Asia/Ho_Chi_Minh'`).
+
+### 6.8 Animation & Micro-interactions (Motion / React)
+- **Thư viện chuẩn**: Sử dụng package `motion` (Framer Motion).
+- **Import convention**: Bắt buộc import từ `"motion/react"`:
+  ```typescript
+  import { motion, AnimatePresence } from 'motion/react';
+  ```
+- **Client Component Requirement**: Bất kỳ component nào sử dụng `motion` đều phải có `'use client';` ở đầu file.
+- **Tập trung tokens chuyển động (Motion Variants)**: Đặt tại `constants/animations.ts` để đảm bảo tính nhất quán (consistent physics & timing).
+- **Quy tắc hiệu năng (Performance Rules)**:
+  - Chỉ animate các thuộc tính GPU-accelerated: `transform` (`x`, `y`, `scale`, `rotate`, `rotateY`) và `opacity`.
+  - Không animate trực tiếp `width`, `height`, `margin`, `top`, `left` (trừ khi dùng `layoutId` hoặc `layout`).
+  - Ưu tiên spring animations tự nhiên: `{ type: 'spring', stiffness: 350, damping: 25 }`.
+- **Ứng dụng toàn diện trong dự án**:
+  - Chuyển tab / Modal / Thông báo: Sử dụng `<AnimatePresence mode="wait">`.
+  - Danh sách từ vựng & Dashboard stat cards: Sử dụng Stagger container (`staggerChildren: 0.05`).
+  - Nút bấm tương tác: Micro-interactions nhẹ nhàng (`whileTap={{ scale: 0.98 }}`).
+  - Flashcard: 3D Flip mượt mà với spring physics (`rotateY: isFlipped ? 180 : 0`).
+
+### 6.9 Skeleton Loading Standard (Chuẩn Hóa Mọi Trạng Thái Loading)
+- **Quy tắc bắt buộc**: MỌI trang, màn hình hoặc danh sách khi đang nạp dữ liệu (data fetching / page loading) PHẢI sử dụng **Skeleton Loading**, tuyệt đối không để màn hình trắng hay dùng spinner đơn lẻ giữa trang lớn (chỉ dùng spinner siêu nhỏ trong nút khi submitting action).
+- **Mục đích**:
+  - Mô phỏng chính xác khung wireframe bố cục thực tế (Header, Stat Cards, Chart, Table list, Flashcard).
+  - Triệt tiêu hiện tượng giật cục Layout Shift (Cumulative Layout Shift - CLS), giúp thị giác người dùng thích ứng mượt mà và tạo cảm giác tải tức thì.
+- **Component chuẩn**:
+  - Sử dụng [`components/ui/skeleton.tsx`](file:///d:/my_project/vocab-app-plus/components/ui/skeleton.tsx) với `animate-pulse` và màu nền `bg-surface-hover/60`.
+- **Triển khai Next.js Streaming**:
+  - Mỗi phân hệ route chính phải có file `loading.tsx` (như `app/(main)/loading.tsx`, `app/(main)/review/loading.tsx`) chứa layout Skeleton tương ứng.
 
 ---
 
