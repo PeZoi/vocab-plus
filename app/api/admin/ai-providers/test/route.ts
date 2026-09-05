@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+function getProviderEndpoint(providerName?: string): string {
+  switch (providerName?.toLowerCase()) {
+    case 'orcarouter':
+      return 'https://api.orcarouter.ai/v1/chat/completions';
+    case 'openrouter':
+      return 'https://openrouter.ai/api/v1/chat/completions';
+    case 'groq':
+    default:
+      return 'https://api.groq.com/openai/v1/chat/completions';
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -26,7 +38,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { api_key, model } = await request.json();
+    const { api_key, model, provider_name } = await request.json();
 
     if (!api_key || typeof api_key !== 'string' || !api_key.trim()) {
       return NextResponse.json(
@@ -35,14 +47,28 @@ export async function POST(request: Request) {
       );
     }
 
-    const modelToUse = model?.trim() || 'llama-3.3-70b-versatile';
+    const defaultModel =
+      provider_name?.toLowerCase() === 'orcarouter'
+        ? 'meta-llama/llama-3.3-70b-instruct'
+        : 'llama-3.3-70b-versatile';
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const modelToUse = model?.trim() || defaultModel;
+    const endpoint = getProviderEndpoint(provider_name);
+    const providerLabel = provider_name?.toLowerCase() === 'orcarouter' ? 'OrcaRouter' : 'Groq';
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${api_key.trim()}`,
+    };
+
+    if (provider_name?.toLowerCase() === 'orcarouter') {
+      headers['HTTP-Referer'] = 'https://vocabapp.plus';
+      headers['X-Title'] = 'VocabApp';
+    }
+
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${api_key.trim()}`,
-      },
+      headers,
       body: JSON.stringify({
         model: modelToUse,
         messages: [
@@ -67,7 +93,7 @@ export async function POST(request: Request) {
         errMsg = errText;
       }
       return NextResponse.json(
-        { error: `Groq báo lỗi: ${errMsg}` },
+        { error: `${providerLabel} báo lỗi: ${errMsg}` },
         { status: response.status >= 500 ? 502 : 400 }
       );
     }

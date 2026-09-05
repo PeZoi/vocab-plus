@@ -8,7 +8,18 @@ import {
   useUpdateAIProviderMutation,
 } from '@/hooks/features/admin/use-ai-providers';
 import type { AIProviderConfig } from '@/services/admin.service';
-import { Eye, EyeOff, Globe2, Loader2, Save, Sparkles } from 'lucide-react';
+import {
+  Check,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Globe2,
+  Loader2,
+  Radio,
+  Save,
+  Sparkles,
+  Zap,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 interface ProviderConfigCardProps {
@@ -17,13 +28,21 @@ interface ProviderConfigCardProps {
 }
 
 export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCardProps) {
+  const isOrca = provider.provider_name.toLowerCase() === 'orcarouter';
+  const defaultFallbackModel = isOrca
+    ? 'meta-llama/llama-3.3-70b-instruct'
+    : 'llama-3.3-70b-versatile';
+
   const [apiKey, setApiKey] = useState(provider.api_key || '');
-  const [model, setModel] = useState(provider.model || 'llama-3.3-70b-versatile');
+  const [model, setModel] = useState(provider.model || defaultFallbackModel);
   const [showKey, setShowKey] = useState(false);
 
   const updateMutation = useUpdateAIProviderMutation();
   const testMutation = useTestAIProviderMutation();
 
+  const providerDisplayName = provider.display_name || (isOrca ? 'OrcaRouter' : 'Groq');
+
+  // Lưu thông tin cấu hình (API Key & Model) mà không đổi trạng thái kích hoạt
   const handleSave = async () => {
     try {
       await updateMutation.mutateAsync({
@@ -33,8 +52,8 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
       });
       onShowMessage({
         type: 'success',
-        title: 'Đã lưu và áp dụng cho toàn hệ thống!',
-        message: `Mô hình "${model}" và API Key đã được cập nhật. Mọi thành viên sử dụng AI sẽ được phục vụ qua cấu hình này.`,
+        title: `Đã lưu cấu hình cho ${providerDisplayName}!`,
+        message: `Thông tin mô hình "${model}" và API Key đã được lưu an toàn vào cơ sở dữ liệu.`,
       });
     } catch (err: unknown) {
       onShowMessage({
@@ -45,12 +64,37 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
     }
   };
 
+  // Kích hoạt provider này làm Provider mặc định đang chạy trong toàn hệ thống
+  const handleSetActive = async () => {
+    try {
+      await updateMutation.mutateAsync({
+        id: provider.id,
+        api_key: apiKey.trim(),
+        model: model.trim(),
+        is_default: true,
+        is_active: true,
+      });
+      onShowMessage({
+        type: 'success',
+        title: `Đã chuyển sang dùng ${providerDisplayName}!`,
+        message: `Toàn bộ các tính năng AI trong hệ thống hiện đã được chuyển sang phục vụ qua ${providerDisplayName} (model: ${model}).`,
+      });
+    } catch (err: unknown) {
+      onShowMessage({
+        type: 'error',
+        title: 'Lỗi kích hoạt provider',
+        message: err instanceof Error ? err.message : 'Lỗi khi kích hoạt provider',
+      });
+    }
+  };
+
+  // Kiểm tra kết nối với API Key và Model được nhập
   const handleTestConnection = async () => {
     if (!apiKey.trim()) {
       onShowMessage({
         type: 'error',
         title: 'Chưa có API Key',
-        message: 'Vui lòng nhập API Key trước khi kiểm tra kết nối.',
+        message: `Vui lòng nhập API Key cho ${providerDisplayName} trước khi kiểm tra kết nối.`,
       });
       return;
     }
@@ -59,110 +103,162 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
       const res = await testMutation.mutateAsync({
         api_key: apiKey.trim(),
         model: model.trim(),
+        provider_name: provider.provider_name,
       });
 
       onShowMessage({
         type: 'success',
-        title: `Kết nối thành công với model: ${res.model}`,
+        title: `[${providerDisplayName}] Kết nối thành công! (Model: ${res.model})`,
         message: res.reply,
       });
     } catch (err: unknown) {
       onShowMessage({
         type: 'error',
-        title: 'Kết nối thất bại',
+        title: `[${providerDisplayName}] Kết nối thất bại`,
         message: err instanceof Error ? err.message : 'Lỗi không xác định',
       });
     }
   };
 
   return (
-    <div className="p-5 rounded-xl bg-surface/90 border border-border/80 shadow-xs space-y-4">
-      {/* Provider Header */}
-      <div className="flex items-center justify-between border-b border-border/60 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center font-semibold text-xs">
-            {provider.provider_name.toUpperCase().slice(0, 2)}
+    <div
+      className={`p-5 sm:p-6 rounded-2xl bg-surface/90 border transition-all space-y-5 shadow-xs ${
+        provider.is_default
+          ? 'border-brand/60 ring-1 ring-brand/30 shadow-brand/10'
+          : 'border-border/80 hover:border-border'
+      }`}
+    >
+      {/* Provider Header & Profile Status */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
+              isOrca
+                ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
+                : 'bg-brand/15 text-brand border border-brand/30'
+            }`}
+          >
+            {isOrca ? '🐋' : 'GR'}
           </div>
+
           <div>
-            <h3 className="text-[15px] font-semibold text-text-primary flex items-center gap-2">
-              <span>Groq</span>
-              <Badge variant="default" className="text-[9px] py-0 px-1.5 gap-1">
-                <Globe2 className="w-2.5 h-2.5" />
-                Áp dụng toàn hệ thống
-              </Badge>
-            </h3>
-            <span className="text-[11px] text-text-secondary capitalize">
-              Nhà cung cấp: {provider.provider_name}
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-bold text-text-primary tracking-tight">
+                {providerDisplayName}
+              </h3>
+              {provider.is_default ? (
+                <Badge variant="default" className="text-[10px] py-0.5 px-2 gap-1 bg-brand text-white border-0 font-medium">
+                  <Globe2 className="w-3 h-3" />
+                  Đang chạy trên hệ thống
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-[10px] py-0.5 px-2 text-text-secondary bg-surface-hover border-border">
+                  Chế độ chờ (Dự phòng)
+                </Badge>
+              )}
+            </div>
+
+            <span className="text-xs text-text-secondary">
+              ID Provider: <span className="font-mono text-text-primary/90">{provider.provider_name}</span>
+              {isOrca && ' • Gateway OpenAI-compatible tự động định tuyến'}
+              {!isOrca && ' • Tăng tốc Llama/Qwen siêu tốc độ'}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-          <span className="text-xs font-medium text-success">Đang hoạt động</span>
+        {/* Quick Profile Switch Indicator */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {provider.is_default ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-success/10 border border-success/30 text-success text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+              <span>Đang hoạt động</span>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSetActive}
+              disabled={updateMutation.isPending}
+              className="gap-1.5 text-xs text-brand border-brand/40 hover:bg-brand hover:text-white transition-all shadow-xs"
+            >
+              {updateMutation.isPending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Zap className="w-3.5 h-3.5" />
+              )}
+              <span>Kích hoạt dùng Profile này</span>
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Form Settings */}
-      <div className="space-y-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Model Input */}
-        <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-text-primary">
             Mô hình AI (LLM Model) <span className="text-danger">*</span>
           </label>
           <Input
             type="text"
-            placeholder="vd: llama-3.3-70b-versatile, qwen/qwen3.8-27b, deepseek-r1-distill-llama-70b..."
+            placeholder={
+              isOrca
+                ? 'vd: meta-llama/llama-3.3-70b-instruct, openai/gpt-4o-mini...'
+                : 'vd: llama-3.3-70b-versatile, qwen/qwen3.8-27b...'
+            }
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            className="font-mono text-xs"
+            className="font-mono text-xs h-9 bg-base/50"
           />
-          <p className="text-[11px] text-text-secondary mt-1">
-            Gõ chính xác Model ID do provider hỗ trợ. Mô hình này sẽ xử lý phân tích từ vựng cho toàn bộ người dùng.
+          <p className="text-[11px] text-text-secondary leading-normal">
+            {isOrca
+              ? 'Model ID hỗ trợ bởi OrcaRouter'
+              : 'Model ID hỗ trợ bởi Groq Cloud'}
           </p>
         </div>
 
-        {/* API Key */}
-        <div>
-          <label className="block text-xs font-medium text-text-secondary mb-1">
-            API Key ({provider.provider_name.toUpperCase()}) <span className="text-danger">*</span>
+        {/* API Key Input */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-text-primary">
+            API Key ({providerDisplayName}) <span className="text-danger">*</span>
           </label>
           <div className="relative">
             <Input
               type={showKey ? 'text' : 'password'}
-              placeholder="vd: gsk_..."
+              placeholder={isOrca ? 'vd: orca_... hoặc sk_...' : 'vd: gsk_...'}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              className="pr-9 font-mono text-xs"
+              className="pr-9 font-mono text-xs h-9 bg-base/50"
             />
             <button
               type="button"
               onClick={() => setShowKey((prev) => !prev)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary transition-colors"
             >
               {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
           </div>
-          <p className="text-[11px] text-text-secondary mt-1">
-            Khóa API này được bảo mật an toàn trên máy chủ và không bao giờ lộ ra phía người dùng.
+          <p className="text-[11px] text-text-secondary leading-normal">
+            Khóa bí mật được lưu trữ độc lập cho riêng profile này và mã hóa an toàn trên máy chủ.
           </p>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="pt-2 border-t border-border/60 flex flex-wrap items-center justify-between gap-2.5">
+      {/* Action Buttons Toolbar */}
+      <div className="pt-2 border-t border-border/60 flex flex-wrap items-center justify-between gap-3">
         <Button
           type="button"
           variant="surface"
           size="default"
           onClick={handleTestConnection}
           disabled={testMutation.isPending || !apiKey.trim()}
-          className="gap-1.5"
+          className="gap-1.5 text-xs"
         >
           {testMutation.isPending ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Đang kết nối kiểm tra...</span>
+              <span>Đang kiểm tra kết nối...</span>
             </>
           ) : (
             <>
@@ -172,26 +268,37 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
           )}
         </Button>
 
-        <Button
-          type="button"
-          variant="primary"
-          size="default"
-          onClick={handleSave}
-          disabled={updateMutation.isPending}
-          className="gap-1.5"
-        >
-          {updateMutation.isPending ? (
-            <>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            type="button"
+            variant="outline"
+            size="default"
+            onClick={handleSave}
+            disabled={updateMutation.isPending}
+            className="gap-1.5 text-xs"
+          >
+            {updateMutation.isPending ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Đang lưu...</span>
-            </>
-          ) : (
-            <>
-              <Save className="w-3.5 h-3.5" />
-              <span>Lưu cấu hình toàn hệ thống</span>
-            </>
+            ) : (
+              <Save className="w-3.5 h-3.5 text-text-secondary" />
+            )}
+            <span>Lưu thông tin profile</span>
+          </Button>
+
+          {!provider.is_default && (
+            <Button
+              type="button"
+              variant="primary"
+              size="default"
+              onClick={handleSetActive}
+              disabled={updateMutation.isPending}
+              className="gap-1.5 text-xs"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Đặt làm Provider chính</span>
+            </Button>
           )}
-        </Button>
+        </div>
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ export interface UpdateAIProviderDto {
 export interface TestAIProviderDto {
   api_key: string;
   model: string;
+  provider_name?: string;
 }
 
 export interface TestAIProviderResponse {

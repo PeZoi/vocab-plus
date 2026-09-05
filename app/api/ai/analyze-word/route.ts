@@ -4,6 +4,18 @@ import type { AIWordAnalysisResponse } from '@/types/card.types';
 
 export const maxDuration = 90; // Cho phép route chạy tối đa 90s khi có nhiều vòng lặp retry 429
 
+function getProviderEndpoint(providerName?: string): string {
+  switch (providerName?.toLowerCase()) {
+    case 'orcarouter':
+      return 'https://api.orcarouter.ai/v1/chat/completions';
+    case 'openrouter':
+      return 'https://openrouter.ai/api/v1/chat/completions';
+    case 'groq':
+    default:
+      return 'https://api.groq.com/openai/v1/chat/completions';
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -36,14 +48,20 @@ export async function POST(request: Request) {
       .eq('is_active', true)
       .single();
 
+    const providerName = aiConfig?.provider_name || 'groq';
+    const providerDisplayName = aiConfig?.display_name || (providerName === 'orcarouter' ? 'OrcaRouter' : 'Groq');
     const apiKey = aiConfig?.api_key || process.env.GROQ_API_KEY;
-    const model = aiConfig?.model || 'llama-3.3-70b-versatile';
+    const defaultModel =
+      providerName === 'orcarouter'
+        ? 'meta-llama/llama-3.3-70b-instruct'
+        : 'llama-3.3-70b-versatile';
+    const model = aiConfig?.model || defaultModel;
 
     if (!apiKey) {
       return NextResponse.json(
         {
           error:
-            'Chưa có API key cho AI Provider! Vui lòng vào trang Quản trị (Admin) để cập nhật API Key cho Groq.',
+            `Chưa có API key cho AI Provider (${providerDisplayName})! Vui lòng vào trang Quản trị (Admin) để cập nhật API Key.`,
         },
         { status: 400 }
       );
@@ -92,18 +110,27 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
   "mnemonic": "Mẹo liên tưởng / mẹo ghi nhớ bằng tiếng Việt sinh động, dễ nhớ"
 }`;
 
-    // 3. Gọi Groq API qua Chat Completions endpoint (Tự động thử lại tối đa 5 lần nếu gặp 429)
+    // 3. Chuẩn bị headers & endpoint tương ứng với provider đang chạy
+    const endpoint = getProviderEndpoint(providerName);
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    };
+
+    if (providerName === 'orcarouter') {
+      headers['HTTP-Referer'] = 'https://vocabapp.plus';
+      headers['X-Title'] = 'VocabApp';
+    }
+
+    // 4. Gọi Chat Completions endpoint (Tự động thử lại tối đa 5 lần nếu gặp 429)
     const maxRetries = 5;
     let response: Response | null = null;
     let lastErrorMsg = '';
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
+        headers,
         body: JSON.stringify({
           model: model,
           messages: [
@@ -116,7 +143,7 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
           ],
           response_format: { type: 'json_object' },
           temperature: 0.3,
-          max_tokens: 2048, // Giới hạn token trả về để tránh lỗi 413 Request Entity Too Large trên một số model
+          max_tokens: 2048,
         }),
       });
 
@@ -125,7 +152,7 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
       }
 
       const errBody = await response.text();
-      console.error(`Groq API Error (Lần thử ${attempt}/${maxRetries}):`, errBody);
+      console.error(`${providerDisplayName} API Error (Lần thử ${attempt}/${maxRetries}):`, errBody);
 
       let errMsg = response.statusText;
       try {
@@ -139,7 +166,7 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
       // Nếu không phải lỗi 429 (Too Many Requests), không cần retry mà báo lỗi ngay
       if (response.status !== 429) {
         return NextResponse.json(
-          { error: `Lỗi khi gọi Groq AI: ${errMsg}` },
+          { error: `Lỗi khi gọi ${providerDisplayName}: ${errMsg}` },
           { status: response.status >= 500 ? 502 : response.status }
         );
       }
@@ -152,7 +179,7 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
           ? Math.min(Math.max(retryAfterSeconds, 1), 6) * 1000
           : attempt * 2000;
 
-        console.log(`Gặp lỗi 429 từ Groq. Đợi ${waitMs}ms trước khi thử lại lần ${attempt + 1}...`);
+        console.log(`Gặp lỗi 429 từ ${providerDisplayName}. Đợi ${waitMs}ms trước khi thử lại lần ${attempt + 1}...`);
         await new Promise((resolve) => setTimeout(resolve, waitMs));
       }
     }
@@ -160,7 +187,7 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
     if (!response || !response.ok) {
       return NextResponse.json(
         {
-          error: `Groq đạt giới hạn lượt gọi (Rate Limit 429) sau ${maxRetries} lần thử lại: ${lastErrorMsg}.`,
+          error: `${providerDisplayName} đạt giới hạn lượt gọi (Rate Limit 429) sau ${maxRetries} lần thử lại: ${lastErrorMsg}.`,
         },
         { status: 429 }
       );

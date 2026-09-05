@@ -92,10 +92,6 @@ export function AiAnalysisLoading({ word }: AiAnalysisLoadingProps) {
                 <span className="text-xs font-semibold text-text-primary truncate">
                   AI đang phân tích &ldquo;{word}&rdquo;
                 </span>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-brand/10 text-brand border border-brand/20 shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-                  Groq LPU
-                </span>
               </div>
               <span className="text-[11px] font-mono text-text-secondary shrink-0">
                 {currentStepIndex + 1}/{AI_STEPS.length}
