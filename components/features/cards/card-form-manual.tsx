@@ -1,12 +1,8 @@
 'use client';
 
-import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { TagInput } from '@/components/common/tag-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -14,13 +10,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { CEFR_SELECT_OPTIONS } from '@/constants/cefr';
 import { useCreateCardMutation } from '@/hooks/features/cards/use-card-mutation';
-import { PartOfSpeech } from '@/types/card.types';
-import { Loader2, CheckCircle2, Plus } from 'lucide-react';
+import { CEFRLevel, PartOfSpeech } from '@/types/card.types';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CheckCircle2, Loader2, Plus } from 'lucide-react';
+import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const manualCardSchema = z.object({
   word: z.string().min(1, 'Từ vựng là bắt buộc'),
   part_of_speech: z.string().optional(),
+  cefr_level: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   ipa: z.string().optional(),
   definition: z.string().min(1, 'Nghĩa của từ là bắt buộc'),
   example_sentence: z.string().optional(),
@@ -55,6 +59,8 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
     defaultValues: {
       word: '',
       part_of_speech: 'noun',
+      cefr_level: 'none',
+      tags: [],
       ipa: '',
       definition: '',
       example_sentence: '',
@@ -70,6 +76,8 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
         ipa: values.ipa || null,
         example_sentence: values.example_sentence || null,
         part_of_speech: (values.part_of_speech as PartOfSpeech) || null,
+        cefr_level: values.cefr_level === 'none' ? null : (values.cefr_level as CEFRLevel) || null,
+        tags: values.tags && values.tags.length > 0 ? values.tags : null,
         mnemonic: values.mnemonic || null,
         source_type: 'manual',
       });
@@ -137,14 +145,62 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
         </div>
       </div>
 
-      {/* IPA */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* CEFR Level */}
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-1">
+            Cấp độ CEFR
+          </label>
+          <Controller
+            control={control}
+            name="cefr_level"
+            render={({ field }) => (
+              <Select
+                value={field.value || 'none'}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Chọn cấp độ CEFR" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CEFR_SELECT_OPTIONS.map((lvl) => (
+                    <SelectItem key={lvl.value} value={lvl.value}>
+                      {lvl.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+
+        {/* IPA */}
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-1">
+            Phiên âm IPA
+          </label>
+          <Input
+            placeholder="vd: /rɪˈzɪl.jənt/"
+            {...register('ipa')}
+          />
+        </div>
+      </div>
+
+      {/* Tags */}
       <div>
         <label className="block text-xs font-medium text-text-secondary mb-1">
-          Phiên âm IPA
+          Nhãn phân loại (Tags)
         </label>
-        <Input
-          placeholder="vd: /rɪˈzɪl.jənt/"
-          {...register('ipa')}
+        <Controller
+          control={control}
+          name="tags"
+          render={({ field }) => (
+            <TagInput
+              value={field.value || []}
+              onChange={field.onChange}
+              placeholder="Nhập tag (vd: ielts, tech, travel)..."
+            />
+          )}
         />
       </div>
 

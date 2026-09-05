@@ -1,0 +1,186 @@
+'use client';
+
+import { AudioButton } from '@/components/common/audio-button';
+import { CEFRBadge } from '@/components/common/cefr-badge';
+import { Badge } from '@/components/ui/badge';
+import type { CardWithProgress } from '@/types/card.types';
+import { formatIPA } from '@/utils/formatters';
+import { AlertTriangle, Edit2, Eye, FolderPlus, Trash2 } from 'lucide-react';
+
+interface VocabTableViewProps {
+  cards: CardWithProgress[];
+  onViewDetail: (card: CardWithProgress) => void;
+  onEdit: (card: CardWithProgress) => void;
+  onDelete: (card: CardWithProgress) => void;
+  onAddToCollection?: (card: CardWithProgress) => void;
+}
+
+export function VocabTableView({
+  cards,
+  onViewDetail,
+  onEdit,
+  onDelete,
+  onAddToCollection,
+}: VocabTableViewProps) {
+  return (
+    <div className="w-full overflow-x-auto rounded-2xl border border-border/80 bg-surface/80">
+      <table className="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr className="border-b border-border/80 bg-base/60 text-text-secondary font-medium">
+            <th className="py-3 px-4 font-semibold">Từ vựng</th>
+            <th className="py-3 px-3 font-semibold">Cấp độ</th>
+            <th className="py-3 px-3 font-semibold">Từ loại</th>
+            <th className="py-3 px-4 font-semibold">Định nghĩa tiếng Việt</th>
+            <th className="py-3 px-3 font-semibold">Tags</th>
+            <th className="py-3 px-3 font-semibold">Trạng thái FSRS</th>
+            <th className="py-3 px-4 font-semibold text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border/60">
+          {cards.map((card) => {
+            const userCard = card.user_card;
+            const isDue = userCard?.due_at ? new Date(userCard.due_at) <= new Date() : false;
+
+            return (
+              <tr
+                key={card.id}
+                onClick={() => onViewDetail(card)}
+                className="hover:bg-surface-hover/80 transition-colors cursor-pointer group"
+              >
+                {/* Word & IPA */}
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-2">
+                    <AudioButton text={card.word} size="sm" />
+                    <div>
+                      <span className="font-semibold text-text-primary group-hover:text-brand transition-colors text-sm">
+                        {card.word}
+                      </span>
+                      {card.ipa && (
+                        <span className="font-mono text-[11px] text-text-secondary block">
+                          {formatIPA(card.ipa)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </td>
+
+                {/* CEFR Level */}
+                <td className="py-3 px-3 whitespace-nowrap">
+                  {card.cefr_level ? (
+                    <CEFRBadge level={card.cefr_level} size="sm" />
+                  ) : (
+                    <span className="text-text-secondary/50">—</span>
+                  )}
+                </td>
+
+                {/* Part of Speech */}
+                <td className="py-3 px-3 whitespace-nowrap">
+                  {card.part_of_speech ? (
+                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
+                      {card.part_of_speech}
+                    </Badge>
+                  ) : (
+                    <span className="text-text-secondary/50">—</span>
+                  )}
+                </td>
+
+                {/* Definition */}
+                <td className="py-3 px-4 max-w-[280px]">
+                  <p className="line-clamp-2 text-text-primary/90 font-medium leading-relaxed">
+                    {card.definition}
+                  </p>
+                </td>
+
+                {/* Tags */}
+                <td className="py-3 px-3">
+                  <div className="flex flex-wrap gap-1 max-w-[160px]">
+                    {card.tags && card.tags.length > 0 ? (
+                      card.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[10px] text-brand/80 bg-brand/10 px-1.5 py-0.2 rounded border border-brand/20 font-medium"
+                        >
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-text-secondary/50 text-[10px]">—</span>
+                    )}
+                    {card.tags && card.tags.length > 2 && (
+                      <span className="text-[10px] text-text-secondary">
+                        +{card.tags.length - 2}
+                      </span>
+                    )}
+                  </div>
+                </td>
+
+                {/* FSRS Status */}
+                <td className="py-3 px-3 whitespace-nowrap">
+                  {userCard?.is_leech ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-fit">
+                      <AlertTriangle className="w-3 h-3" />
+                      Leech
+                    </span>
+                  ) : isDue ? (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand/15 text-brand border border-brand/30">
+                      Cần ôn tập
+                    </span>
+                  ) : userCard?.state ? (
+                    <span className="text-[11px] text-text-secondary capitalize">
+                      {userCard.state}
+                    </span>
+                  ) : (
+                    <span className="text-text-secondary/50">Mới</span>
+                  )}
+                </td>
+
+                {/* Actions */}
+                <td className="py-3 px-4 text-right whitespace-nowrap">
+                  <div
+                    className="flex items-center justify-end gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onViewDetail(card)}
+                      className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-base/70 transition-colors"
+                      title="Xem chi tiết"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    {onAddToCollection && (
+                      <button
+                        type="button"
+                        onClick={() => onAddToCollection(card)}
+                        className="p-1.5 rounded-lg text-text-secondary hover:text-brand hover:bg-brand/10 transition-colors"
+                        title="Thêm vào bộ sưu tập"
+                      >
+                        <FolderPlus className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onEdit(card)}
+                      className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-base/70 transition-colors"
+                      title="Chỉnh sửa thẻ"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(card)}
+                      className="p-1.5 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
+                      title="Xóa thẻ"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}

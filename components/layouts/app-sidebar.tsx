@@ -1,22 +1,23 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Layers,
-  PlusCircle,
-  Settings,
-  FileText,
-  Trophy,
-  Cpu,
-  ShieldCheck,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { ROUTES } from '@/constants/routes';
 import { useReviewStats } from '@/hooks/features/review/use-review-stats';
 import { useUserProfile } from '@/hooks/features/user/use-user-profile';
+import { cn } from '@/lib/utils';
+import {
+  BookOpen,
+  Cpu,
+  FileText,
+  FolderKanban,
+  Layers,
+  LayoutDashboard,
+  PlusCircle,
+  Settings,
+  ShieldCheck,
+  Trophy,
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -35,6 +36,16 @@ export function AppSidebar() {
       href: ROUTES.APP.REVIEW,
       icon: Layers,
       badge: dueCount > 0 ? dueCount : undefined,
+    },
+    {
+      label: 'Kho từ vựng',
+      href: ROUTES.APP.VOCAB,
+      icon: BookOpen,
+    },
+    {
+      label: 'Bộ sưu tập',
+      href: ROUTES.APP.COLLECTIONS,
+      icon: FolderKanban,
     },
     {
       label: 'Thêm từ vựng',

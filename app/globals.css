@@ -7,6 +7,7 @@
   --color-border: #202736;
   --color-text-primary: #EEF2F6;
   --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
   --color-brand: #EA580C;
   --color-brand-hover: #C2410C;
   --color-success: #10B981;
@@ -178,3 +179,5 @@ button:focus-visible {
   -webkit-transform: rotateY(180deg);
   z-index: 1;
 }
+
+

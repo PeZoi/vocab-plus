@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cardKeys, reviewKeys } from '@/constants/query-keys';
 import { reviewService } from '@/services/review.service';
 import type { ReviewRating } from '@/types/review.types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function useReviewSession() {
+export function useReviewSession(params?: {
+  collection_id?: string;
+  tag?: string;
+  cefr_level?: string;
+}) {
   const queryClient = useQueryClient();
 
   const {
@@ -15,8 +19,8 @@ export function useReviewSession() {
     error,
     refetch,
   } = useQuery({
-    queryKey: cardKeys.due(),
-    queryFn: () => reviewService.getDueCards(),
+    queryKey: [...cardKeys.due(), params],
+    queryFn: () => reviewService.getDueCards(params),
   });
 
   const [currentIndex, setCurrentIndex] = useState(0);

@@ -1,12 +1,11 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Layers, PlusCircle, Settings } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { ROUTES } from '@/constants/routes';
 import { useReviewStats } from '@/hooks/features/review/use-review-stats';
+import { cn } from '@/lib/utils';
+import { BookOpen, Layers, LayoutDashboard, PlusCircle, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -15,6 +14,7 @@ export function MobileBottomNav() {
 
   const items = [
     { label: 'Tổng quan', href: ROUTES.APP.DASHBOARD, icon: LayoutDashboard },
+    { label: 'Kho từ', href: ROUTES.APP.VOCAB, icon: BookOpen },
     {
       label: 'Ôn tập',
       href: ROUTES.APP.REVIEW,

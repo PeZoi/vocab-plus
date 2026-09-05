@@ -9,6 +9,10 @@ export const ROUTES = {
   APP: {
     DASHBOARD: '/',
     REVIEW: '/review',
+    VOCAB: '/vocab',
+    VOCAB_DETAIL: (id: string) => `/vocab/${id}`,
+    COLLECTIONS: '/collections',
+    COLLECTION_DETAIL: (id: string) => `/collections/${id}`,
     ADD: '/add',
     IMPORT: '/import',
     LEADERBOARD: '/leaderboard',

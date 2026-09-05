@@ -1,9 +1,9 @@
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { createClient } from '@/lib/supabase/client';
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api',
-  timeout: 20000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },

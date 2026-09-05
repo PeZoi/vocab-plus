@@ -28,3 +28,11 @@ export const aiKeys = {
   providers: () => [...aiKeys.all, 'providers'] as const,
   activeProvider: () => [...aiKeys.providers(), 'active'] as const,
 };
+
+export const collectionKeys = {
+  all: ['collections'] as const,
+  lists: () => [...collectionKeys.all, 'list'] as const,
+  list: (filter?: Record<string, unknown>) => [...collectionKeys.lists(), { filter }] as const,
+  details: () => [...collectionKeys.all, 'detail'] as const,
+  detail: (id: string) => [...collectionKeys.details(), id] as const,
+};

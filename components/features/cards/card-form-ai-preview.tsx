@@ -1,20 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Loader2, Plus, AlertCircle } from 'lucide-react';
+import { AudioButton } from '@/components/common/audio-button';
+import { CEFRBadge } from '@/components/common/cefr-badge';
+import { TagInput } from '@/components/common/tag-input';
+import { AiAnalysisLoading } from '@/components/features/cards/ai-analysis-loading';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { CEFR_SELECT_OPTIONS } from '@/constants/cefr';
 import { useAiAnalyzer } from '@/hooks/features/ai/use-ai-analyzer';
 import { useCreateCardMutation } from '@/hooks/features/cards/use-card-mutation';
-import type { AIWordAnalysisResponse, SenseItem, PartOfSpeech } from '@/types/card.types';
+import type { AIWordAnalysisResponse, CEFRLevel, PartOfSpeech, SenseItem } from '@/types/card.types';
+import { AlertCircle, Loader2, Plus, Sparkles } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useState } from 'react';
 
 export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
   const [wordInput, setWordInput] = useState('');
   const [contextInput, setContextInput] = useState('');
   const [analysisResult, setAnalysisResult] = useState<AIWordAnalysisResponse | null>(null);
+  const [editedCefrLevel, setEditedCefrLevel] = useState<CEFRLevel | 'none'>('none');
   const [selectedSenses, setSelectedSenses] = useState<Record<number, boolean>>({});
   const [editedSenses, setEditedSenses] = useState<SenseItem[]>([]);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -32,7 +45,14 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
       });
 
       setAnalysisResult(result);
-      setEditedSenses(result.senses);
+      const initialSenses = (result.senses || []).map((s) => ({
+        ...s,
+        tags: Array.isArray(s.tags)
+          ? s.tags.map((t) => (t.startsWith('#') ? t : `#${t.trim()}`))
+          : [],
+      }));
+      setEditedSenses(initialSenses);
+      setEditedCefrLevel(result.cefr_level || 'none');
 
       if (result.is_corrected && result.word) {
         setWordInput(result.word);
@@ -56,7 +76,11 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
     }));
   };
 
-  const updateSenseField = (index: number, field: keyof SenseItem, value: string) => {
+  const updateSenseField = <K extends keyof SenseItem>(
+    index: number,
+    field: K,
+    value: SenseItem[K]
+  ) => {
     setEditedSenses((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
@@ -86,9 +110,13 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
           example_sentence: sense.example_sentence || null,
           part_of_speech: (sense.part_of_speech as PartOfSpeech) || null,
           card_type: analysisResult.card_type || 'word',
+          cefr_level: editedCefrLevel === 'none' ? null : editedCefrLevel,
+          tags: sense.tags && sense.tags.length > 0 ? sense.tags : null,
           source_type: 'ai_generated',
           sense_number: idx + 1,
           mnemonic: analysisResult.mnemonic || null,
+          collocations: analysisResult.collocations || null,
+          word_family: analysisResult.word_family || null,
         });
       }
 
@@ -130,13 +158,17 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
               type="button"
               onClick={handleAnalyze}
               disabled={aiAnalyzer.isPending || !wordInput.trim()}
-              className="shrink-0 gap-1.5"
+              className={`shrink-0 gap-1.5 transition-all duration-300 ${
+                aiAnalyzer.isPending
+                  ? 'bg-gradient-to-r from-brand via-purple-600 to-pink-500 text-white shadow-lg animate-pulse'
+                  : ''
+              }`}
               size="default"
             >
               {aiAnalyzer.isPending ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Đang phân tích...</span>
+                  <Sparkles className="w-3.5 h-3.5 animate-spin text-cyan-200" />
+                  <span>AI đang phân tích...</span>
                 </>
               ) : (
                 <>
@@ -168,10 +200,15 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
         )}
       </div>
 
-      {/* Analysis Preview Card with Motion */}
-      <AnimatePresence>
-        {analysisResult && (
+      {/* Analysis Preview Card or AI Loading with Motion */}
+      <AnimatePresence mode="wait">
+        {aiAnalyzer.isPending && (
+          <AiAnalysisLoading key="ai-loading" word={wordInput.trim()} />
+        )}
+
+        {analysisResult && !aiAnalyzer.isPending && (
           <motion.div
+            key="ai-result"
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
@@ -214,6 +251,31 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                 </span>
               </motion.div>
             )}
+
+            {/* CEFR Level Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-base/50 rounded-lg border border-border/60">
+              <label className="text-xs font-medium text-text-secondary flex items-center gap-1.5">
+                <span>Cấp độ CEFR toàn từ:</span>
+                {editedCefrLevel !== 'none' && <CEFRBadge level={editedCefrLevel} size="sm" />}
+              </label>
+              <div className="w-full sm:w-48">
+                <Select
+                  value={editedCefrLevel}
+                  onValueChange={(val) => setEditedCefrLevel(val as CEFRLevel | 'none')}
+                >
+                  <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue placeholder="Chọn cấp độ CEFR" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CEFR_SELECT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
           {/* Senses Selection */}
           <div className="space-y-3">
@@ -293,6 +355,20 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                             className="text-xs min-h-[55px]"
                           />
                         </div>
+
+                        {/* Sense-specific Tags */}
+                        <div>
+                          <label className="text-[10px] text-text-secondary block mb-0.5">
+                            Nhãn phân loại riêng cho nghĩa này (Tags):
+                          </label>
+                          <TagInput
+                            value={sense.tags || []}
+                            onChange={(tags) => updateSenseField(idx, 'tags', tags)}
+                            disabled={!isSelected}
+                            placeholder="Thêm tag cho nghĩa này..."
+                            className="min-h-[34px] py-1 text-xs"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -302,40 +378,85 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
           </div>
 
           {/* Collocations & Word Family */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/60">
+          <div className="space-y-3 pt-2 border-t border-border/60">
             {analysisResult.collocations && analysisResult.collocations.length > 0 && (
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary mb-1.5">
-                  Cụm từ hay đi kèm (Collocations):
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
+                  <span>🔗 Cụm từ hay đi kèm (Collocations):</span>
                 </p>
-                <div className="flex flex-wrap gap-1">
-                  {analysisResult.collocations.map((col, i) => (
-                    <span
-                      key={i}
-                      className="text-[11px] px-2 py-0.5 rounded-md bg-base border border-border/70 text-text-secondary"
-                    >
-                      {col}
-                    </span>
-                  ))}
+                <div className="grid grid-cols-1 gap-2">
+                  {analysisResult.collocations.map((col, i) => {
+                    const phrase = typeof col === 'string' ? col : col.phrase;
+                    const meaning = typeof col === 'object' ? col.meaning : null;
+                    const example = typeof col === 'object' ? col.example : null;
+
+                    return (
+                      <div
+                        key={i}
+                        className="p-2.5 rounded-lg bg-base/60 border border-border/70 text-xs space-y-1"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-brand text-[13px]">{phrase}</span>
+                            {meaning && (
+                              <span className="text-text-secondary text-xs">: {meaning}</span>
+                            )}
+                          </div>
+                          {example && <AudioButton text={example} size="sm" />}
+                        </div>
+                        {example && (
+                          <p className="text-text-secondary italic text-[11.5px] leading-relaxed">
+                            &ldquo;{example}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {analysisResult.word_family && analysisResult.word_family.length > 0 && (
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary mb-1.5">
-                  Gia đình từ (Word Family):
+              <div className="space-y-1.5 pt-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
+                  <span>🌳 Gia đình từ (Word Family):</span>
                 </p>
-                <div className="flex flex-wrap gap-1">
-                  {analysisResult.word_family.map((wf, i) => (
-                    <span
-                      key={i}
-                      className="text-[11px] px-2 py-0.5 rounded-md bg-base border border-border/70 text-text-secondary"
-                    >
-                      {wf.form_word}{' '}
-                      <span className="text-[9px] text-brand">({wf.part_of_speech})</span>
-                    </span>
-                  ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {analysisResult.word_family.map((wf, i) => {
+                    const formWord = typeof wf === 'string' ? wf : (wf.word || (wf as { form_word?: string }).form_word);
+                    const pos = typeof wf === 'object' ? wf.part_of_speech : '';
+                    const meaning = typeof wf === 'object' ? wf.meaning : null;
+                    const example = typeof wf === 'object' ? wf.example : null;
+
+                    return (
+                      <div
+                        key={i}
+                        className="p-2.5 rounded-lg bg-base/60 border border-border/70 text-xs space-y-1 flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-text-primary text-[13px]">{formWord}</span>
+                              {pos && (
+                                <Badge variant="secondary" className="text-[9.5px] py-0 px-1.5">
+                                  {pos}
+                                </Badge>
+                              )}
+                            </div>
+                            {example && <AudioButton text={example} size="sm" />}
+                          </div>
+                          {meaning && (
+                            <p className="text-text-secondary text-[11.5px] mt-0.5">{meaning}</p>
+                          )}
+                        </div>
+                        {example && (
+                          <p className="text-text-secondary italic text-[11px] leading-relaxed pt-1 border-t border-border/40 mt-1">
+                            &ldquo;{example}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

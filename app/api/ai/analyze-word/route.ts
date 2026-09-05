@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { AIWordAnalysisResponse } from '@/types/card.types';
 
+export const maxDuration = 90; // Cho phép route chạy tối đa 90s khi có nhiều vòng lặp retry 429
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -19,6 +21,12 @@ export async function POST(request: Request) {
     if (!word || typeof word !== 'string' || !word.trim()) {
       return NextResponse.json({ error: 'Từ vựng cần phân tích là bắt buộc' }, { status: 400 });
     }
+
+    // Giới hạn độ dài để tránh lỗi payload quá lớn (413 Request Entity Too Large)
+    const safeWord = word.trim().slice(0, 100);
+    const safeContext = context_sentence && typeof context_sentence === 'string'
+      ? context_sentence.trim().slice(0, 500)
+      : undefined;
 
     // 1. Lấy AI Provider config đang active/default từ database
     const { data: aiConfig } = await supabase
@@ -42,12 +50,12 @@ export async function POST(request: Request) {
     }
 
     // 2. Chuẩn bị prompt phân tích từ vựng kèm quy tắc sửa lỗi chính tả
-    const prompt = `Phân tích từ hoặc cụm từ tiếng Anh sau mà người dùng đã nhập: "${word.trim()}".
-${context_sentence ? `Ngữ cảnh trong câu: "${context_sentence}". Hãy ưu tiên nghĩa phù hợp nhất với ngữ cảnh này lên đầu danh sách senses.` : ''}
+    const prompt = `Phân tích từ hoặc cụm từ tiếng Anh sau mà người dùng đã nhập: "${safeWord}".
+${safeContext ? `Ngữ cảnh trong câu: "${safeContext}". Hãy ưu tiên nghĩa phù hợp nhất với ngữ cảnh này lên đầu danh sách senses.` : ''}
 
 QUY TẮC SỬA LỖI CHÍNH TẢ BẮT BUỘC:
-- Nếu người dùng nhập sai chính tả (ví dụ: "proccess" -> "process", "embarass" -> "embarrass", "recive" -> "receive", "defanitely" -> "definitely", "akward" -> "awkward", "occurr" -> "occur"), bạn PHẢI TỰ ĐỘNG SỬA lại từ chính xác trong trường "word". Đặt "is_corrected": true và "original_word": "${word.trim()}".
-- Nếu từ đã đúng chính tả, đặt "is_corrected": false và "original_word": "${word.trim()}".
+- Nếu người dùng nhập sai chính tả (ví dụ: "proccess" -> "process", "embarass" -> "embarrass", "recive" -> "receive", "defanitely" -> "definitely", "akward" -> "awkward", "occurr" -> "occur"), bạn PHẢI TỰ ĐỘNG SỬA lại từ chính xác trong trường "word". Đặt "is_corrected": true và "original_word": "${safeWord}".
+- Nếu từ đã đúng chính tả, đặt "is_corrected": false và "original_word": "${safeWord}".
 
 Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown code fence hay chữ giải thích bên ngoài), tuân thủ cấu trúc sau:
 {
@@ -56,49 +64,105 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
   "is_corrected": false hoặc true,
   "ipa": "phiên âm IPA chuẩn, ví dụ /səkˈses/",
   "card_type": "word" hoặc "phrasal_verb" hoặc "idiom",
+  "cefr_level": "A1 | A2 | B1 | B2 | C1 | C2",
   "senses": [
     {
       "part_of_speech": "noun | verb | adjective | adverb | preposition | conjunction | pronoun | interjection",
       "definition": "Định nghĩa bằng tiếng Việt rõ ràng, dễ hiểu",
       "vietnamese_hint": "Nghĩa ngắn gọn 1-3 từ tiếng Việt",
-      "example_sentence": "Một câu ví dụ tiếng Anh đơn giản, dùng từ vựng cơ bản A2-B1 để minh họa, dễ hiểu trọn câu"
+      "example_sentence": "Một câu ví dụ tiếng Anh đơn giản, dùng từ vựng cơ bản A2-B1 để minh họa, dễ hiểu trọn câu",
+      "tags": ["#tag1", "#tag2"] (từ nào phổ biến tag được thì ghi không thì để rỗng, tag viết bằng tiếng anh)
     }
   ],
-  "collocations": ["cụm từ hay đi kèm 1", "cụm từ hay đi kèm 2"],
+  "collocations": [
+    {
+      "phrase": "cụm từ hay đi kèm thông dụng",
+      "meaning": "nghĩa tiếng Việt ngắn",
+      "example": "câu ví dụ tiếng Anh đơn giản minh họa cách dùng cụm từ này"
+    }
+  ],
   "word_family": [
-    { "form_word": "dạng từ khác", "part_of_speech": "noun | verb | adjective | adverb" }
+    {
+      "word": "từ cùng gốc",
+      "part_of_speech": "noun | verb | adjective | adverb",
+      "meaning": "nghĩa tiếng Việt ngắn",
+      "example": "câu ví dụ tiếng Anh đơn giản minh họa từ này"
+    }
   ],
   "mnemonic": "Mẹo liên tưởng / mẹo ghi nhớ bằng tiếng Việt sinh động, dễ nhớ"
 }`;
 
-    // 3. Gọi Groq API qua Chat Completions endpoint
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: 'system',
-            content:
-              'Bạn là chuyên gia ngôn ngữ học và từ điển tiếng Anh cho người Việt. Nhiệm vụ của bạn là phân tích từ vựng và trả về dữ liệu định dạng JSON hợp lệ.',
-          },
-          { role: 'user', content: prompt },
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.3,
-      }),
-    });
+    // 3. Gọi Groq API qua Chat Completions endpoint (Tự động thử lại tối đa 5 lần nếu gặp 429)
+    const maxRetries = 5;
+    let response: Response | null = null;
+    let lastErrorMsg = '';
 
-    if (!response.ok) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Bạn là chuyên gia ngôn ngữ học và từ điển tiếng Anh cho người Việt. Nhiệm vụ của bạn là phân tích từ vựng và trả về dữ liệu định dạng JSON hợp lệ.',
+            },
+            { role: 'user', content: prompt },
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.3,
+          max_tokens: 2048, // Giới hạn token trả về để tránh lỗi 413 Request Entity Too Large trên một số model
+        }),
+      });
+
+      if (response.ok) {
+        break;
+      }
+
       const errBody = await response.text();
-      console.error('Groq API Error:', errBody);
+      console.error(`Groq API Error (Lần thử ${attempt}/${maxRetries}):`, errBody);
+
+      let errMsg = response.statusText;
+      try {
+        const errJson = JSON.parse(errBody);
+        errMsg = errJson.error?.message || errBody;
+      } catch {
+        errMsg = errBody;
+      }
+      lastErrorMsg = errMsg;
+
+      // Nếu không phải lỗi 429 (Too Many Requests), không cần retry mà báo lỗi ngay
+      if (response.status !== 429) {
+        return NextResponse.json(
+          { error: `Lỗi khi gọi Groq AI: ${errMsg}` },
+          { status: response.status >= 500 ? 502 : response.status }
+        );
+      }
+
+      // Nếu là lỗi 429 và chưa hết số lần thử, chờ theo retry-after hoặc backoff
+      if (attempt < maxRetries) {
+        const retryAfterHeader = response.headers.get('retry-after');
+        const retryAfterSeconds = retryAfterHeader ? parseFloat(retryAfterHeader) : null;
+        const waitMs = retryAfterSeconds && !isNaN(retryAfterSeconds)
+          ? Math.min(Math.max(retryAfterSeconds, 1), 6) * 1000
+          : attempt * 2000;
+
+        console.log(`Gặp lỗi 429 từ Groq. Đợi ${waitMs}ms trước khi thử lại lần ${attempt + 1}...`);
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
+    }
+
+    if (!response || !response.ok) {
       return NextResponse.json(
-        { error: `Lỗi khi gọi Groq AI: ${response.statusText}` },
-        { status: 502 }
+        {
+          error: `Groq đạt giới hạn lượt gọi (Rate Limit 429) sau ${maxRetries} lần thử lại: ${lastErrorMsg}.`,
+        },
+        { status: 429 }
       );
     }
 

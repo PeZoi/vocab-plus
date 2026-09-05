@@ -1,9 +1,9 @@
 import { apiClient } from '@/lib/axios';
 import type {
   ReviewCardItem,
-  SubmitReviewDto,
-  ReviewStats,
   ReviewForecastDay,
+  ReviewStats,
+  SubmitReviewDto,
 } from '@/types/review.types';
 
 export interface ReviewStatsResponse {
@@ -13,10 +13,14 @@ export interface ReviewStatsResponse {
 
 export const reviewService = {
   /**
-   * Lấy danh sách các thẻ cần review hôm nay
+   * Lấy danh sách các thẻ cần review (hỗ trợ Custom Study Session)
    */
-  getDueCards: (): Promise<ReviewCardItem[]> => {
-    return apiClient.get('/review/due');
+  getDueCards: (params?: {
+    collection_id?: string;
+    tag?: string;
+    cefr_level?: string;
+  }): Promise<ReviewCardItem[]> => {
+    return apiClient.get('/review/due', { params });
   },
 
   /**
