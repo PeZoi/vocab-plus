@@ -170,7 +170,7 @@ export function CardDetailModal({
             {Array.isArray(wordFamily) && wordFamily.length > 0 && (
               <div className="space-y-1.5 pt-1">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
-                  <span>🌳 Gia đình từ (Word Family):</span>
+                  <span>🌳 Từ vựng liên quan:</span>
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {wordFamily.map((wf, i) => {

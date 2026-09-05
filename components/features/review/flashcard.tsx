@@ -189,7 +189,7 @@ export function Flashcard({ card, isFlipped, onFlip }: FlashcardProps) {
                 {Array.isArray(wordFamily) && wordFamily.length > 0 && (
                   <div className="space-y-1.5">
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary flex items-center gap-1">
-                      🌳 Gia đình từ:
+                      🌳 Từ vựng liên quan:
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {wordFamily.slice(0, 4).map((wf, i) => {

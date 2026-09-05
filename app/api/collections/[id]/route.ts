@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { UpdateCollectionDto } from '@/types/collection.types';
+import type { Tables } from '@/types/database.types';
 
 export async function GET(
   request: Request,
@@ -18,15 +19,10 @@ export async function GET(
       return NextResponse.json({ error: 'Chưa xác thực' }, { status: 401 });
     }
 
-    // 1. Fetch collection details
+    // Fetch collection info with creator profile
     const { data: collection, error: colError } = await supabase
       .from('collections')
-      .select(`
-        *,
-        creator:profiles!collections_creator_id_fkey(id, display_name, avatar_url),
-        collection_likes(user_id),
-        user_collections(user_id)
-      `)
+      .select('*, creator:profiles!collections_creator_id_fkey(id, display_name, avatar_url), collection_likes(user_id), user_collections(user_id)')
       .eq('id', id)
       .single();
 
@@ -34,32 +30,28 @@ export async function GET(
       return NextResponse.json({ error: 'Không tìm thấy bộ sưu tập' }, { status: 404 });
     }
 
-    // Check permission: public or owner
+    // If private, only owner can view
     if (!collection.is_public && collection.creator_id !== user.id) {
-      return NextResponse.json({ error: 'Bạn không có quyền truy cập bộ sưu tập này' }, { status: 403 });
+      return NextResponse.json({ error: 'Bạn không có quyền xem bộ sưu tập này' }, { status: 403 });
     }
 
-    // 2. Fetch cards inside collection
+    // Fetch cards in this collection
     const { data: cardLinks, error: linksError } = await supabase
       .from('collection_cards')
-      .select(`
-        display_order,
-        added_at,
-        card:cards(
-          *,
-          user_cards(*)
-        )
-      `)
+      .select('card:cards(*, user_cards(*))')
       .eq('collection_id', id)
-      .order('display_order', { ascending: true })
       .order('added_at', { ascending: true });
 
     if (linksError) {
       console.error('Error fetching collection cards:', linksError);
     }
 
-    const cards = (cardLinks || [])
-      .map((link: any) => {
+    type RawCardLink = {
+      card: (Tables<'cards'> & { user_cards?: Tables<'user_cards'>[] | Tables<'user_cards'> | null }) | null;
+    };
+
+    const cards = ((cardLinks || []) as unknown as RawCardLink[])
+      .map((link) => {
         if (!link.card) return null;
         const userCard = Array.isArray(link.card.user_cards) ? link.card.user_cards[0] : link.card.user_cards;
         return {
@@ -69,8 +61,8 @@ export async function GET(
       })
       .filter(Boolean);
 
-    const isLiked = Array.isArray(collection.collection_likes) && collection.collection_likes.some((l: any) => l.user_id === user.id);
-    const isSaved = Array.isArray(collection.user_collections) && collection.user_collections.some((s: any) => s.user_id === user.id);
+    const isLiked = Array.isArray(collection.collection_likes) && collection.collection_likes.some((l: { user_id: string }) => l.user_id === user.id);
+    const isSaved = Array.isArray(collection.user_collections) && collection.user_collections.some((s: { user_id: string }) => s.user_id === user.id);
     const isOwner = collection.creator_id === user.id;
 
     const { collection_likes, user_collections, ...rest } = collection;
@@ -83,9 +75,10 @@ export async function GET(
       is_saved: isSaved,
       is_owner: isOwner,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Collection GET [id] error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -121,7 +114,7 @@ export async function PUT(
     }
 
     const body: UpdateCollectionDto = await request.json();
-    const updatePayload: Record<string, any> = {
+    const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
 
@@ -145,9 +138,10 @@ export async function PUT(
     }
 
     return NextResponse.json(data);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Collection PUT [id] error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -190,8 +184,9 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true, message: 'Đã xóa bộ sưu tập thành công' });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Collection DELETE [id] error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

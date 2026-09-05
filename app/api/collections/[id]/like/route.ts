@@ -69,8 +69,9 @@ export async function POST(
       .eq('id', id);
 
     return NextResponse.json({ is_liked: isLiked, likes_count: newCount });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Like toggle error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -1,12 +1,13 @@
 'use client';
 
-import { EmptyState } from '@/components/common/empty-state';
 import { Flashcard } from '@/components/features/review/flashcard';
 import { RatingActions } from '@/components/features/review/rating-actions';
+import { ReviewCompletionScreen } from '@/components/features/review/review-completion-screen';
+import { ReviewEmptyState } from '@/components/features/review/review-empty-state';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { useReviewSession } from '@/hooks/features/review/use-review-session';
-import { ArrowLeft, CheckCircle, FolderKanban, Sparkles, Trophy } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
@@ -58,75 +59,16 @@ function ReviewSessionContent() {
   // Màn hình hoàn thành phiên học
   if (sessionCompleted) {
     return (
-      <div className="max-w-md mx-auto text-center py-12 px-4 space-y-6 animate-fadeIn">
-        <div className="w-20 h-20 rounded-full bg-success/15 border border-success/30 flex items-center justify-center text-success mx-auto success-glow">
-          <Trophy className="w-10 h-10 animate-bounce" />
-        </div>
-
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold font-heading text-text-primary">
-            Tuyệt vời! Hoàn thành phiên ôn tập!
-          </h2>
-          <p className="text-sm text-text-secondary mt-2">
-            Bạn đã ôn tập xong <span className="font-bold text-brand">{cardsReviewedCount}</span> thẻ
-            {isCustomSession ? ' trong phiên ôn tập tùy chỉnh.' : ' theo lịch FSRS hôm nay.'}
-          </p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-surface border border-border flex items-center justify-around text-center">
-          <div>
-            <span className="text-xs text-text-secondary">Thẻ đã ôn</span>
-            <p className="text-xl font-bold text-text-primary">{cardsReviewedCount}</p>
-          </div>
-          <div className="h-8 w-px bg-border" />
-          <div>
-            <span className="text-xs text-text-secondary">XP ước tính</span>
-            <p className="text-xl font-bold text-brand">+{cardsReviewedCount * 5} XP</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
-          <Link href={ROUTES.APP.DASHBOARD} className="flex-1">
-            <Button variant="surface" className="w-full">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Về Dashboard
-            </Button>
-          </Link>
-          <Link href={ROUTES.APP.COLLECTIONS} className="flex-1">
-            <Button variant="primary" className="w-full">
-              <FolderKanban className="w-4 h-4 mr-2" />
-              Bộ sưu tập
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <ReviewCompletionScreen
+        cardsReviewedCount={cardsReviewedCount}
+        isCustomSession={isCustomSession}
+      />
     );
   }
 
   // Không có thẻ nào cần ôn hôm nay
   if (!currentItem || totalCards === 0) {
-    return (
-      <div className="max-w-md mx-auto py-12 space-y-4">
-        {isCustomSession && (
-          <div className="p-3 rounded-xl bg-surface border border-border/80 text-center text-xs text-text-secondary">
-            <span>Phiên học tùy chỉnh này hiện chưa có thẻ nào.</span>
-          </div>
-        )}
-        <EmptyState
-          icon={CheckCircle}
-          title={isCustomSession ? "Bộ từ hiện chưa có thẻ nào!" : "Không có thẻ nào cần ôn hôm nay!"}
-          description={
-            isCustomSession
-              ? "Bộ sưu tập này chưa có thẻ từ vựng hoặc các thẻ chưa được liên kết."
-              : "Bạn đã hoàn thành xuất sắc toàn bộ lịch học FSRS ngày hôm nay. Hãy tiếp tục duy trì chuỗi học tập nhé!"
-          }
-          actionText={isCustomSession ? "Quay lại Bộ sưu tập" : "Thêm từ vựng mới để học"}
-          onAction={() => {
-            window.location.href = isCustomSession ? ROUTES.APP.COLLECTIONS : ROUTES.APP.ADD;
-          }}
-        />
-      </div>
-    );
+    return <ReviewEmptyState isCustomSession={isCustomSession} />;
   }
 
   return (
@@ -135,7 +77,7 @@ function ReviewSessionContent() {
       {isCustomSession && (
         <div className="p-3 rounded-xl bg-brand/10 border border-brand/30 flex items-center justify-between text-xs animate-fadeIn">
           <div className="flex items-center gap-2">
-            <span className="text-base">🎯</span>
+            <span className="text-[15px]">🎯</span>
             <div>
               <span className="font-semibold text-brand block">
                 Phiên Ôn Tập Tùy Chỉnh (Custom Study Session)

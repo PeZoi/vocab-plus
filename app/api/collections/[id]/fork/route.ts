@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createEmptyCard } from '@/lib/fsrs';
+import type { Tables } from '@/types/database.types';
 
 export async function POST(
   request: Request,
@@ -45,7 +46,13 @@ export async function POST(
       return NextResponse.json({ error: linksError.message }, { status: 500 });
     }
 
-    const cardsToClone = (cardLinks || []).map((l: any) => l.card).filter(Boolean);
+    type RawForkCardLink = {
+      card: Tables<'cards'> | null;
+    };
+
+    const cardsToClone = ((cardLinks || []) as unknown as RawForkCardLink[])
+      .map((l) => l.card)
+      .filter((card): card is Tables<'cards'> => card !== null);
 
     // 3. Create a personal cloned collection for the user
     const { data: clonedCollection, error: createColError } = await supabase
@@ -139,8 +146,9 @@ export async function POST(
       collection: clonedCollection,
       cards_cloned: clonedCount,
     }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Fork collection error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống khi clone bộ từ' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống khi clone bộ từ';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

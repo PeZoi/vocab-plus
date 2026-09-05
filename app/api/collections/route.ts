@@ -61,11 +61,30 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    type RawCollectionItem = {
+      id: string;
+      creator_id: string;
+      title: string;
+      description: string | null;
+      cover_image: string | null;
+      category: string;
+      is_public: boolean;
+      tags: string[];
+      fork_count: number;
+      likes_count: number;
+      created_at: string;
+      updated_at: string;
+      collection_cards?: Array<{ count: number }>;
+      collection_likes?: Array<{ user_id: string }>;
+      user_collections?: Array<{ user_id: string }>;
+      creator?: { id: string; display_name: string | null; avatar_url: string | null };
+    };
+
     // Format results to include calculated metadata
-    const formatted = (data || []).map((col: any) => {
+    const formatted = ((data || []) as unknown as RawCollectionItem[]).map((col) => {
       const cardCount = col.collection_cards?.[0]?.count || 0;
-      const isLiked = Array.isArray(col.collection_likes) && col.collection_likes.some((l: any) => l.user_id === user.id);
-      const isSaved = Array.isArray(col.user_collections) && col.user_collections.some((s: any) => s.user_id === user.id);
+      const isLiked = Array.isArray(col.collection_likes) && col.collection_likes.some((l) => l.user_id === user.id);
+      const isSaved = Array.isArray(col.user_collections) && col.user_collections.some((s) => s.user_id === user.id);
       const isOwner = col.creator_id === user.id;
 
       const { collection_cards, collection_likes, user_collections, ...rest } = col;
@@ -80,9 +99,10 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(formatted);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Collections GET error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -145,8 +165,9 @@ export async function POST(request: Request) {
       is_liked: false,
       is_saved: false,
     }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Collections POST error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

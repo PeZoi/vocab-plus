@@ -51,7 +51,10 @@ export function CollectionFiltersBar({
 
         {/* Sort & Reset */}
         <div className="flex items-center gap-2">
-          <Select value={sortBy} onValueChange={(val: any) => onSortChange(val)}>
+          <Select
+            value={sortBy}
+            onValueChange={(val) => onSortChange(val as 'popular' | 'newest' | 'alpha')}
+          >
             <SelectTrigger className="w-40 h-9 text-xs bg-surface border-border/80">
               <SelectValue placeholder="Sắp xếp" />
             </SelectTrigger>

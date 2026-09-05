@@ -419,7 +419,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
             {analysisResult.word_family && analysisResult.word_family.length > 0 && (
               <div className="space-y-1.5 pt-1">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
-                  <span>🌳 Gia đình từ (Word Family):</span>
+                  <span>🌳 Từ vựng liên quan:</span>
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {analysisResult.word_family.map((wf, i) => {

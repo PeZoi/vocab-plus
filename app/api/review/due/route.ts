@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import type { Tables } from '@/types/database.types';
 
 export async function GET(request: Request) {
   try {
@@ -30,12 +31,17 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: colError.message }, { status: 500 });
       }
 
-      const formatted = (colCards || [])
-        .map((item: any) => {
+      type CollectionCardJoin = {
+        card: (Tables<'cards'> & { user_cards?: Tables<'user_cards'>[] | Tables<'user_cards'> | null }) | null;
+      };
+
+      const formatted = ((colCards || []) as unknown as CollectionCardJoin[])
+        .map((item) => {
           if (!item.card) return null;
-          const userCard = Array.isArray(item.card.user_cards)
-            ? item.card.user_cards.find((uc: any) => uc.user_id === user.id) || item.card.user_cards[0]
-            : item.card.user_cards;
+          const userCards = item.card.user_cards;
+          const userCard = Array.isArray(userCards)
+            ? userCards.find((uc) => uc.user_id === user.id) || userCards[0]
+            : userCards;
 
           return {
             card: item.card,

@@ -65,9 +65,10 @@ export async function POST(
     }
 
     return NextResponse.json({ success: true, count: cardIds.length });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Add cards error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -121,8 +122,9 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Delete card from collection error:', err);
-    return NextResponse.json({ error: err.message || 'Lỗi hệ thống' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -12,28 +12,14 @@ import { CreateCollectionModal } from '@/components/features/collections/create-
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
-import type {
-  CardWithProgress,
-  CEFRLevel,
-  FSRSState,
-  VocabSortOption,
-} from '@/types/card.types';
+import { useVocabFilter } from '@/hooks/features/cards/use-vocab-filter';
+import type { CardWithProgress } from '@/types/card.types';
 import { BookOpen, SearchX } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useState } from 'react';
 
 export default function VocabPage() {
   const router = useRouter();
-
-  // Filter & Search states
-  const [searchQuery, setSearchQuery] = useState('');
-  const deferredSearch = useDeferredValue(searchQuery);
-
-  const [cefrLevel, setCefrLevel] = useState<CEFRLevel | 'all'>('all');
-  const [selectedTag, setSelectedTag] = useState<string | 'all'>('all');
-  const [fsrsState, setFsrsState] = useState<FSRSState>('all');
-  const [sortBy, setSortBy] = useState<VocabSortOption>('created_desc');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   // Modal states
   const [editCard, setEditCard] = useState<CardWithProgress | null>(null);
@@ -41,116 +27,28 @@ export default function VocabPage() {
   const [addToCollectionCard, setAddToCollectionCard] = useState<CardWithProgress | null>(null);
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
 
-  // Fetch all user cards (we query from API and filter client-side for smooth and responsive feel)
-  const { data: rawCards = [], isLoading, isError, refetch } = useCardsQuery();
+  // Fetch all user cards
+  const { data: rawCards = [], isLoading, refetch } = useCardsQuery();
 
-  // Extract all unique tags across cards
-  const availableTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    rawCards.forEach((card) => {
-      if (card.tags && Array.isArray(card.tags)) {
-        card.tags.forEach((tag) => tagSet.add(tag));
-      }
-    });
-    return Array.from(tagSet).sort();
-  }, [rawCards]);
-
-  // Client-side filtering & sorting
-  const filteredCards = useMemo(() => {
-    let result = [...rawCards];
-
-    // Search query
-    if (deferredSearch.trim()) {
-      const q = deferredSearch.toLowerCase().trim();
-      result = result.filter(
-        (card) =>
-          card.word.toLowerCase().includes(q) ||
-          card.definition.toLowerCase().includes(q) ||
-          (card.example_sentence && card.example_sentence.toLowerCase().includes(q))
-      );
-    }
-
-    // CEFR Level filter
-    if (cefrLevel !== 'all') {
-      result = result.filter((card) => card.cefr_level?.toUpperCase() === cefrLevel);
-    }
-
-    // Tag filter
-    if (selectedTag !== 'all') {
-      result = result.filter(
-        (card) => card.tags && card.tags.includes(selectedTag)
-      );
-    }
-
-    // FSRS State filter
-    if (fsrsState !== 'all') {
-      result = result.filter((card) => {
-        const userCard = card.user_card;
-        if (!userCard) return fsrsState === 'new';
-
-        if (fsrsState === 'leech') {
-          return !!userCard.is_leech;
-        }
-        if (fsrsState === 'review') {
-          return userCard.due_at ? new Date(userCard.due_at) <= new Date() : false;
-        }
-        return userCard.state === fsrsState;
-      });
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case 'created_asc':
-          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
-        case 'created_desc':
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-        case 'alpha_asc':
-          return a.word.localeCompare(b.word);
-        case 'alpha_desc':
-          return b.word.localeCompare(a.word);
-        case 'due_asc': {
-          const dueA = a.user_card?.due_at ? new Date(a.user_card.due_at).getTime() : Infinity;
-          const dueB = b.user_card?.due_at ? new Date(b.user_card.due_at).getTime() : Infinity;
-          return dueA - dueB;
-        }
-        case 'due_desc': {
-          const dueA = a.user_card?.due_at ? new Date(a.user_card.due_at).getTime() : 0;
-          const dueB = b.user_card?.due_at ? new Date(b.user_card.due_at).getTime() : 0;
-          return dueB - dueA;
-        }
-        case 'difficulty_desc': {
-          const diffA = a.user_card?.difficulty || 0;
-          const diffB = b.user_card?.difficulty || 0;
-          return Number(diffB) - Number(diffA);
-        }
-        case 'stability_desc': {
-          const stabA = a.user_card?.stability || 0;
-          const stabB = b.user_card?.stability || 0;
-          return Number(stabB) - Number(stabA);
-        }
-        default:
-          return 0;
-      }
-    });
-
-    return result;
-  }, [rawCards, deferredSearch, cefrLevel, selectedTag, fsrsState, sortBy]);
-
-  const isFiltered =
-    searchQuery.trim() !== '' ||
-    cefrLevel !== 'all' ||
-    selectedTag !== 'all' ||
-    fsrsState !== 'all' ||
-    sortBy !== 'created_desc';
-
-  const handleResetFilters = () => {
-    setSearchQuery('');
-    setCefrLevel('all');
-    setSelectedTag('all');
-    setFsrsState('all');
-    setSortBy('created_desc');
-  };
+  // Encapsulated filter & sorting logic via custom hook
+  const {
+    searchQuery,
+    setSearchQuery,
+    cefrLevel,
+    setCefrLevel,
+    selectedTag,
+    setSelectedTag,
+    fsrsState,
+    setFsrsState,
+    sortBy,
+    setSortBy,
+    viewMode,
+    setViewMode,
+    availableTags,
+    filteredCards,
+    isFiltered,
+    resetFilters,
+  } = useVocabFilter(rawCards);
 
   return (
     <div className="space-y-5 pb-12 max-w-7xl mx-auto">
@@ -176,7 +74,7 @@ export default function VocabPage() {
           onFsrsStateChange={setFsrsState}
           sortBy={sortBy}
           onSortChange={setSortBy}
-          onResetFilters={handleResetFilters}
+          onResetFilters={resetFilters}
           isFiltered={isFiltered}
         />
       )}
@@ -218,7 +116,7 @@ export default function VocabPage() {
           title="Không tìm thấy từ vựng phù hợp"
           description="Không có từ nào khớp với bộ lọc hoặc từ khóa tìm kiếm hiện tại của bạn."
           actionText="Đặt lại bộ lọc"
-          onAction={handleResetFilters}
+          onAction={resetFilters}
           className="my-8"
         />
       ) : viewMode === 'grid' ? (
