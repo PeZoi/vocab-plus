@@ -1,24 +1,32 @@
 # 📘 Đặc Tả Sản Phẩm — Vocab App (Phiên bản Web)
 
 > Stack: **Next.js** (App Router) + **Supabase** (Postgres, Auth, Edge Functions, Storage) + **Tailwind CSS** + **Motion (Framer Motion)** + **Zustand** + **TanStack Query** + **React Hook Form** + **Zod** — Deploy trên **Vercel**
-> Ngôn ngữ học: **Tiếng Anh**
-> Mục tiêu: Sản phẩm nghiêm túc, launch public, ưu tiên tối đa chi phí **$0**
+> Ngôn ngữ học: **Tiếng Anh** | Giao diện: **Tiếng Việt**
+> Mục tiêu: Sản phẩm học từ vựng khoa học, thẩm mỹ cao, tính năng cộng đồng mạnh mẽ, ưu tiên tối đa chi phí **$0**
 
 ---
 
 ## 1. Tổng quan
 
-Ứng dụng học từ vựng tiếng Anh dùng phương pháp **Lặp lại ngắt quãng (Spaced Repetition)** thông qua thuật toán **FSRS**, có khả năng:
-- Tự tạo card từ nội dung thật của người dùng (import & auto-detect)
-- Hỗ trợ AI sinh mnemonic, ảnh liên tưởng, chấm câu viết
-- Nhắc nhở & báo cáo qua **Telegram** theo "giờ vàng" cá nhân hóa
-- Có trang **Admin** quản trị toàn diện, bao gồm cấu hình AI provider động
+Ứng dụng học từ vựng tiếng Anh hiện đại kết hợp phương pháp **Lặp lại ngắt quãng (Spaced Repetition)** thông qua thuật toán **FSRS** và các nguyên lý khoa học nhận thức (Cognitive Science):
+1. **Chuẩn hóa cấp độ quốc tế**: Phân loại và quản lý từ vựng theo khung tham chiếu châu Âu **CEFR (A1, A2, B1, B2, C1, C2)**.
+2. **Mô hình tổ chức & chia sẻ lai (Hybrid: Tags + Collections)**:
+   - **Tags (Cá nhân & Linh hoạt)**: Gắn nhãn tự do cho từng thẻ (`#ielts`, `#technology`, `#daily`), hỗ trợ tạo **Custom Study Session** ôn tập chuyên sâu theo chủ đề/tag bất kỳ.
+   - **Collections / Study Sets (Bộ từ vựng đóng gói / Playlists chia sẻ cộng đồng)**: Đóng gói các bộ từ có chủ đề (IELTS 7.5, 3000 từ Oxford, IT Vocab...) với đầy đủ metadata (Title, Description, Cover). Người dùng khác có thể xem trước và **1-Click Clone/Fork** vào kho từ cá nhân để bắt đầu học với FSRS.
+3. **Đọc hiểu & Trích xuất từ vựng ngữ cảnh (Smart Contextual Reader)**: Đọc văn bản tiếng Anh, bôi đen từ vựng để tra nghĩa tức thì và lưu thẻ kèm chính xác câu ngữ cảnh thật (`example_sentence`).
+4. **Chế độ ôn tập Active Recall đa dạng**:
+   - **Flashcard 3D FSRS**: Lật thẻ trực quan với 4 mức đánh giá (Again, Hard, Good, Easy) cùng phím tắt tiện lợi.
+   - **Cloze Deletion (Điền khuyết ngữ cảnh)**: Ẩn từ mục tiêu trong câu ví dụ dạng `[_____]` để rèn luyện khả năng nhớ chủ động trong câu.
+5. **Hỗ trợ AI học sâu**: AI Word Analyzer tự động phân tích cấp độ CEFR, tầng nghĩa, collocations; AI sinh mnemonic, hình ảnh liên tưởng (Dual-Coding), chấm câu viết ngữ pháp.
+6. **Nhắc nhở & báo cáo qua Telegram**: Theo "giờ vàng" cá nhân hóa dựa trên hiệu suất học thực tế qua `pg_cron`.
+7. **Kho từ vựng & Quản lý từ vựng tập trung (`/vocab`)**: Trang quản trị toàn bộ vốn từ vựng cá nhân, tích hợp tìm kiếm tức thời, lọc đa chiều (CEFR, Tags, Trạng thái FSRS, Loại từ), sắp xếp linh hoạt, xem chi tiết thẻ, chỉnh sửa, xóa và thao tác hàng loạt.
+8. **Trang Admin quản trị toàn diện**: Giám sát hệ thống và cấu hình AI provider động (Groq, Gemini, OpenAI...).
 
 ---
 
 ## 2. Design System — "Deep Focus (Dark)"
 
-Mục tiêu: tối, chuyên nghiệp, nhưng có điểm nhấn sinh động — không xám xịt nhàm chán.
+Mục tiêu: Giao diện tối sang trọng, chuyên nghiệp, điểm nhấn sinh động, không xám xịt nhàm chán.
 
 ### 2.1 Bảng màu (Color Tokens)
 
@@ -37,41 +45,27 @@ Mục tiêu: tối, chuyên nghiệp, nhưng có điểm nhấn sinh động —
 | `--danger` | `#EF4444` (Rose/Red) | Trả lời sai, cảnh báo |
 | `--info` | `#0284C7` (Sky/Blue) | Thông báo, tip |
 
-Gradient điểm nhấn (dùng cho hero, streak badge, nút CTA quan trọng):
+**Màu sắc phân biệt Huy hiệu Cấp độ CEFR**:
+- `A1 - A2` (Sơ cấp): Xanh ngọc / Emerald (`#10B981`)
+- `B1 - B2` (Trung cấp): Xanh dương / Sky Blue (`#0284C7`)
+- `C1 - C2` (Cao cấp): Tím thẫm / Purple (`#8B5CF6`)
+
+Gradient điểm nhấn:
 `linear-gradient(135deg, #F97316 0%, #FB923C 100%)`
 
 ### 2.2 Typography
 
-- **Heading/Display**: `Sora` (Google Fonts, free) — trọng lượng 600–700, tạo cảm giác hiện đại, hơi "geometric"
-- **Body/UI**: `Be Vietnam Pro` (Google Fonts, free, hỗ trợ dấu tiếng Việt đầy đủ cho phần UI/admin tiếng Việt)
-- **Monospace** (phiên âm IPA, code): `JetBrains Mono`
+- **Heading/Display**: `Sora` (Google Fonts, free) — font hiện đại, geometric
+- **Body/UI**: `Be Vietnam Pro` (Google Fonts, free, hỗ trợ dấu tiếng Việt đầy đủ)
+- **Monospace** (phiên âm IPA, phím tắt): `JetBrains Mono`
 
-Kích thước cơ bản: base 16px, scale 1.25 (Major Third).
+### 2.3 Nguyên tắc UI/UX
 
-### 2.3 Nguyên tắc UI
-
-- Bo góc lớn vừa phải: `rounded-2xl` (16px) cho card, `rounded-xl` (12px) cho input/button
-- Shadow rất nhẹ, thiên về "glow" màu brand thay vì shadow đen (vì nền đã tối): `box-shadow: 0 0 24px -8px rgba(99,102,241,0.35)`
-- Không dùng border cứng nhiều — ưu tiên phân tách bằng độ sáng nền (surface vs base)
-- Micro-animation khi review card đúng/sai (màu success/danger flash nhẹ + haptic-like feedback trên mobile)
-- Empty state luôn có minh họa nhẹ (line-art SVG đơn sắc theo brand color) thay vì để trống trơn
-
-### 2.4 Tailwind config (gợi ý)
-
-```js
-// tailwind.config.ts
-colors: {
-  base: '#0B0F17',
-  surface: { DEFAULT: '#131A26', hover: '#1B2333' },
-  border: '#232B3A',
-  text: { primary: '#E7EAF0', secondary: '#8B94A7' },
-  brand: { DEFAULT: '#6366F1', hover: '#818CF8' },
-  success: '#10B981',
-  warning: '#F59E0B',
-  danger: '#F43F5E',
-  info: '#38BDF8',
-}
-```
+- Bo góc: `rounded-2xl` (16px) cho card, `rounded-xl` (12px) cho input/button.
+- Glow mềm mại thay vì shadow đen: `box-shadow: 0 0 24px -8px rgba(249,115,22,0.35)`.
+- **Tuyệt đối loại bỏ outline màu trắng** khi click/focus/active trên mọi button, select, sidebar menu, input; thay thế bằng highlight viền màu thương hiệu hoặc glow nhẹ.
+- **Skeleton Loading chuẩn mực**: Toàn bộ các trang khi tải dữ liệu đều sử dụng Skeleton Loading (`<Skeleton />`) khớp layout thực tế, loại bỏ việc dùng spinner đơn độc gây giật layout.
+- Micro-animation mượt mà khi lật card 3D và khi đánh giá đáp án.
 
 ---
 
@@ -83,39 +77,47 @@ colors: {
 |---|---|---|
 | Framework | **Next.js** (App Router) | Framework chính, SSR/RSC, deploy trên Vercel |
 | Backend / DB | **Supabase** (Postgres, Auth, Storage, Edge Functions) | Backend as a Service, có RLS bảo mật theo user |
-| Styling | **Tailwind CSS** | Utility-first CSS, dùng trực tiếp các token màu đã định nghĩa ở mục 2 |
-| UI Components | **shadcn/ui** | Component dựng sẵn trên Radix (dialog, dropdown, table, form...), dễ chỉnh theo Design System tối |
-| State toàn cục (client) | **Zustand** | Quản lý state client nhẹ: trạng thái phiên review đang chạy, filter tạm, UI state |
-| Data fetching & cache | **TanStack Query** | Fetch/cache/đồng bộ dữ liệu server: card due, dashboard, leaderboard... |
-| Form | **React Hook Form** | Quản lý toàn bộ form: tạo card thủ công, settings, admin forms |
-| Validation | **Zod** | Validate schema cho form (kết hợp `@hookform/resolvers/zod`) và validate input ở API/Edge Function |
-| Supabase client | `@supabase/supabase-js` + `@supabase/ssr` | Kết nối Supabase, xử lý session/cookie đúng chuẩn cho Next.js App Router |
-| Icon | `lucide-react` | Bộ icon mặc định đi kèm shadcn/ui |
-| FSRS engine | `ts-fsrs` | Thư viện tính lịch ôn tập theo thuật toán Spaced Repetition FSRS |
-| Date/Time & Timezone | `date-fns` + `date-fns-tz` | Xử lý múi giờ cho tính năng "giờ vàng" theo timezone từng user |
+| Styling | **Tailwind CSS** | Utility-first CSS theo đúng design tokens |
+| UI Components | **shadcn/ui** | Component dựng sẵn trên Radix (Select, Dialog, Form, Tabs...) |
+| State toàn cục (client) | **Zustand** | Quản lý UI state nhẹ: custom study session, filters, modal |
+| Data fetching & cache | **TanStack Query** | Fetch/cache/đồng bộ dữ liệu server: cards, collections, stats |
+| Form & Validation | **React Hook Form** + **Zod** | Quản lý form và validate schema an toàn runtime |
+| Supabase client | `@supabase/supabase-js` + `@supabase/ssr` | Kết nối Supabase, xử lý session/cookie App Router |
+| Icon | `lucide-react` | Bộ icon chính |
+| FSRS engine | `ts-fsrs` | Thư viện thuật toán Spaced Repetition FSRS |
+| Date/Time & Timezone | `date-fns` + `date-fns-tz` | Xử lý múi giờ cho tính năng "giờ vàng" |
 
-### 3.2 Sơ đồ kiến trúc
+### 3.2 Sơ đồ luồng dữ liệu
 
 ```
-┌─────────────────┐      ┌──────────────────────┐
-│   Next.js App    │◄────►│   Supabase Postgres    │
-│  (Vercel, App    │      │   + Auth + Storage     │
-│   Router, RSC)   │      │   + Edge Functions     │
-└────────┬─────────┘      └──────────┬────────────┘
-         │                           │
-         │                  pg_cron (lịch chạy)
-         │                           │
-         ▼                           ▼
-┌─────────────────┐      ┌──────────────────────┐
-│  AI Provider     │      │   Telegram Bot API     │
-│ (Gemini/Groq free)│     │   (sendMessage/webhook)│
-└──────────────────┘      └──────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    Next.js App                          │
+│  (Dashboard, Review 3D, Smart Reader, Collections, UI)  │
+└───────────────┬─────────────────────────┬───────────────┘
+                │                         │
+       REST / TanStack Query              │ Supabase Client / SSR
+                │                         │
+                ▼                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                   Supabase Platform                     │
+│  ┌──────────────────┐  ┌─────────────┐  ┌────────────┐  │
+│  │ Postgres + RLS   │  │ Auth (OAuth)│  │ Storage    │  │
+│  └────────┬─────────┘  └─────────────┘  └────────────┘  │
+│           │                                             │
+│       pg_cron (30 phút/lần)                             │
+│           │                                             │
+│           ▼                                             │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │ Edge Functions: send-reminders, weekly-report     │  │
+│  └────────┬──────────────────────────────────────────┘  │
+└───────────┼─────────────────────────────────────────────┘
+            │                                 │
+            ▼                                 ▼
+┌───────────────────────┐         ┌───────────────────────┐
+│   Telegram Bot API    │         │  AI Providers (Groq/  │
+│ (Nhắc nhở, báo cáo)   │         │  Gemini/OpenAI...)    │
+└───────────────────────┘         └───────────────────────┘
 ```
-
-### 3.3 Lưu ý triển khai
-
-- **Không dùng Vercel Cron** cho tác vụ chạy mỗi 30 phút vì gói Hobby free chỉ cho phép cron chạy **1 lần/ngày**. Thay vào đó dùng **Supabase `pg_cron`** (miễn phí, chạy được theo phút) để trigger Edge Function.
-- Toàn bộ logic nghiệp vụ (FSRS scheduling, gọi AI, gửi Telegram) đặt trong **Supabase Edge Functions** — để sau này app iOS gọi chung, không viết lại logic.
 
 ---
 
@@ -126,33 +128,72 @@ colors: {
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
+  avatar_url text,
   role text default 'user' check (role in ('user','admin')),
   timezone text default 'Asia/Ho_Chi_Minh',
   telegram_chat_id bigint unique,
   golden_hours jsonb default '["07:00-08:00","12:00-13:00","21:00-22:00"]',
-  xp integer default 0, -- dùng cho leaderboard, cộng theo review đúng có trọng số độ khó
+  xp integer default 0,
   created_at timestamptz default now()
 );
 
--- Thẻ từ vựng (global pool, có thể do user hoặc admin tạo)
+-- Thẻ từ vựng (chứa đầy đủ CEFR Level, Tags, Mnemonic)
 create table public.cards (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid references public.profiles(id),
+  owner_id uuid references public.profiles(id) on delete cascade,
   word text not null,
   ipa text,
   definition text not null,
   example_sentence text,
   source_type text check (source_type in ('manual','imported','ai_generated','admin_curated')),
   card_type text default 'word' check (card_type in ('word','phrasal_verb','idiom')),
-  part_of_speech text check (part_of_speech in ('noun','verb','adjective','adverb','preposition','conjunction','pronoun','interjection')), -- chỉ áp dụng khi card_type = 'word'; AI tự detect ở Chế độ 2, hoặc user tự chọn ở Chế độ 1
-  sense_number int default 1, -- phân biệt các nghĩa khác nhau của cùng 1 từ (từ đa nghĩa)
+  part_of_speech text check (part_of_speech in ('noun','verb','adjective','adverb','preposition','conjunction','pronoun','interjection')),
+  cefr_level text check (cefr_level in ('A1','A2','B1','B2','C1','C2')), -- Cấp độ chuẩn CEFR
+  tags text[] default '{}', -- Mảng tags cá nhân: ['#ielts', '#marketing', '#reading']
+  sense_number int default 1,
   audio_url text,
   image_url text,
   mnemonic text,
   created_at timestamptz default now()
 );
 
--- Collocation gắn với 1 card (vd: "make a decision", không phải "do a decision")
+-- Bộ sưu tập / Bộ từ vựng đóng gói (Collections / Playlists để chia sẻ cộng đồng)
+create table public.collections (
+  id uuid primary key default gen_random_uuid(),
+  creator_id uuid references public.profiles(id) on delete cascade,
+  title text not null,
+  description text,
+  cover_image text,
+  category text check (category in ('ielts','toeic','toefl','daily_communication','business','academic','travel','slang_idioms','other')),
+  is_public boolean default false, -- true: hiển thị trên Thư viện cộng đồng
+  tags text[] default '{}',
+  fork_count int default 0, -- Số lượt người dùng khác clone bộ này
+  likes_count int default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Bảng liên kết thẻ vào Collection (quan hệ nhiều - nhiều)
+create table public.collection_cards (
+  id uuid primary key default gen_random_uuid(),
+  collection_id uuid references public.collections(id) on delete cascade,
+  card_id uuid references public.cards(id) on delete cascade,
+  display_order int default 0,
+  added_at timestamptz default now(),
+  unique(collection_id, card_id)
+);
+
+-- Bộ sưu tập người dùng đã lưu/bookmark (User Saved Collections)
+create table public.user_collections (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.profiles(id) on delete cascade,
+  collection_id uuid references public.collections(id) on delete cascade,
+  is_pinned boolean default false,
+  saved_at timestamptz default now(),
+  unique(user_id, collection_id)
+);
+
+-- Collocation gắn với 1 card
 create table public.collocations (
   id uuid primary key default gen_random_uuid(),
   card_id uuid references public.cards(id) on delete cascade,
@@ -160,7 +201,7 @@ create table public.collocations (
   example_sentence text
 );
 
--- Word family: các dạng biến thể của cùng 1 từ gốc (danh từ/tính từ/động từ/trạng từ)
+-- Word family: các dạng biến thể của cùng 1 từ gốc
 create table public.word_families (
   id uuid primary key default gen_random_uuid(),
   root_card_id uuid references public.cards(id) on delete cascade,
@@ -177,7 +218,7 @@ create table public.minimal_pairs (
   audio_b text not null
 );
 
--- Truyện ngắn AI sinh cuối tuần, lồng ghép từ mới học trong tuần
+-- Truyện ngắn AI sinh cuối tuần
 create table public.weekly_stories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete cascade,
@@ -187,7 +228,7 @@ create table public.weekly_stories (
   created_at timestamptz default now()
 );
 
--- Quan hệ bạn bè (cho leaderboard & duel)
+-- Quan hệ bạn bè
 create table public.friendships (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete cascade,
@@ -197,12 +238,12 @@ create table public.friendships (
   unique(user_id, friend_id)
 );
 
--- Thách đấu ôn từ giữa 2 người
+-- Thách đấu ôn từ giữa 2 người (Duel)
 create table public.duels (
   id uuid primary key default gen_random_uuid(),
   challenger_id uuid references public.profiles(id),
   opponent_id uuid references public.profiles(id),
-  word_set jsonb not null, -- danh sách card_id dùng trong trận
+  word_set jsonb not null,
   status text default 'pending' check (status in ('pending','active','finished','declined')),
   challenger_score int,
   opponent_score int,
@@ -211,7 +252,7 @@ create table public.duels (
   finished_at timestamptz
 );
 
--- Trạng thái học của từng user với từng card (FSRS state)
+-- Trạng thái học FSRS của từng user với từng card
 create table public.user_cards (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete cascade,
@@ -221,22 +262,23 @@ create table public.user_cards (
   due_at timestamptz default now(),
   review_count int default 0,
   lapse_count int default 0,
-  is_leech boolean default false, -- tự động bật khi lapse_count vượt ngưỡng (mặc định 4)
+  is_leech boolean default false,
   state text default 'new' check (state in ('new','learning','review','relearning')),
   unique(user_id, card_id)
 );
 
--- Lịch sử review (dùng để vẽ forecast, tính giờ vàng, weekly report)
+-- Lịch sử review
 create table public.review_logs (
   id bigint generated always as identity primary key,
   user_id uuid references public.profiles(id) on delete cascade,
   card_id uuid references public.cards(id) on delete cascade,
-  rating smallint check (rating between 1 and 4), -- 1 Again 2 Hard 3 Good 4 Easy
+  rating smallint check (rating between 1 and 4),
   reviewed_at timestamptz default now(),
-  response_ms int
+  response_ms int,
+  review_mode text default 'flashcard' check (review_mode in ('flashcard', 'cloze', 'custom_session'))
 );
 
--- Token liên kết Telegram (deep link /start <token>)
+-- Token liên kết Telegram
 create table public.telegram_link_tokens (
   token text primary key,
   user_id uuid references public.profiles(id) on delete cascade,
@@ -244,238 +286,217 @@ create table public.telegram_link_tokens (
   used boolean default false
 );
 
--- Log gửi nhắc nhở (tránh spam trong cùng khung giờ vàng)
+-- Log gửi nhắc nhở
 create table public.reminder_logs (
   id bigint generated always as identity primary key,
   user_id uuid references public.profiles(id),
   sent_at timestamptz default now(),
-  window_label text -- vd: '2026-09-03_morning'
+  window_label text
 );
 
--- Cấu hình AI Provider động (admin quản lý qua UI, không hardcode)
+-- Cấu hình AI Provider động
 create table public.ai_provider_configs (
   id uuid primary key default gen_random_uuid(),
-  provider_name text not null, -- 'groq' | 'gemini' | 'openai' | 'anthropic' ...
+  provider_name text not null,
   display_name text,
-  model text not null, -- vd 'llama-3.3-70b-versatile' (Groq)
-  api_key_secret_name text not null, -- CHỈ lưu tên secret trong Supabase Vault, không lưu key thô ở đây
+  model text not null,
+  api_key text,
   is_active boolean default true,
-  is_default boolean default false, -- chỉ 1 provider được default tại 1 thời điểm
+  is_default boolean default false,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 
--- Văn bản đã import để tách từ
+-- Văn bản đã import để tách từ & đọc tương tác
 create table public.imported_texts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete cascade,
+  title text,
   raw_text text not null,
   detected_words jsonb,
   created_at timestamptz default now()
 );
 ```
 
-Tất cả bảng chứa dữ liệu user đều bật **Row Level Security (RLS)**: user chỉ đọc/ghi được dữ liệu của chính mình; `role = 'admin'` được policy riêng cho phép truy cập toàn bộ.
+---
+
+## 5. Tính năng chi tiết theo Phase
+
+### 🟦 Phase 1 — Nền tảng Core FSRS + Chuẩn hóa CEFR Level & Tags
+- Xác thực đăng nhập qua Google OAuth.
+- Thuật toán **FSRS** (`ts-fsrs`): tính toán chu kỳ lặp tối ưu dựa trên độ ổn định (stability) và độ khó (difficulty).
+- Giao diện Review Flashcard 3D: hiệu ứng lật thẻ mượt mà, hỗ trợ phím tắt (`Space`: lật thẻ; `1`: Again, `2`: Hard, `3`: Good, `4`: Easy).
+- Dashboard cá nhân: thống kê số thẻ đến hạn hôm nay, chuỗi ngày học liên tục (streak), biểu đồ forecast 7 ngày tới, biểu đồ phân bổ từ vựng theo trình độ quốc tế **CEFR (A1, A2, B1, B2, C1, C2)**.
+
+**1.x. Thêm từ vựng mới — 2 chế độ hoàn chỉnh**:
+- **Chế độ 1 — Nhập thủ công**:
+  - Nhập Từ (*), Nghĩa (*), Từ loại (Select dropdown), **Cấp độ CEFR** (Select: A1, A2, B1, B2, C1, C2), **Tags** (nhập danh sách nhãn dạng tag badge), IPA, Câu ví dụ, Ảnh minh họa, Audio (tự sinh TTS).
+  - Bấm "Lưu từ" → ghi vào bảng `cards` với `source_type = 'manual'`.
+- **Chế độ 2 — AI Word Analyzer (Tự động phân tích toàn diện)**:
+  - Gõ từ/cụm từ bất kỳ → AI tự động phân tích:
+    - `cefr_level`: Đánh giá cấp độ CEFR chuẩn xác.
+    - `card_type`: Phát hiện từ đơn, phrasal verb, hay idiom.
+    - `ipa` & `part_of_speech`.
+    - `senses[]`: Các tầng nghĩa riêng biệt kèm câu ví dụ đơn giản, dễ hiểu cho người học.
+    - `tags`: AI tự động gợi ý 2-3 tags phù hợp với chủ đề của từ vựng.
+    - `collocations`, `word_family`, `mnemonic`.
+  - Toàn bộ kết quả hiển thị dạng form preview cho phép người dùng chỉnh sửa từng trường trước khi lưu.
+
+**1.y. Kho từ vựng & Quản lý từ vựng (`/vocab`)**:
+- Màn hình quản trị tập trung toàn bộ vốn từ vựng của người dùng:
+  - **Thanh tìm kiếm tức thời (Search Bar)**: Tìm kiếm nhanh theo từ khóa, nghĩa tiếng Việt hoặc câu ví dụ.
+  - **Bộ lọc đa chiều (Filters Toolbar)**:
+    - Lọc theo Cấp độ CEFR: Tất cả, A1, A2, B1, B2, C1, C2.
+    - Lọc theo Tags cá nhân: Chọn 1 hoặc nhiều tags (`#ielts`, `#technology`...).
+    - Lọc theo Trạng thái học (FSRS State): Thẻ mới (New), Đang học (Learning), Cần ôn (Review/Due), Đã thành thạo, Từ khó (Leech).
+    - Lọc theo Từ loại (Part of speech): Noun, Verb, Adj, Adv, Phrasal verb, Idiom...
+  - **Sắp xếp linh hoạt (Sort)**: Mới thêm gần đây, Cũ nhất, Hạn ôn gần nhất (Due Date), Độ ổn định (Stability cao/thấp), Độ khó (Difficulty), Bảng chữ cái A-Z.
+  - **Chế độ hiển thị kép**: Chuyển đổi linh hoạt giữa Dạng lưới thẻ (Card Grid) sinh động và Dạng bảng danh sách (Data Table) tiện quản lý số lượng lớn.
+  - **Thao tác trên từng thẻ**:
+    - Xem chi tiết thẻ (Modal Detail): Hiển thị đầy đủ phiên âm, audio TTS, câu ví dụ, collocations, word family, mẹo nhớ mnemonic, chỉ số FSRS (stability, difficulty, due date, lapse count).
+    - Chỉnh sửa (Edit Modal): Sửa trực tiếp từ, nghĩa, ví dụ, CEFR level, tags, ảnh.
+    - Xóa thẻ (Delete Confirmation Dialog): Xóa thẻ kèm dọn dẹp các bản ghi liên quan trong `user_cards` và `review_logs`.
+    - Phát âm mẫu (Audio TTS) chỉ với 1 click.
+  - **Thao tác hàng loạt (Bulk Actions)**: Chọn nhiều thẻ để gán tag, đưa vào Collection (Phase 3), hoặc tạo Custom Study Session ôn tập nhóm từ đã chọn.
 
 ---
 
-## 5. Tính năng theo Phase (chỉ liệt kê tính năng CHẮC CHẮN làm)
-
-### 🟦 Phase 1 — Nền tảng & Core SRS
-- Đăng ký/đăng nhập (Email + Google OAuth qua Supabase Auth)
-- CRUD thẻ từ vựng: từ, từ loại, IPA, nghĩa, câu ví dụ, audio (TTS), ảnh — chi tiết 2 chế độ nhập (thủ công / AI tự động phân tích) ở mục 1.x ngay dưới đây
-- Thuật toán **FSRS** (dùng thư viện `ts-fsrs`) — đây chính là phương pháp **Lặp lại ngắt quãng (Spaced Repetition)**, phiên bản hiện đại và chính xác hơn thuật toán SM-2 cũ — tính lịch ôn tập tối ưu cho từng card
-- Màn hình Review: hiển thị card, 4 nút đánh giá (Again/Hard/Good/Easy), animation phản hồi theo màu success/danger
-- Dashboard cá nhân: số từ đang học, số due hôm nay, streak hiện tại, biểu đồ forecast 7 ngày tới
-
-**1.x. Thêm từ vựng mới — 2 chế độ: Thủ công & AI tự động phân tích**
-
-Màn hình "Thêm từ" (`/add`, dạng dialog) có segmented control chọn chế độ ở trên cùng, dùng chung 1 layout form bên dưới.
-
-**Chế độ 1 — Nhập thủ công**
-- Form đầy đủ (React Hook Form + Zod): Từ/cụm từ (*), Từ loại (dropdown: danh từ/động từ/tính từ/trạng từ/giới từ/liên từ/đại từ/thán từ — ẩn field này nếu `card_type` chọn Phrasal verb/Idiom), IPA (không bắt buộc), Nghĩa (*), Câu ví dụ (không bắt buộc), Ảnh minh họa (upload hoặc bấm "Tìm ảnh" gọi Unsplash), Audio (tự sinh bằng TTS khi lưu, không cần thao tác thêm)
-- Zod schema chỉ bắt buộc `word` và `definition`, các trường còn lại optional
-- Bấm "Lưu từ" → gọi thẳng `POST /api/cards`, lưu với `source_type = 'manual'`
-- Dùng khi: user đã chắc nghĩa/cách dùng và muốn nhập nhanh, hoặc muốn tự viết lại sau khi thấy kết quả AI ở Chế độ 2 chưa ưng ý
-
-**Chế độ 2 — AI tự động phân tích ("AI Word Analyzer")**
-- User chỉ cần gõ 1 từ hoặc cụm từ (không cần biết nghĩa/loại từ/IPA) → bấm "Phân tích bằng AI"
-- Edge Function gọi AI provider đang active (mặc định Groq, xem mục 5.5) với prompt yêu cầu trả JSON có cấu trúc, gồm:
-  - `ipa`, `card_type` (tự detect word/phrasal_verb/idiom)
-  - `senses[]`: nếu từ đa nghĩa, trả về **nhiều nghĩa riêng biệt**, mỗi nghĩa kèm `part_of_speech`, `definition`, `vietnamese_hint`, `example_sentence` riêng
-    - `example_sentence` bắt buộc ở mức **câu đơn giản, cơ bản** (ưu tiên từ vựng phổ biến A2–B1 trong chính câu ví dụ, tránh nhồi thêm từ khó khác) — để người vừa học từ này vẫn đọc hiểu được trọn câu
-  - `collocations[]`: các cụm từ hay đi kèm (tự động insert vào bảng `collocations`)
-  - `word_family[]`: các dạng biến thể danh/động/tính/trạng từ (tự động insert vào bảng `word_families`)
-  - `mnemonic`: gợi ý mẹo nhớ luôn trong 1 lần gọi, khỏi phải bấm sinh mnemonic riêng ở Phase 3
-- Kết quả hiển thị dạng **preview** dùng chung layout form của Chế độ 1 — mọi field (kể cả `part_of_speech`, câu ví dụ...) đều sửa/xóa được trước khi lưu, không tự động lưu thẳng vì AI có thể sai
-- Nếu `senses.length > 1`: hiển thị checkbox để user chọn nghĩa nào muốn thêm — mỗi nghĩa chọn tạo 1 card riêng với `sense_number` tương ứng
-- Bấm "Lưu" ở preview → gọi `POST /api/cards` (1 lần cho mỗi nghĩa được chọn), `source_type = 'ai_generated'`
-
-### 🟩 Phase 2 — Import & Tự động phát hiện từ mới
-- Ô nhập/paste đoạn văn bản tiếng Anh
-- Tokenize + so khớp với danh sách từ user đã học/đang học → highlight từ **chưa** có trong deck
-- User chọn (checkbox) những từ muốn thêm → bấm "Phân tích bằng AI" để gọi **AI Word Analyzer** hàng loạt (tái dùng `POST /api/ai/analyze-word`, nay hỗ trợ dạng batch — xem mục 7):
-  - Gộp các từ đã chọn vào tối đa ~10 từ/lần gọi (chọn nhiều hơn thì tự chia thành nhiều lần gọi tuần tự) — tránh gọi API riêng lẻ từng từ, tiết kiệm hạn mức free tier
-  - Mỗi từ gửi kèm `context_sentence` = câu gốc chứa từ đó trong đoạn văn → AI ưu tiên trả về `senses[]` khớp đúng nghĩa đang được dùng trong câu đó lên đầu, thay vì liệt kê mọi nghĩa có thể có
-  - `example_sentence` của card lấy mặc định là **câu gốc từ đoạn văn user paste** (không dùng câu AI tự sinh) — vì đây là ngữ cảnh thật user đã gặp từ, giá trị ghi nhớ cao hơn ví dụ chung chung; các field còn lại (`part_of_speech`, `ipa`, `definition`, `vietnamese_hint`, collocations, word family, mnemonic) lấy từ AI như Chế độ 2 ở Phase 1
-- Kết quả hiển thị dạng preview hàng loạt (tái dùng UI/validate của Chế độ 1&2 ở mục 1.x — `word` + `definition` bắt buộc), cho sửa từng field trước khi lưu → "Lưu tất cả" → tạo card với `source_type = 'imported'`
-- Lưu lại `imported_texts` để tham chiếu sau
-
-### 🟨 Phase 3 — AI hỗ trợ học sâu
-- Sinh **mnemonic** (câu chuyện/liên tưởng ghi nhớ) cho từng từ qua AI, hiển thị ở mặt sau card
-- Gợi ý **ảnh minh họa** (dual coding) từ Unsplash API theo từ khóa
-- Chế độ **viết câu**: user dùng từ vừa học viết 1 câu, AI chấm đúng/sai ngữ pháp + gợi ý cải thiện
-
-### 🟥 Phase 4 — Tích hợp Telegram & Nhắc nhở "Giờ Vàng"
-
-**4.1. Liên kết tài khoản Telegram**
-- User vào Settings → bấm "Kết nối Telegram" → hệ thống tạo `telegram_link_tokens` (hết hạn 15 phút) → hiển thị nút deep link `https://t.me/<bot_username>?start=<token>`
-- Webhook `POST /api/telegram/webhook` nhận update, nếu là `/start <token>` hợp lệ → lưu `chat_id` vào `profiles.telegram_chat_id`, bot trả lời xác nhận
-
-**4.2. Phương pháp xác định "Giờ vàng"**
-- Mặc định 3 khung: Sáng (07:00–08:00), Trưa (12:00–13:00), Tối trước ngủ (21:00–22:00) — dựa nguyên lý multiple exposure của spaced repetition
-- Sau khi user có ≥ 15 phiên review: hệ thống phân tích `review_logs` theo khung 2 giờ, tính **tỉ lệ đúng trung bình** + **tỉ lệ hoàn thành phiên** theo từng khung → tự xếp hạng lại, chọn ra 2–3 khung giờ hiệu quả nhất, cập nhật `profiles.golden_hours`
-- Cho phép user override thủ công trong Settings
-
-**4.3. Logic gửi nhắc nhở (Edge Function chạy mỗi 30 phút qua `pg_cron`)**
-1. Với mỗi user: quy đổi giờ hiện tại theo `timezone` của họ
-2. Nếu giờ hiện tại rơi vào 1 khung `golden_hours` **và** có card `due_at <= now()` **và** chưa gửi nhắc nhở trong khung này hôm nay (check `reminder_logs`) → gửi tin nhắn Telegram
-3. Giới hạn tối đa 3 lần nhắc/ngày/user
-4. Nếu user đã hoàn thành review hôm nay → không nhắc nữa dù còn khung giờ vàng
-5. Nếu user không hoạt động 2 ngày liên tiếp → gửi 1 tin nhắc nhẹ nhàng ngoài giờ vàng (re-engagement, không tính vào cap 3 lần/ngày)
-
-**4.4. Báo cáo tuần (Weekly Report)**
-- Edge Function chạy Chủ nhật 20:00 (giờ user), tổng hợp từ `review_logs` 7 ngày gần nhất
-- Nội dung: tổng số lượt ôn, độ chính xác trung bình, streak, top từ hay sai (leech), dự báo số từ due tuần tới
-- Gửi qua Telegram dạng tin nhắn Markdown
-
-### 🟪 Phase 5 — Trang Admin (chi tiết)
-
-**Bảo mật**: route `/admin/*` bọc middleware kiểm tra `profiles.role = 'admin'`, kết hợp RLS phía Supabase.
-
-**5.1. Dashboard tổng quan**
-- Tổng số user, user hoạt động (DAU/WAU/MAU)
-- Tổng số card trong hệ thống, tổng lượt review hôm nay
-- Tỉ lệ ghi nhớ trung bình toàn hệ thống (accuracy trung bình)
-- Số user đã kết nối Telegram / chưa kết nối
-- Thống kê từ leech phổ biến toàn hệ thống (những từ nhiều user hay quên nhất)
-- Biểu đồ tăng trưởng user theo thời gian
-
-**5.2. Quản lý người dùng**
-- Bảng danh sách user: tìm kiếm, lọc theo trạng thái hoạt động, ngày đăng ký
-- Xem chi tiết 1 user: số card, streak, lịch sử review, trạng thái Telegram
-- Hành động: khóa/mở khóa tài khoản, gửi tin nhắn test qua Telegram, xóa dữ liệu (theo yêu cầu xóa tài khoản)
-
-**5.3. Quản lý nội dung**
-- CRUD bộ từ vựng do admin biên soạn (`source_type = 'admin_curated'`) — dùng làm deck mẫu cho user mới
-- Duyệt/ẩn card do lỗi hoặc không phù hợp (nếu sau này mở tính năng chia sẻ)
-
-**5.4. Giám sát sử dụng AI**
-- Bảng theo dõi số lượt gọi AI provider theo ngày/tháng, so với hạn mức free tier
-- Cảnh báo (hiển thị màu `warning`/`danger`) khi gần chạm giới hạn free tier của provider đang active
-
-**5.5. Cấu hình AI Provider động**
-- Admin quản lý bảng `ai_provider_configs` qua UI: thêm/sửa/xóa provider, chọn model, bật/tắt, chọn 1 provider làm **default**
-- **Mặc định ban đầu: Groq** (free tier, chạy model open-source tốc độ cao) — nhưng kiến trúc cho phép thêm Gemini, OpenAI, Anthropic... bất cứ lúc nào mà không cần deploy lại code
-- API key của từng provider lưu qua **Supabase Vault** (extension `pgsodium`), bảng `ai_provider_configs` chỉ lưu `api_key_secret_name` tham chiếu tới secret, không lưu key thô
-- Nút "Kiểm tra kết nối": gửi 1 prompt test đơn giản tới provider đang chọn để xác nhận key hoạt động trước khi set làm default
-- Toàn bộ Edge Function gọi AI (`/api/ai/mnemonic`, `/api/ai/grade-sentence`, weekly-story...) đọc provider `is_default = true` tại thời điểm gọi, không hardcode provider trong code
-
-**5.6. Quản lý Telegram Bot**
-- Xem log tin nhắn đã gửi (thành công/thất bại)
-- Test gửi thử tin nhắn tới 1 user cụ thể
-- Cấu hình template nội dung nhắc nhở / báo cáo tuần (cho phép chỉnh câu chữ mà không cần deploy lại code)
-
-**5.7. Feature Flags**
-- Bật/tắt từng phase tính năng (import, AI mnemonic, collocation, dictation...) toàn hệ thống hoặc theo từng user (dùng cho A/B test hoặc rollout dần)
-
-**5.8. Logs & Reports**
-- Log lỗi hệ thống (API fail, Edge Function fail)
-- Export báo cáo CSV: danh sách user, thống kê học tập
-
-### 🔶 Phase 6 — Học sâu: Collocation, Word Family, Từ đa nghĩa, Phrasal Verbs
-- **Collocation trainer**: mỗi card có thể gắn các cụm collocation phổ biến (bảng `collocations`) — bài tập dạng chọn từ ghép đúng (vd "make a decision" chứ không phải "do a decision")
-- **Word family**: khi mở 1 card, hiển thị thêm các dạng biến thể liên quan (bảng `word_families`) — danh từ/động từ/tính từ/trạng từ cùng gốc — cho phép "học mở rộng" cả nhóm cùng lúc
-- **Xử lý từ đa nghĩa**: cùng 1 từ có thể có nhiều card riêng biệt phân biệt bằng `sense_number`, mỗi nghĩa có ví dụ ngữ cảnh riêng, tránh học lẫn lộn nghĩa
-- **Phrasal verbs & Idioms**: có `card_type` riêng, hiển thị badge phân loại rõ trong UI, có thể lọc riêng deck theo loại này
-
-### 🔷 Phase 7 — Dictation & Minimal Pairs
-- **Dictation mode**: phát audio câu ví dụ (ẩn chữ), user gõ lại chính xác, chấm bằng khoảng cách Levenshtein giữa câu gõ và câu gốc
-- **Minimal pairs pronunciation**: luyện phân biệt các cặp từ dễ nhầm (vd *ship/sheep*) từ bảng `minimal_pairs` — nghe audio, chọn đúng từ vừa phát (chỉ dạng nghe-chọn, không ghi âm — phần ghi âm/chấm phát âm dành riêng cho app iOS)
-
-### 🔺 Phase 8 — Leech Detection (xử lý từ hay quên tự động)
-- Khi 1 card có `lapse_count` vượt ngưỡng (mặc định 4 lần liên tiếp Again/Hard) → Edge Function tự động set `is_leech = true`
-- Card leech được: (1) AI sinh lại mnemonic mới khác cách trình bày cũ, (2) tạm tăng tần suất ôn ngắn hạn riêng cho từ đó, (3) gắn badge "Từ khó" nổi bật màu `warning` trong UI
-- Dashboard có mục riêng "Từ khó cần chú ý" liệt kê toàn bộ card đang `is_leech = true`
-- Admin xem được thống kê leech toàn hệ thống (mục 5.1) để biết loại từ nào gây khó phổ biến
-
-### 🔻 Phase 9 — AI Mini-Story cuối tuần
-- Edge Function chạy cùng lịch với weekly report (Chủ nhật) — lấy danh sách từ user học trong tuần, prompt AI viết 1 đoạn truyện ngắn (~100-150 từ) lồng ghép tự nhiên các từ đó
-- Lưu vào bảng `weekly_stories`, hiển thị trong tab "Ôn tập tuần" trên app
-- Gửi kèm bản rút gọn qua Telegram trong báo cáo tuần, kèm link mở app xem đầy đủ
-
-### ⭐ Phase 10 — Gamification xã hội: Duel & Leaderboard
-- **Kết bạn**: gửi/chấp nhận lời mời qua username hoặc link chia sẻ (bảng `friendships`)
-- **Duel**: 2 người thách đấu ôn cùng 1 bộ từ trong thời gian giới hạn (mặc định 5 phút), so điểm accuracy + tốc độ trả lời, kết quả thông báo qua Telegram cho cả 2 (bảng `duels`)
-- **Leaderboard**: bảng xếp hạng XP theo tuần trong nhóm bạn bè, XP tính theo số lượt trả lời đúng có trọng số theo độ khó (không tính số lần ôn để tránh khuyến khích học vẹt/spam), reset mỗi tuần
+### 🟩 Phase 2 — Smart Contextual Reader & Import từ mới
+- **Trình đọc thông minh (Smart Contextual Reader)**:
+  - Cho phép người dùng dán các bài đọc tiếng Anh (tin tức, báo chí, bài thi mẫu).
+  - Giao diện đọc tương tác: Click hoặc bôi đen từ vựng bất kỳ trên bài đọc → hiển thị tooltip tra nhanh nghĩa, IPA, cấp độ CEFR.
+  - **Nút "Lưu từ nhanh"**: Lưu ngay từ vựng vào kho cá nhân kèm chính xác câu ngữ cảnh chứa từ đó trong bài đọc (`context_sentence`), giúp não bộ ghi nhớ tự nhiên qua ngữ cảnh gốc.
+- **Batch Word Extraction**:
+  - Tự động tokenize và đối chiếu kho từ của user để highlight các từ chưa học.
+  - Chọn nhiều từ mới cùng lúc → gọi AI phân tích hàng loạt theo batch (~10 từ/lần gọi) tiết kiệm quota.
 
 ---
 
-## 6. Chi phí & Free Tier — Bảng theo dõi
-
-| Dịch vụ | Free tier | Giới hạn cần lưu ý | Rủi ro phát sinh phí | Phương án thay thế miễn phí |
-|---|---|---|---|---|
-| **Vercel** (Hobby) | Không giới hạn deploy, 100GB bandwidth/tháng | Cron job chỉ chạy **1 lần/ngày** | Nếu cần cron dày hơn sẽ phải nâng gói | Dùng **Supabase `pg_cron`** thay vì Vercel Cron |
-| **Supabase** (Free) | 500MB DB, 1GB storage, 50k MAU, 500k Edge Function invocations/tháng | **Project tự tạm dừng (pause) sau 7 ngày không có hoạt động** | Cần có traffic đều hoặc ping định kỳ để tránh pause | Set up 1 cron nhỏ tự ping project, hoặc chấp nhận unpause thủ công |
-| **Telegram Bot API** | Hoàn toàn miễn phí | Rate limit ~30 tin/giây (dư sức) | Không có rủi ro phí | — |
-| **AI (mnemonic, chấm câu, mini-story)** | **Groq** (mặc định ban đầu, cấu hình qua Admin) — free tier, chạy model open-source tốc độ cao | Free tier Groq có giới hạn request/phút và token/ngày (thay đổi theo thời gian, cần kiểm tra hiện tại) | Nếu vượt hạn mức Groq free, cần đổi sang provider khác hoặc trả phí | Nhờ kiến trúc `ai_provider_configs`, admin chuyển sang **Gemini Flash free tier** hoặc provider free khác chỉ bằng vài click, không cần deploy lại |
-| **TTS** (phát âm mẫu, dictation) | Web Speech API (`speechSynthesis`) — client-side, miễn phí | Chất lượng giọng phụ thuộc trình duyệt/OS, không đồng nhất | Dịch vụ TTS chất lượng cao (Google Cloud TTS, ElevenLabs) đều tính phí sau hạn mức nhỏ | Chấp nhận chất lượng Web Speech API cho bản Web |
-| **Ảnh minh họa** | Unsplash API (Demo tier) | ~50 request/giờ | Cần xin "Production" tier (vẫn free) nếu traffic cao | Có thể cache ảnh đã dùng để giảm số request |
-| **Domain** | `*.vercel.app` miễn phí | — | Domain riêng (`.com`, `.app`...) phải mua | Dùng subdomain free trong giai đoạn đầu |
-
-⚠️ **Lưu ý quan trọng nhất**: Supabase Free project bị **pause sau 7 ngày không hoạt động** — cần tính phương án (ví dụ: chính cron job nhắc nhở Telegram mỗi 30 phút sẽ tự nhiên giữ project luôn "sống", vì nó liên tục có Edge Function invocation).
+### 🟨 Phase 3 — Hệ Thống Tổ Chức & Chia Sẻ Cộng Đồng (Tags + Collections)
+- **Tổ chức cá nhân bằng Tags**:
+  - Gắn nhãn tự do cho từng thẻ: `#ielts_writing`, `#technology`, `#daily_life`...
+  - Lọc nhanh danh sách từ vựng theo 1 hoặc nhiều tags.
+  - **Custom Study Session (Ôn tập tùy chỉnh theo Tag/Level)**:
+    - Cho phép tạo phiên ôn tập tập trung theo nhu cầu: "Hôm nay tôi chỉ ôn 20 từ thuộc tag `#business`" hoặc "Ôn cấp tốc các từ trình độ `B2`" mà không làm xáo trộn chu kỳ FSRS tổng thể.
+- **Collections / Study Sets (Bộ từ vựng đóng gói / Playlists chia sẻ)**:
+  - Người dùng có thể nhóm các thẻ thành bộ từ vựng hoàn chỉnh: Tiêu đề, Mô tả, Ảnh bìa, Danh mục (IELTS, TOEIC, Giao tiếp, Học thuật...).
+  - Thiết lập quyền riêng tư: **Private** (cá nhân) hoặc **Public** (chia sẻ cộng đồng).
+- **Khám phá bộ từ vựng cộng đồng (Community Library)**:
+  - Trang khám phá các Study Sets công khai được tạo bởi Admin hoặc cộng đồng học viên.
+  - Xem trước (Preview) các thẻ trong bộ từ, xem thống kê lượt clone và đánh giá.
+  - **1-Click Fork/Clone**: Chỉ với 1 click, toàn bộ thẻ trong bộ từ vựng được sao chép vào kho cá nhân của user, khởi tạo trạng thái FSRS để bắt đầu học ngay.
+  - Chia sẻ link trực tiếp (`/collections/[id]`) cho bạn bè hoặc nhóm học tập.
 
 ---
 
-## 7. API / Edge Functions (để dùng chung cho iOS sau này)
+### 🟧 Phase 4 — Chế độ ôn tập Active Recall: Cloze Deletion (Điền khuyết)
+- Bổ sung chế độ ôn tập **Điền từ vào câu** bên cạnh Flashcard lật kinh điển:
+  - Hệ thống tự động ẩn từ mục tiêu trong câu ví dụ: `"He has a strong [_______] to succeed in his career."`
+  - Cung cấp gợi ý (chữ cái đầu hoặc từ loại).
+  - Người dùng tự gõ từ cần điền hoặc chọn từ trắc nghiệm để kiểm tra khả năng nhớ chủ động trong văn cảnh thật (Contextual Active Recall).
+  - Chấm điểm độ chính xác và thưởng XP cao hơn so với lật flashcard thụ động.
 
-| Endpoint / Function | Mô tả |
+---
+
+### 🟫 Phase 5 — AI Hỗ Trợ Học Sâu & Dual-Coding
+- **Visual Mnemonic & Dual-Coding**:
+  - Gợi ý hình ảnh liên tưởng thông qua Unsplash API hoặc mô tả hình ảnh gợi nhớ bằng AI.
+  - Kích hoạt cơ chế ghi nhớ kép (Dual-Coding: Ngôn ngữ + Hình ảnh) giúp tăng 200% tỷ lệ lưu giữ từ vựng dài hạn.
+- **Mnemonic Generator**: Tạo câu chuyện ngắn hoặc mẹo nhớ bằng âm thanh tương tự sinh động.
+- **Sentence Writing & AI Grader**: Người dùng tự đặt câu với từ mới, AI chấm đúng/sai ngữ pháp và gợi ý cách dùng từ tự nhiên hơn (natural collocations).
+
+---
+
+### 🟥 Phase 6 — Tích hợp Telegram & Nhắc nhở "Giờ Vàng"
+- Liên kết tài khoản nhanh qua Deep Link `/start <token>`.
+- Thuật toán tự động nhận diện **"Giờ vàng" (Golden Hours)**: Phân tích lịch sử `review_logs` theo khung 2 giờ, tự động chọn 2-3 khung giờ user có tỷ lệ nhớ bài và tập trung cao nhất.
+- Supabase Edge Function chạy định kỳ bằng `pg_cron` (mỗi 30 phút) kiểm tra số từ due và gửi tin nhắn nhắc nhở qua Telegram bot.
+- **Weekly Report**: 20:00 Chủ nhật hàng tuần, bot gửi báo cáo tổng kết tuần (tổng lượt ôn, độ chính xác, streak, top từ leech hay quên) kèm dự báo số từ tuần tới.
+
+---
+
+### 🟪 Phase 7 — Trang Admin Quản Trị & Cấu hình AI Provider Động
+- **Cấu hình AI Provider linh hoạt**:
+  - Quản lý bảng `ai_provider_configs` trực tiếp trên UI: Groq, Gemini Flash, OpenAI, Anthropic...
+  - Thay đổi provider mặc định chỉ bằng 1 click mà không cần sửa code hay deploy lại.
+  - Nút kiểm tra kết nối API key trực tiếp từ giao diện Admin.
+- **Giám sát hệ thống & Metrics**:
+  - Theo dõi người dùng (DAU/WAU/MAU), số lượt ôn, tỷ lệ nhớ bài toàn hệ thống.
+  - Giám sát lượng gọi API và mức tiêu thụ token tránh vượt quá free tier.
+  - Thống kê các từ khó (leech) phổ biến nhất trong cộng đồng.
+- **Quản lý nội dung mẫu**: Tạo và duyệt các bộ từ vựng chuẩn mực do Admin biên soạn (`admin_curated`) để đưa lên trang Khám phá cộng đồng.
+
+---
+
+### 🔶 Phase 8 — Collocations, Word Families, Minimal Pairs & Phrasal Verbs
+- **Collocation Trainer**: Luyện ghép các cụm từ cố định tự nhiên (vd: "make a decision" chứ không dùng "do a decision").
+- **Word Family Tree**: Khám phá mạng lưới các biến thể danh/động/tính/trạng từ cùng gốc.
+- **Minimal Pairs**: Luyện phân biệt các cặp âm dễ nhầm lẫn bằng audio mẫu chuẩn xác.
+- **Phrasal Verbs & Idioms**: Gắn nhãn riêng biệt, có bộ lọc chuyên biệt trong kho từ vựng.
+
+---
+
+### 🔺 Phase 9 — Xử lý từ khó (Leech Detection) & AI Mini-Story
+- Tự động phát hiện từ khó (`lapse_count >= 4` → `is_leech = true`).
+- Cơ chế xử lý từ khó: sinh lại mnemonic mới với góc nhìn khác, tạm thời tăng tần suất ôn ngắn hạn, gắn badge cảnh báo nổi bật.
+- **AI Mini-Story cuối tuần**: AI tự động sáng tác truyện ngắn (~150 từ) lồng ghép toàn bộ từ vựng mới học trong tuần để người dùng đọc ôn tập ngữ cảnh giải trí.
+
+---
+
+### ⭐ Phase 10 — Gamification Xã Hội: Duel & Leaderboard
+- **Kết bạn (Friendships)**: Kết nối với bạn bè qua username hoặc link chia sẻ.
+- **Bảng xếp hạng tuần (Leaderboard)**: Đua top XP tích lũy từ các phiên review đúng có trọng số độ khó.
+- **Đấu từ vựng thời gian thực (Duel)**: 2 người chơi thách đấu ôn cùng một bộ từ vựng trong 5 phút, so tài tốc độ và độ chính xác với điểm số cập nhật trực tiếp.
+
+---
+
+## 6. Chiến lược Chi phí $0 & Tối ưu Free Tier
+
+| Dịch vụ | Hạn mức Free Tier | Giải pháp tối ưu duy trì $0 |
+|---|---|---|
+| **Vercel** | Hobby free | Tối ưu App Router static/SSR, không dùng cron Vercel. |
+| **Supabase** | 500MB DB, 50k MAU, 500k Edge Fn | Sử dụng `pg_cron` (miễn phí) chạy Edge Function nhắc nhở Telegram định kỳ — vừa phục vụ tính năng vừa tự động giữ instance Supabase luôn hoạt động, tránh bị tạm dừng (pause) sau 7 ngày. |
+| **AI Engine** | Groq Free / Google AI Studio (Gemini Flash) | Chạy model mã nguồn mở tốc độ cao; dễ dàng đổi provider dự phòng qua trang Admin nếu một bên gặp sự cố rate limit. |
+| **Telegram API** | Miễn phí 100% | Không tốn chi phí SMS/Push notification phức tạp. |
+| **TTS (Phát âm)** | Web Speech API | Chạy client-side hoàn toàn miễn phí. |
+| **Ảnh minh họa** | Unsplash API Free Tier | ~50 req/giờ, cache URL ảnh đã dùng để tiết kiệm quota. |
+
+---
+
+## 7. Danh mục API & Edge Functions (Dùng chung cho Web và iOS)
+
+| Endpoint / Hàm | Phương thức | Mô tả chức năng |
+|---|---|---|
+| `/api/cards` | GET / POST | Lấy danh sách thẻ / Tạo thẻ mới (kèm CEFR level, tags) |
+| `/api/cards/:id` | PUT / DELETE | Cập nhật thông tin thẻ / Xóa thẻ |
+| `/api/review/due` | GET | Lấy danh sách thẻ FSRS đến hạn ôn hôm nay |
+| `/api/review/submit` | POST | Gửi kết quả review, cập nhật FSRS state & ghi log |
+| `/api/review/custom-session` | GET | Lấy danh sách thẻ ôn tập theo Tag hoặc Collection |
+| `/api/collections` | GET / POST | Lấy danh sách collections (cá nhân & public) / Tạo mới |
+| `/api/collections/:id` | GET / PUT / DELETE | Xem chi tiết collection kèm preview thẻ / Chỉnh sửa / Xóa |
+| `/api/collections/:id/fork` | POST | **1-Click Clone toàn bộ thẻ trong collection vào kho FSRS cá nhân** |
+| `/api/collections/:id/cards` | POST / DELETE | Thêm / xóa thẻ khỏi bộ sưu tập |
+| `/api/import/extract` | POST | Trích xuất từ mới từ đoạn văn bản |
+| `/api/ai/analyze-word` | POST | AI Word Analyzer: phân tích CEFR, nghĩa, IPA, collocations, tags, mnemonic |
+| `/api/ai/mnemonic` | POST | Sinh mẹo nhớ sinh động cho từ |
+| `/api/ai/grade-sentence` | POST | Chấm điểm câu tiếng Anh người dùng tự viết |
+| `/api/telegram/webhook` | POST | Webhook tiếp nhận tin nhắn từ Telegram bot |
+| `edge-fn: send-reminders` | Cron trigger | Kiểm tra giờ vàng và gửi thông báo Telegram |
+| `edge-fn: weekly-report` | Cron trigger | Tổng hợp báo cáo tuần và AI Mini-Story |
+
+---
+
+## 8. Kế hoạch Milestones triển khai
+
+| Mốc | Nội dung công việc |
 |---|---|
-| `POST /api/cards` | Tạo card mới (dùng cho cả Chế độ 1 - nhập thủ công, và bước lưu sau khi xác nhận preview ở Chế độ 2 - AI Word Analyzer) |
-| `GET /api/review/due` | Lấy danh sách card due hôm nay |
-| `POST /api/review/submit` | Gửi kết quả review, cập nhật FSRS state |
-| `POST /api/import/extract` | Nhận đoạn text, trả về danh sách từ mới phát hiện |
-| `POST /api/ai/mnemonic` | Sinh mnemonic cho 1 từ (dùng provider `is_default` hiện tại) |
-| `POST /api/ai/analyze-word` | **AI Word Analyzer**: nhận 1 hoặc nhiều từ dạng batch (tối đa ~10 từ/lần, mỗi từ kèm `context_sentence` tùy chọn để ưu tiên đúng nghĩa theo ngữ cảnh), trả về từ loại (`part_of_speech`), IPA, senses (đa nghĩa, ví dụ ở mức cơ bản), collocations, word family, mnemonic — dùng cho Chế độ 2 ở màn "Thêm từ" (Phase 1) và bước phân tích khi Import (Phase 2) |
-| `POST /api/ai/grade-sentence` | Chấm câu user viết (dùng provider `is_default` hiện tại) |
-| `GET/POST /api/admin/ai-providers` | Admin xem/thêm/sửa cấu hình `ai_provider_configs`, đổi provider default |
-| `POST /api/telegram/webhook` | Nhận webhook từ Telegram |
-| `edge-fn: send-reminders` | Chạy theo `pg_cron`, gửi nhắc nhở giờ vàng |
-| `edge-fn: weekly-report` | Chạy Chủ nhật, gửi báo cáo tuần |
-
----
-
-## 8. Yêu cầu phi chức năng
-
-- **Bảo mật**: RLS bật cho mọi bảng chứa dữ liệu cá nhân; Telegram bot token, AI API key chỉ lưu server-side (Supabase secrets/Vercel env)
-- **Hiệu năng**: cache danh sách card due bằng **TanStack Query**, tránh gọi lại API không cần thiết khi review liên tục
-- **Đa ngôn ngữ giao diện**: UI chính tiếng Việt (vì đây là sản phẩm cho người Việt học tiếng Anh)
-- **Responsive**: Web phải dùng tốt trên mobile browser vì đây sẽ là trải nghiệm chính trước khi có app iOS
-
----
-
-## 9. Gợi ý mốc triển khai (Milestones)
-
-| Mốc | Nội dung |
-|---|---|
-| M1 | Auth + CRUD card + FSRS review (Spaced Repetition) hoạt động end-to-end |
-| M2 | Import & auto-detect từ mới (kèm AI Word Analyzer chạy batch) |
-| M3 | AI mnemonic + ảnh + chấm câu (dùng Groq qua kiến trúc provider động) |
-| M4 | Telegram liên kết + gửi nhắc nhở giờ vàng + báo cáo tuần |
-| M5 | Admin panel đầy đủ (bao gồm cấu hình AI provider động) |
-| M6 | Collocation, word family, từ đa nghĩa, phrasal verbs |
-| M7 | Dictation mode + minimal pairs (nghe-chọn) |
-| M8 | Leech detection tự động |
-| M9 | AI mini-story cuối tuần |
-| M10 | Gamification xã hội: duel & leaderboard |
-| M11 | Public launch |
+| **M1** | Core SRS (FSRS) + Auth Google + CRUD Card + Phân loại CEFR Level (A1-C2) + Tags cá nhân |
+| **M2** | Collections & Chia sẻ cộng đồng (Tạo bộ từ, Public lên Thư viện, 1-Click Fork/Clone) + Custom Study Session theo Tag |
+| **M3** | Smart Contextual Reader (Đọc bài tương tác, bôi đen lưu từ kèm câu gốc ngữ cảnh) + Batch Import |
+| **M4** | Chế độ ôn tập Cloze Deletion (Điền khuyết ngữ cảnh) + Flashcard 3D |
+| **M5** | AI học sâu: Dual-Coding ảnh Unsplash + Sinh Mnemonic + AI Grader chấm câu viết |
+| **M6** | Tích hợp Telegram: Liên kết tài khoản + Thuật toán Giờ vàng + Nhắc nhở tự động qua `pg_cron` |
+| **M7** | Admin Dashboard hoàn chỉnh + Cấu hình AI Provider động linh hoạt |
+| **M8** | Collocations, Word Families, Phrasal Verbs, Dictation & Minimal Pairs |
+| **M9** | Leech Detection tự động + AI Mini-Story cuối tuần |
+| **M10** | Gamification xã hội: Bạn bè, Thách đấu Duel thời gian thực & Bảng xếp hạng tuần |
