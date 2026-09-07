@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, BookmarkPlus, Loader2, Sparkles, AlertCircle, RefreshCw, Lightbulb } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CEFRBadge } from '@/components/common/cefr-badge';
 import { AudioButton } from '@/components/common/audio-button';
+import { CEFRBadge } from '@/components/common/cefr-badge';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAiAnalyzer } from '@/hooks/features/ai/use-ai-analyzer';
 import { useCreateCardMutation } from '@/hooks/features/cards/use-card-mutation';
+import type { AIWordAnalysisResponse, CardWithProgress, CEFRLevel, CollocationItem, CreateCardDto } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
 import type { ReaderToken } from '@/utils/text-extractor';
-import type { CardWithProgress, CEFRLevel, CollocationItem, CreateCardDto, AIWordAnalysisResponse } from '@/types/card.types';
+import { AlertCircle, BookmarkPlus, Check, Lightbulb, Loader2, Sparkles, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import React, { useState } from 'react';
 
 interface WordQuickPopoverProps {
   token: ReaderToken | null;
@@ -32,38 +32,6 @@ export function WordQuickPopover({
   const [analyzedData, setAnalyzedData] = useState<AIWordAnalysisResponse | null>(null);
   const [justSavedCard, setJustSavedCard] = useState<CardWithProgress | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [prevWord, setPrevWord] = useState<string | null>(token?.clean ?? null);
-
-  // Tự động reset và gọi API phân tích khi token thay đổi
-  React.useEffect(() => {
-    if (!token) return;
-
-    if (token.clean !== prevWord) {
-      setPrevWord(token.clean);
-      setJustSavedCard(null);
-      setErrorMsg(null);
-      setAnalyzedData(null);
-    }
-
-    // Nếu từ chưa có trong kho và chưa được phân tích, tự động phân tích
-    if (!knownCard && !justSavedCard && token.clean !== prevWord) {
-      const cleanWord = token.clean;
-      analyzeWord({ word: cleanWord, context_sentence: contextSentence })
-        .then((res) => {
-          // Chỉ set nếu người dùng chưa tắt popover
-          setAnalyzedData(res);
-        })
-        .catch((err) => {
-          const msg = err instanceof Error ? err.message : 'Có lỗi khi phân tích từ vựng.';
-          setErrorMsg(msg);
-        });
-    }
-  }, [token, prevWord, knownCard, justSavedCard, analyzeWord, contextSentence]);
-
-  if (!token) return null;
-
-  const word = token.clean;
-  const isAlreadySaved = Boolean(knownCard) || Boolean(justSavedCard);
 
   // Map analyzed data into a temporary CardWithProgress for display
   const tempCard = React.useMemo(() => {
@@ -86,6 +54,10 @@ export function WordQuickPopover({
     } as unknown as CardWithProgress;
   }, [analyzedData, contextSentence]);
 
+  if (!token) return null;
+
+  const word = token.clean;
+  const isAlreadySaved = Boolean(knownCard) || Boolean(justSavedCard);
   const activeCard = knownCard || justSavedCard || tempCard;
   const collocations = (activeCard?.collocations as unknown as CollocationItem[]) || [];
 
@@ -127,7 +99,7 @@ export function WordQuickPopover({
     }
   };
 
-  const handleRetryAnalysis = () => {
+  const handleAnalyze = () => {
     if (!token) return;
     setErrorMsg(null);
     analyzeWord({ word: token.clean, context_sentence: contextSentence })
@@ -211,7 +183,7 @@ export function WordQuickPopover({
           </div>
 
           {/* Body Content */}
-          <div className="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[65vh]">
+          <div className="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[65vh] custom-scrollbar">
             {/* Context Sentence */}
             <div className="p-3.5 rounded-xl bg-base border border-border/60 space-y-1.5">
               <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider block">
@@ -337,13 +309,24 @@ export function WordQuickPopover({
                   AI đang trích xuất định nghĩa, phát âm, và collocations dựa trên ngữ cảnh bài đọc.
                 </p>
               </div>
-            ) : (
-              <div className="text-center py-4 px-3 rounded-xl bg-surface-hover/30 border border-dashed border-border/80 text-xs text-text-secondary space-y-1.5 flex flex-col items-center">
-                <AlertCircle className="w-5 h-5 text-warning mx-auto opacity-80 mb-1" />
+            ) : errorMsg ? (
+              <div className="text-center py-5 px-3 rounded-xl bg-danger/5 border border-danger/20 text-xs text-text-secondary space-y-2 flex flex-col items-center">
+                <AlertCircle className="w-5 h-5 text-danger mx-auto opacity-90 mb-0.5" />
                 <p className="font-medium text-text-primary">Không thể tải dữ liệu phân tích</p>
-                <Button variant="outline" size="sm" onClick={handleRetryAnalysis} className="mt-2 h-7 text-xs">
-                  <RefreshCw className="w-3.5 h-3.5 mr-1" /> Thử lại
-                </Button>
+                <p className="text-[11.5px] text-text-secondary max-w-xs mx-auto leading-relaxed">
+                  {errorMsg}
+                </p>
+                <p className="text-[11px] text-text-secondary">Nhấn nút <strong className="text-brand">Phân tích AI</strong> bên dưới để thử lại.</p>
+              </div>
+            ) : (
+              <div className="text-center py-6 px-3 rounded-xl bg-surface-hover/30 border border-dashed border-border/80 text-xs text-text-secondary space-y-2.5 flex flex-col items-center">
+                <div className="w-9 h-9 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center text-brand mb-0.5">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <p className="font-medium text-text-primary text-sm">Sẵn sàng phân tích với AI</p>
+                <p className="text-[11.5px] text-text-secondary max-w-xs mx-auto leading-relaxed">
+                  Nhấn nút <strong className="text-brand font-semibold">Phân tích AI</strong> bên dưới để trích xuất định nghĩa chuẩn ngữ cảnh, phiên âm IPA và ví dụ.
+                </p>
               </div>
             )}
           </div>
@@ -357,12 +340,12 @@ export function WordQuickPopover({
                 </div>
                 <span>Đã lưu vào kho từ vựng (FSRS)</span>
               </div>
-            ) : (
+            ) : analyzedData ? (
               <Button
                 type="button"
                 onClick={handleSave}
-                disabled={isSaving || isAnalyzing || !analyzedData}
-                className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white rounded-xl font-medium shadow-md shadow-brand/20 flex items-center justify-center gap-2 transition-all"
+                disabled={isSaving}
+                className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white rounded-xl font-medium shadow-md shadow-brand/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 {isSaving ? (
                   <>
@@ -376,6 +359,25 @@ export function WordQuickPopover({
                   </>
                 )}
               </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white rounded-xl font-medium shadow-md shadow-brand/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang phân tích AI...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Phân tích AI</span>
+                  </>
+                )}
+              </Button>
             )}
 
             <Button
@@ -383,7 +385,7 @@ export function WordQuickPopover({
               variant="outline"
               size="sm"
               onClick={onClose}
-              className="rounded-xl border-border hover:bg-surface-hover text-text-secondary shrink-0"
+              className="rounded-xl border-border hover:bg-surface-hover text-text-secondary shrink-0 cursor-pointer"
             >
               Đóng
             </Button>

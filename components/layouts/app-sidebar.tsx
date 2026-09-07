@@ -70,7 +70,7 @@ export function AppSidebar() {
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-60 fixed top-16 left-0 bottom-0 border-r border-border/80 bg-base p-3 z-30 overflow-y-auto">
+    <aside className="hidden md:flex flex-col w-60 fixed top-16 left-0 bottom-0 border-r border-border/80 bg-base p-3 z-30 overflow-y-auto custom-scrollbar">
       {/* Menu người dùng thông thường */}
       <div className="space-y-1">
         {userNavItems.map((item) => {

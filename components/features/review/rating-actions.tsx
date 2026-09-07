@@ -46,7 +46,7 @@ export function RatingActions({ onRate, disabled = false }: RatingActionsProps) 
       sublabel: 'Hard (~1d)',
       shortcut: '2',
       colorClass:
-        'border-warning/30 text-warning hover:bg-warning hover:text-base active:bg-warning/90',
+        'border-warning/30 text-warning hover:bg-warning hover:text-[#0B0F17] active:bg-warning/90',
     },
     {
       rating: 3,

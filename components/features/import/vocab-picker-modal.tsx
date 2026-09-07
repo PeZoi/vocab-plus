@@ -173,8 +173,8 @@ export function VocabPickerModal({
             )}
           </div>
 
-          {/* Word List */}
-          <div className="flex-1 overflow-y-auto p-4 divide-y divide-border/30">
+          {/* Cards List */}
+          <div className="flex-1 overflow-y-auto p-4 divide-y divide-border/30 custom-scrollbar">
             {isLoading ? (
               <div className="py-12 text-center text-sm text-text-secondary">
                 Đang tải kho từ vựng của bạn...

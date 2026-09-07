@@ -89,7 +89,7 @@ export function InteractiveReader({
           <div className="h-4 w-px bg-border hidden sm:block" />
 
           <div>
-            <h2 className="text-sm sm:text-base font-bold text-text-primary line-clamp-1 max-w-[200px] sm:max-w-md">
+            <h2 className="text-sm font-bold text-text-primary line-clamp-1 max-w-50 sm:max-w-md">
               {title || 'Bài đọc tương tác'}
             </h2>
             <div className="flex items-center gap-3 text-xs text-text-secondary">
@@ -225,7 +225,7 @@ export function InteractiveReader({
             >
               <Sparkles className="w-4 h-4" />
               <span>
-                Tra cứu &quot;
+                Phân tích AI &quot;
                 {textSelection.text.length > 20
                   ? textSelection.text.substring(0, 20) + '...'
                   : textSelection.text}

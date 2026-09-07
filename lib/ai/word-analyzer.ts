@@ -60,6 +60,7 @@ REQUIREMENTS:
 1. Context priority: ${safeContext ? `Provide the definition and sense matching the context above as the FIRST sense in "senses".` : `Provide the most common sense as the first sense.`}
 2. Accurate translation: ${safeContext ? `Translate the full context sentence accurately and naturally into Vietnamese for "context_translation".` : `Provide an empty string "" for "context_translation".`}
 3. Spelling rule: If misspelled, correct it in "word" and set "is_corrected": true with "original_word": "${safeWord}". Otherwise set "is_corrected": false.
+4. Topic tags: Include 1-3 English topic tags with '#' in "tags" (e.g., ["#work", "#daily"]) if relevant, otherwise an empty array [].
 
 CRITICAL INSTRUCTION:
 Do not include <think> tags or internal reasoning. Return ONLY a single valid JSON object adhering to this schema:
@@ -79,7 +80,7 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
       "vietnamese_hint": "Nghĩa ngắn gọn 1-3 từ tiếng Việt",
       "example_sentence": "A simple English example sentence",
       "example_translation": "Bản dịch tiếng Việt chính xác của câu ví dụ tiếng Anh trên",
-      "tags": ["#tag1", "#tag2"] (từ nào phổ biến tag được thì ghi không thì để rỗng, tag viết bằng tiếng anh, phải tag theo chủ đề nhé)
+      "tags": ["#tag1", "#tag2"]
     }
   ],
   "collocations": [

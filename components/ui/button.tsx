@@ -25,7 +25,7 @@ const buttonVariants = cva(
         danger:
           'bg-danger/90 hover:bg-danger text-white font-medium border border-danger/30 shadow-xs',
         warning:
-          'bg-warning/90 hover:bg-warning text-base font-medium shadow-xs',
+          'bg-warning/90 hover:bg-warning text-[#0B0F17] font-medium shadow-xs',
       },
       size: {
         default: 'h-9 px-3.5 py-1.5',

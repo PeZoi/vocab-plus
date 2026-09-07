@@ -20,6 +20,12 @@
   --font-mono: var(--font-jetbrains-mono);
 }
 
+/* Khôi phục utility text-base về font-size (16px) thay vì bị --color-base ghi đè thành màu chữ */
+@utility text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
 :root {
   --bg-base: #0B0F17;
   --bg-surface: #131A26;
@@ -117,6 +123,120 @@ button:focus-visible {
   background: rgba(19, 26, 38, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(32, 39, 54, 0.8);
+}
+
+/* ==============================================================================
+   CUSTOM BRAND SCROLLBAR (Dark Focus & Warm Sunset Orange Theme)
+   ============================================================================== */
+/* WebKit / Blink (Chrome, Edge, Safari, Opera) */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+/* Ẩn hoàn toàn 2 nút mũi tên lên / xuống ở thanh cuộn */
+::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button,
+::-webkit-scrollbar-button:single-button,
+::-webkit-scrollbar-button:start,
+::-webkit-scrollbar-button:end,
+::-webkit-scrollbar-button:vertical:decrement,
+::-webkit-scrollbar-button:vertical:increment,
+::-webkit-scrollbar-button:horizontal:decrement,
+::-webkit-scrollbar-button:horizontal:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(11, 15, 23, 0.5);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(234, 88, 12, 0.35);
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #EA580C;
+  box-shadow: 0 0 10px rgba(234, 88, 12, 0.45);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: #C2410C;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Chuẩn W3C (chỉ áp dụng cho Firefox hoặc trình duyệt không hỗ trợ ::-webkit-scrollbar
+   để tránh việc Chrome 121+ ghi đè làm lộ lại 2 mũi tên Windows mặc định) */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(234, 88, 12, 0.35) transparent;
+  }
+
+  *:hover {
+    scrollbar-color: rgba(234, 88, 12, 0.6) transparent;
+  }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(234, 88, 12, 0.35) transparent;
+  }
+}
+
+/* Specific Custom Scrollbar Classes */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(234, 88, 12, 0.35);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #EA580C;
+  box-shadow: 0 0 8px rgba(234, 88, 12, 0.5);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(234, 88, 12, 0.3);
+  border-radius: 9999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #EA580C;
+}
+
+/* Utility to hide scrollbars while preserving scroll functionality */
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* ==============================================================================
