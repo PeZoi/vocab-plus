@@ -36,3 +36,12 @@ export const collectionKeys = {
   details: () => [...collectionKeys.all, 'detail'] as const,
   detail: (id: string) => [...collectionKeys.details(), id] as const,
 };
+
+export const importKeys = {
+  all: ['imported-texts'] as const,
+  lists: () => [...importKeys.all, 'list'] as const,
+  details: () => [...importKeys.all, 'detail'] as const,
+  detail: (id: string) => [...importKeys.details(), id] as const,
+  extract: (textHash: string) => [...importKeys.all, 'extract', textHash] as const,
+};
+

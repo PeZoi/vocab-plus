@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/axios';
 import type { AIWordAnalysisResponse } from '@/types/card.types';
+import type { GenerateStoryRequest, GenerateStoryResponse } from '@/types/imported-text.types';
 
 export const aiService = {
   /**
@@ -14,4 +15,14 @@ export const aiService = {
       }
     );
   },
+
+  /**
+   * Gọi AI tạo câu chuyện theo trình độ CEFR, chủ đề, thể loại và từ vựng mục tiêu
+   */
+  generateStory: (payload: GenerateStoryRequest): Promise<GenerateStoryResponse> => {
+    return apiClient.post('/ai/generate-story', payload, {
+      timeout: 90000,
+    });
+  },
 };
+

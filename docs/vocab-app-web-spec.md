@@ -402,7 +402,7 @@ create table public.imported_texts (
 
 ### 🟫 Phase 5 — AI Hỗ Trợ Học Sâu & Dual-Coding
 - **Visual Mnemonic & Dual-Coding**:
-  - Gợi ý hình ảnh liên tưởng thông qua Unsplash API hoặc mô tả hình ảnh gợi nhớ bằng AI.
+  - Gợi ý hình ảnh liên tưởng thông qua Pexels API hoặc mô tả hình ảnh gợi nhớ bằng AI.
   - Kích hoạt cơ chế ghi nhớ kép (Dual-Coding: Ngôn ngữ + Hình ảnh) giúp tăng 200% tỷ lệ lưu giữ từ vựng dài hạn.
 - **Mnemonic Generator**: Tạo câu chuyện ngắn hoặc mẹo nhớ bằng âm thanh tương tự sinh động.
 - **Sentence Writing & AI Grader**: Người dùng tự đặt câu với từ mới, AI chấm đúng/sai ngữ pháp và gợi ý cách dùng từ tự nhiên hơn (natural collocations).
@@ -461,7 +461,7 @@ create table public.imported_texts (
 | **AI Engine** | Groq Free / Google AI Studio (Gemini Flash) | Chạy model mã nguồn mở tốc độ cao; dễ dàng đổi provider dự phòng qua trang Admin nếu một bên gặp sự cố rate limit. |
 | **Telegram API** | Miễn phí 100% | Không tốn chi phí SMS/Push notification phức tạp. |
 | **TTS (Phát âm)** | Web Speech API | Chạy client-side hoàn toàn miễn phí. |
-| **Ảnh minh họa** | Unsplash API Free Tier | ~50 req/giờ, cache URL ảnh đã dùng để tiết kiệm quota. |
+| **Ảnh minh họa** | Pexels API (Free Tier) | 200 req/giờ, 20.000 req/tháng, cache URL ảnh đã dùng để tiết kiệm quota. |
 
 ---
 
@@ -496,7 +496,7 @@ create table public.imported_texts (
 | **M2** | Collections & Chia sẻ cộng đồng (Tạo bộ từ, Public lên Thư viện, 1-Click Fork/Clone) + Custom Study Session theo Tag |
 | **M3** | Smart Contextual Reader (Đọc bài tương tác, bôi đen lưu từ kèm câu gốc ngữ cảnh) + Batch Import |
 | **M4** | Chế độ ôn tập Cloze Deletion (Điền khuyết ngữ cảnh) + Flashcard 3D |
-| **M5** | AI học sâu: Dual-Coding ảnh Unsplash + Sinh Mnemonic + AI Grader chấm câu viết |
+| **M5** | AI học sâu: Dual-Coding ảnh Pexels + Sinh Mnemonic + AI Grader chấm câu viết |
 | **M6** | Tích hợp Telegram: Liên kết tài khoản + Thuật toán Giờ vàng + Nhắc nhở tự động qua `pg_cron` |
 | **M7** | Admin Dashboard hoàn chỉnh + Cấu hình AI Provider động linh hoạt |
 | **M8** | Collocations, Word Families, Phrasal Verbs, Dictation & Minimal Pairs |

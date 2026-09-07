@@ -68,6 +68,7 @@ export interface AIWordAnalysisResponse {
   mnemonic?: string;
   collocations?: CollocationItem[];
   word_family?: WordFamilyItem[];
+  context_translation?: string;
 }
 
 export interface CreateCardDto {

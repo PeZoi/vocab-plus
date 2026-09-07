@@ -434,6 +434,13 @@ Tuân thủ nghiêm ngặt mô hình SSR của `@supabase/ssr`:
   - Câu ví dụ tiếng Anh (`example_sentence`) đi kèm nút audio phát âm.
   - Dưới câu ví dụ tiếng Anh hiển thị bản dịch tiếng Việt (`example_translation`) với sắc thái màu phụ (`text-slate-400` / `text-text-secondary`).
 
+### 6.11 Quy Chuẩn Tắt Kiểm Tra Chính Tả (Disable Spellcheck & Autocorrect)
+- **Quy tắc bắt buộc 100%**: Mọi thẻ `<input>`, `<textarea>`, các component form và editable elements trong toàn bộ ứng dụng **PHẢI tắt kiểm tra chính tả và tự động sửa** (`spellCheck={false}`, `autoCorrect="off"`, `autoCapitalize="off"`). Điều này ngăn chặn triệt để các đường gạch chân đỏ (red squiggly lines) gây rối mắt khi người dùng nhập tiếng Anh hoặc tiếng Việt.
+- **Triển khai ở component dùng chung**:
+  - `components/ui/input.tsx` và `components/ui/textarea.tsx` đã được cấu hình mặc định `spellCheck={false}`, `autoCorrect="off"`, `autoCapitalize="off"`.
+  - Toàn bộ các component mới PHẢI sử dụng `Input` / `Textarea` từ `@/components/ui/` hoặc đảm bảo gắn đầy đủ các thuộc tính trên nếu dùng thẻ HTML gốc.
+  - Thẻ `<body>` tại `app/layout.tsx` đã được gắn `spellCheck={false}` để ngăn chặn spellcheck kế thừa trên toàn bộ cây DOM.
+
 ---
 
 ## 7. Quy Ước Đặt Tên & Coding Conventions
@@ -459,5 +466,6 @@ Trước khi commit code hoặc kết thúc một công việc, Agent/Developer 
 - [ ] **API đồng bộ**: Gọi API thông qua `apiClient` (`services/`), không gọi axios tùy tiện trong component.
 - [ ] **Data Fetching chuẩn**: Dùng TanStack Query kết hợp `QUERY_KEYS` tập trung, có cấu hình invalidate rõ ràng khi mutate.
 - [ ] **Type Safety đầy đủ**: Không còn kiểu `any`, các response và props đều có type/interface tường minh.
+- [ ] **Tắt Spellcheck**: Toàn bộ `input`, `textarea` và form fields đều có `spellCheck={false}`, `autoCorrect="off"`, `autoCapitalize="off"`.
 - [ ] **UI nhất quán**: Màu sắc dùng đúng token Design System "Deep Focus", bo góc và font chữ tuân thủ thiết kế.
 - [ ] **Layout phân định đúng**: Server Component cho nội dung tĩnh/fetch ban đầu, `'use client'` chỉ đặt ở lá cây tương tác.

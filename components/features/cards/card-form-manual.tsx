@@ -15,7 +15,7 @@ import { CEFR_SELECT_OPTIONS } from '@/constants/cefr';
 import { useCreateCardMutation } from '@/hooks/features/cards/use-card-mutation';
 import { CEFRLevel, PartOfSpeech } from '@/types/card.types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, Loader2, Plus } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Plus } from 'lucide-react';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -48,6 +48,7 @@ const PARTS_OF_SPEECH: { value: PartOfSpeech; label: string }[] = [
 
 export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
   const [successMessage, setSuccessMessage] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const createCardMutation = useCreateCardMutation();
 
   const {
@@ -73,6 +74,7 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   const onSubmit = async (values: ManualCardFormValues) => {
+    setErrorMessage(null);
     try {
       await createCardMutation.mutateAsync({
         word: values.word,
@@ -92,13 +94,22 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
       reset();
       setTimeout(() => setSuccessMessage(false), 3000);
       onSuccess?.();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Lỗi khi lưu thẻ:', err);
+      const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu thẻ từ vựng.';
+      setErrorMessage(msg);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
+      {errorMessage && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-danger/10 border border-danger/30 text-danger text-xs font-medium animate-in fade-in-50 duration-200">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
       {successMessage && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-success/15 border border-success/30 text-success text-xs font-medium">
           <CheckCircle2 className="w-4 h-4 shrink-0" />

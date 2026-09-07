@@ -39,7 +39,7 @@ export default function RootLayout({
       lang="vi"
       className={`${sora.variable} ${beVietnamPro.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-base text-text-primary">
+      <body className="min-h-full flex flex-col bg-base text-text-primary" spellCheck={false}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

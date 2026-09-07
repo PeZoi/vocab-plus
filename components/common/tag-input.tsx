@@ -95,6 +95,9 @@ export function TagInput({
               handleAddTag(inputValue);
             }
           }}
+          spellCheck={false}
+          autoCorrect="off"
+          autoCapitalize="off"
           placeholder={value.length === 0 ? placeholder : 'Thêm tag...'}
           className="flex-1 min-w-[120px] bg-transparent border-none text-xs sm:text-sm text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:ring-0 focus-visible:outline-none p-0.5"
         />

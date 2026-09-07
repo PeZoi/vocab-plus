@@ -31,12 +31,14 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
   const [selectedSenses, setSelectedSenses] = useState<Record<number, boolean>>({});
   const [editedSenses, setEditedSenses] = useState<SenseItem[]>([]);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const aiAnalyzer = useAiAnalyzer();
   const createCardMutation = useCreateCardMutation();
 
   const handleAnalyze = async () => {
     if (!wordInput.trim()) return;
+    setSaveError(null);
 
     try {
       const result = await aiAnalyzer.mutateAsync({
@@ -64,7 +66,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
         initialSelection[idx] = idx === 0;
       });
       setSelectedSenses(initialSelection);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Lỗi phân tích AI:', err);
     }
   };
@@ -90,13 +92,14 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
 
   const handleSaveSelected = async () => {
     if (!analysisResult) return;
+    setSaveError(null);
 
     const indicesToSave = Object.keys(selectedSenses)
       .map(Number)
       .filter((idx) => selectedSenses[idx]);
 
     if (indicesToSave.length === 0) {
-      alert('Vui lòng chọn ít nhất một nghĩa để lưu');
+      setSaveError('Vui lòng chọn ít nhất một nghĩa để lưu');
       return;
     }
 
@@ -130,8 +133,10 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
         setContextInput('');
         onSuccess?.();
       }, 2000);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Lỗi lưu thẻ từ AI:', err);
+      const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu thẻ từ vựng vào kho.';
+      setSaveError(msg);
     }
   };
 
@@ -154,6 +159,9 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                   handleAnalyze();
                 }
               }}
+              spellCheck={false}
+              autoCorrect="off"
+              autoCapitalize="off"
               className="text-sm font-medium"
             />
             <Button
@@ -190,6 +198,9 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
             placeholder="vd: The process of making bread takes time."
             value={contextInput}
             onChange={(e) => setContextInput(e.target.value)}
+            spellCheck={false}
+            autoCorrect="off"
+            autoCapitalize="off"
             className="text-xs"
           />
         </div>
@@ -503,6 +514,14 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
             <div className="p-3 rounded-lg bg-brand/5 border border-brand/20 text-xs">
               <span className="font-semibold text-brand mr-1">💡 Mẹo liên tưởng:</span>
               <span className="text-text-primary italic">&ldquo;{analysisResult.mnemonic}&rdquo;</span>
+            </div>
+          )}
+
+          {/* Error Message when saving */}
+          {saveError && (
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-danger/10 border border-danger/30 text-xs text-danger animate-in fade-in-50 duration-200">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{saveError}</span>
             </div>
           )}
 
