@@ -109,14 +109,28 @@ export function CollectionDetailWordList({
                   </div>
                 </div>
 
-                <p className="text-xs text-text-secondary line-clamp-2">
-                  {card.definition}
-                </p>
+                <div className="space-y-0.5">
+                  {card.definition_en && (
+                    <p className="text-xs font-semibold text-text-primary line-clamp-1">
+                      {card.definition_en}
+                    </p>
+                  )}
+                  <p className={`text-xs ${card.definition_en ? 'text-text-secondary line-clamp-1' : 'text-text-primary/90 font-medium line-clamp-2'}`}>
+                    {card.definition}
+                  </p>
+                </div>
 
                 {card.example_sentence && (
-                  <p className="text-[11.5px] text-text-secondary/80 italic line-clamp-1 border-l-2 border-border/60 pl-2">
-                    &ldquo;{card.example_sentence}&rdquo;
-                  </p>
+                  <div className="border-l-2 border-brand/60 pl-2 space-y-0.5">
+                    <p className="text-[11.5px] text-text-secondary/90 italic line-clamp-1">
+                      &ldquo;{card.example_sentence}&rdquo;
+                    </p>
+                    {card.example_translation && (
+                      <p className="text-[10.5px] text-text-secondary/70 not-italic line-clamp-1">
+                        {card.example_translation}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 

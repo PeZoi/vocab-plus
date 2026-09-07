@@ -86,9 +86,16 @@ export function VocabTableView({
 
                 {/* Definition */}
                 <td className="py-3 px-4 max-w-[280px]">
-                  <p className="line-clamp-2 text-text-primary/90 font-medium leading-relaxed">
-                    {card.definition}
-                  </p>
+                  <div className="space-y-0.5">
+                    {card.definition_en && (
+                      <p className="line-clamp-1 text-text-primary font-semibold leading-snug">
+                        {card.definition_en}
+                      </p>
+                    )}
+                    <p className={`line-clamp-1 ${card.definition_en ? 'text-text-secondary' : 'text-text-primary/90 font-medium'} leading-relaxed`}>
+                      {card.definition}
+                    </p>
+                  </div>
                 </td>
 
                 {/* Tags */}

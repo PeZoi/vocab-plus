@@ -30,9 +30,11 @@ interface CardEditModalProps {
 
 const editCardSchema = z.object({
   word: z.string().min(1, 'Từ vựng là bắt buộc'),
+  definition_en: z.string().optional(),
   definition: z.string().min(1, 'Định nghĩa là bắt buộc'),
   ipa: z.string().optional(),
   example_sentence: z.string().optional(),
+  example_translation: z.string().optional(),
   part_of_speech: z.string().optional(),
   cefr_level: z.string().optional(),
   tags: z.array(z.string()).optional(),
@@ -70,9 +72,11 @@ export function CardEditModal({
     resolver: zodResolver(editCardSchema),
     defaultValues: {
       word: '',
+      definition_en: '',
       definition: '',
       ipa: '',
       example_sentence: '',
+      example_translation: '',
       part_of_speech: 'noun',
       cefr_level: 'none',
       tags: [],
@@ -84,9 +88,11 @@ export function CardEditModal({
     if (card) {
       reset({
         word: card.word,
+        definition_en: card.definition_en || '',
         definition: card.definition,
         ipa: card.ipa || '',
         example_sentence: card.example_sentence || '',
+        example_translation: card.example_translation || '',
         part_of_speech: card.part_of_speech || 'noun',
         cefr_level: (card.cefr_level as CEFRLevel) || 'none',
         tags: card.tags || [],
@@ -103,9 +109,11 @@ export function CardEditModal({
         id: card.id,
         payload: {
           word: values.word,
+          definition_en: values.definition_en || null,
           definition: values.definition,
           ipa: values.ipa || null,
           example_sentence: values.example_sentence || null,
+          example_translation: values.example_translation || null,
           part_of_speech: (values.part_of_speech as PartOfSpeech) || null,
           cefr_level: values.cefr_level === 'none' ? null : (values.cefr_level as CEFRLevel) || null,
           tags: values.tags || [],
@@ -234,6 +242,19 @@ export function CardEditModal({
           />
         </div>
 
+        {/* English Definition */}
+        <div>
+          <label className="block text-xs font-semibold text-text-primary mb-1 flex items-center justify-between">
+            <span>Định nghĩa tiếng Anh (English definition)</span>
+            <span className="text-[10px] text-brand font-medium">Ưu tiên hiển thị nổi bật</span>
+          </label>
+          <Textarea
+            rows={2}
+            placeholder="English definition..."
+            {...register('definition_en')}
+          />
+        </div>
+
         {/* Definition */}
         <div>
           <label className="block text-xs font-medium text-text-secondary mb-1">
@@ -252,11 +273,23 @@ export function CardEditModal({
         {/* Example sentence */}
         <div>
           <label className="block text-xs font-medium text-text-secondary mb-1">
-            Câu ví dụ
+            Câu ví dụ (Tiếng Anh)
           </label>
           <Textarea
             rows={2}
             {...register('example_sentence')}
+          />
+        </div>
+
+        {/* Example translation */}
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-1">
+            Dịch câu ví dụ (Tiếng Việt)
+          </label>
+          <Textarea
+            rows={2}
+            placeholder="Bản dịch tiếng Việt của câu ví dụ..."
+            {...register('example_translation')}
           />
         </div>
 

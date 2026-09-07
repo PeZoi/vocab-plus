@@ -107,7 +107,9 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
           word: analysisResult.word,
           ipa: analysisResult.ipa || null,
           definition: sense.definition,
+          definition_en: sense.definition_en || null,
           example_sentence: sense.example_sentence || null,
+          example_translation: sense.example_translation || null,
           part_of_speech: (sense.part_of_speech as PartOfSpeech) || null,
           card_type: analysisResult.card_type || 'word',
           cefr_level: editedCefrLevel === 'none' ? null : editedCefrLevel,
@@ -327,33 +329,67 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                           )}
                         </div>
 
-                        {/* Editable Definition */}
-                        <div>
-                          <label className="text-[10px] text-text-secondary block mb-0.5">
-                            Định nghĩa tiếng Việt:
-                          </label>
-                          <Input
-                            value={sense.definition}
-                            onChange={(e) => updateSenseField(idx, 'definition', e.target.value)}
-                            disabled={!isSelected}
-                            className="h-8 text-xs"
-                          />
+                        {/* Editable Definition (English & Vietnamese) */}
+                        <div className="space-y-2">
+                          <div>
+                            <label className="text-[10px] font-semibold text-text-primary flex items-center justify-between mb-0.5">
+                              <span>Định nghĩa tiếng Anh:</span>
+                            </label>
+                            <Input
+                              value={sense.definition_en || ''}
+                              onChange={(e) => updateSenseField(idx, 'definition_en', e.target.value)}
+                              disabled={!isSelected}
+                              placeholder="English definition..."
+                              className="h-8 text-xs font-medium bg-base/60"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] text-text-secondary block mb-0.5">
+                              Định nghĩa tiếng Việt:
+                            </label>
+                            <Input
+                              value={sense.definition}
+                              onChange={(e) => updateSenseField(idx, 'definition', e.target.value)}
+                              disabled={!isSelected}
+                              placeholder="Định nghĩa tiếng Việt..."
+                              className="h-8 text-xs"
+                            />
+                          </div>
                         </div>
 
-                        {/* Editable Example Sentence */}
-                        <div>
-                          <label className="text-[10px] text-text-secondary block mb-0.5">
-                            Câu ví dụ minh họa:
-                          </label>
-                          <Textarea
-                            value={sense.example_sentence}
-                            onChange={(e) =>
-                              updateSenseField(idx, 'example_sentence', e.target.value)
-                            }
-                            disabled={!isSelected}
-                            rows={2}
-                            className="text-xs min-h-[55px]"
-                          />
+                        {/* Editable Example Sentence & Translation */}
+                        <div className="space-y-2">
+                          <div>
+                            <label className="text-[10px] text-text-secondary block mb-0.5">
+                              Câu ví dụ minh họa (Tiếng Anh):
+                            </label>
+                            <Textarea
+                              value={sense.example_sentence}
+                              onChange={(e) =>
+                                updateSenseField(idx, 'example_sentence', e.target.value)
+                              }
+                              disabled={!isSelected}
+                              rows={2}
+                              placeholder="Example sentence in English..."
+                              className="text-xs min-h-[50px]"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] text-text-secondary block mb-0.5">
+                              Dịch câu ví dụ (Tiếng Việt):
+                            </label>
+                            <Input
+                              value={sense.example_translation || ''}
+                              onChange={(e) =>
+                                updateSenseField(idx, 'example_translation', e.target.value)
+                              }
+                              disabled={!isSelected}
+                              placeholder="Bản dịch tiếng Việt của câu ví dụ..."
+                              className="h-8 text-xs"
+                            />
+                          </div>
                         </div>
 
                         {/* Sense-specific Tags */}

@@ -143,8 +143,10 @@ create table public.cards (
   owner_id uuid references public.profiles(id) on delete cascade,
   word text not null,
   ipa text,
-  definition text not null,
-  example_sentence text,
+  definition text not null, -- Định nghĩa tiếng Việt
+  definition_en text, -- Định nghĩa tiếng Anh chuẩn xác (English-first definition)
+  example_sentence text, -- Câu ví dụ tiếng Anh thực tế
+  example_translation text, -- Dịch nghĩa tiếng Việt của câu ví dụ
   source_type text check (source_type in ('manual','imported','ai_generated','admin_curated')),
   card_type text default 'word' check (card_type in ('word','phrasal_verb','idiom')),
   part_of_speech text check (part_of_speech in ('noun','verb','adjective','adverb','preposition','conjunction','pronoun','interjection')),

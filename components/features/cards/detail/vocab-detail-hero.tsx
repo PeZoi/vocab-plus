@@ -76,15 +76,43 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
           )}
         </div>
 
-        {/* Core Definition Section */}
-        <div className="p-6 sm:p-7 space-y-2.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-brand" />
-            <span>Định nghĩa tiếng Việt</span>
-          </span>
-          <p className="text-lg sm:text-xl font-medium text-white leading-relaxed">
-            {card.definition}
-          </p>
+        {/* Core Definition Section (Bilingual - English Primary) */}
+        <div className="p-6 sm:p-7 space-y-3.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-brand" />
+              <span>Định nghĩa</span>
+            </span>
+          </div>
+
+          {card.definition_en ? (
+            <div className=" space-y-2">
+              {/* Primary English Definition (Bold, Large, White) */}
+              <div className='flex items-start gap-2'>
+                <span className="text-[11px] font-bold text-slate-400 bg-surface px-1.5 py-0.5 rounded border border-border/60 shrink-0 mt-0.5">
+                  EN
+                </span>
+                <p className="text-md sm:text-lg font-bold text-white leading-relaxed tracking-tight">
+                  {card.definition_en}
+                </p>
+              </div>
+
+              {/* Secondary Vietnamese Definition (Subtle, Slate-300) */}
+              <div className="flex items-start gap-2 pt-1.5 border-t border-border/40">
+                <span className="text-[11px] font-bold text-slate-400 bg-surface px-1.5 py-0.5 rounded border border-border/60 shrink-0 mt-0.5">
+                  VI
+                </span>
+                <p className="text-[14px] text-slate-300 font-medium leading-relaxed">
+                  {card.definition}
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* Fallback for cards without English definition */
+            <p className="text-lg sm:text-xl font-medium text-white leading-relaxed">
+              {card.definition}
+            </p>
+          )}
         </div>
 
         {/* Context Example Sentence Section */}
@@ -98,10 +126,15 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
               <AudioButton text={card.example_sentence} size="sm" />
             </div>
 
-            <div className="border-l-2 border-brand/80 pl-4 py-1">
-              <p className="text-[15px] sm:text-[16px] text-slate-100 italic font-serif leading-relaxed">
+            <div className="border-l-2 border-brand/80 pl-4 py-1 space-y-1.5">
+              <p className="text-[15px] sm:text-[16.5px] text-slate-100 font-serif leading-relaxed">
                 &ldquo;{card.example_sentence}&rdquo;
               </p>
+              {card.example_translation && (
+                <p className="text-[13.5px] sm:text-[14px] text-slate-400 font-normal leading-relaxed">
+                  {card.example_translation}
+                </p>
+              )}
             </div>
           </div>
         )}

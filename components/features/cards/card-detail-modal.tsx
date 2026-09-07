@@ -91,13 +91,34 @@ export function CardDetailModal({
         </div>
 
         {/* Definition */}
-        <div className="space-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
-            Định nghĩa tiếng Việt:
-          </span>
-          <p className="text-sm sm:text-base font-medium text-text-primary leading-relaxed p-3 rounded-xl bg-base/40 border border-border/60">
-            {card.definition}
-          </p>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
+              Định nghĩa:
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-base/40 border border-border/60 space-y-2">
+            {card.definition_en ? (
+              <>
+                <p className="text-base sm:text-lg font-bold text-text-primary leading-relaxed">
+                  {card.definition_en}
+                </p>
+                <div className="flex items-start gap-2 pt-1 border-t border-border/40">
+                  <span className="text-[10px] font-bold text-text-secondary bg-surface px-1.5 py-0.5 rounded border border-border/60 shrink-0 mt-0.5">
+                    VI
+                  </span>
+                  <p className="text-xs sm:text-sm text-text-secondary font-medium leading-relaxed">
+                    {card.definition}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm sm:text-base font-medium text-text-primary leading-relaxed">
+                {card.definition}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Example Sentence */}
@@ -109,9 +130,16 @@ export function CardDetailModal({
               </span>
               <AudioButton text={card.example_sentence} size="sm" />
             </div>
-            <p className="text-xs sm:text-sm text-text-primary italic leading-relaxed p-3 rounded-xl bg-base/40 border border-border/60">
-              &ldquo;{card.example_sentence}&rdquo;
-            </p>
+            <div className="p-3 rounded-xl bg-base/40 border border-border/60 space-y-1">
+              <p className="text-xs sm:text-sm text-text-primary italic leading-relaxed">
+                &ldquo;{card.example_sentence}&rdquo;
+              </p>
+              {card.example_translation && (
+                <p className="text-[11.5px] text-text-secondary not-italic leading-relaxed">
+                  {card.example_translation}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

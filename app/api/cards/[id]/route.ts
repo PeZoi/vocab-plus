@@ -56,7 +56,9 @@ export async function PUT(request: Request, { params }: RouteParams) {
     if (body.word !== undefined) updatePayload.word = body.word.trim();
     if (body.ipa !== undefined) updatePayload.ipa = body.ipa?.trim() || null;
     if (body.definition !== undefined) updatePayload.definition = body.definition.trim();
+    if (body.definition_en !== undefined) updatePayload.definition_en = body.definition_en?.trim() || null;
     if (body.example_sentence !== undefined) updatePayload.example_sentence = body.example_sentence?.trim() || null;
+    if (body.example_translation !== undefined) updatePayload.example_translation = body.example_translation?.trim() || null;
     if (body.part_of_speech !== undefined) updatePayload.part_of_speech = body.part_of_speech;
     if (body.card_type !== undefined) updatePayload.card_type = body.card_type;
     if (body.cefr_level !== undefined) updatePayload.cefr_level = body.cefr_level;

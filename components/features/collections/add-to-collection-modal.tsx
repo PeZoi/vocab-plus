@@ -95,9 +95,16 @@ export function AddToCollectionModal({
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-text-secondary line-clamp-1">
-              {card.definition}
-            </p>
+            <div className="space-y-0.5">
+              {card.definition_en && (
+                <p className="text-xs font-medium text-text-primary line-clamp-1">
+                  {card.definition_en}
+                </p>
+              )}
+              <p className={`text-xs ${card.definition_en ? 'text-text-secondary line-clamp-1' : 'text-text-primary line-clamp-2'}`}>
+                {card.definition}
+              </p>
+            </div>
             {card.tags && card.tags.length > 0 && (
               <div className="flex items-center gap-1 flex-wrap pt-0.5">
                 {card.tags.map((tag) => (

@@ -113,12 +113,23 @@ export function Flashcard({ card, isFlipped, onFlip }: FlashcardProps) {
           {/* Card Body: Definition, Example, Mnemonic */}
           <div className="flex-1 flex flex-col justify-center my-4 space-y-4 text-left">
             <div>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary block mb-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary block mb-1">
                 Định nghĩa:
               </span>
-              <p className="text-lg sm:text-xl font-semibold text-text-primary leading-snug">
-                {card.definition}
-              </p>
+              {card.definition_en ? (
+                <div className="space-y-1">
+                  <p className="text-lg sm:text-xl font-bold text-text-primary leading-snug">
+                    {card.definition_en}
+                  </p>
+                  <p className="text-xs sm:text-sm text-text-secondary font-medium">
+                    {card.definition}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-lg sm:text-xl font-semibold text-text-primary leading-snug">
+                  {card.definition}
+                </p>
+              )}
             </div>
 
             {card.example_sentence && (
@@ -129,9 +140,16 @@ export function Flashcard({ card, isFlipped, onFlip }: FlashcardProps) {
                   </span>
                   <AudioButton text={card.example_sentence} size="sm" />
                 </div>
-                <p className="text-xs text-text-primary italic leading-relaxed">
-                  &ldquo;{card.example_sentence}&rdquo;
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs sm:text-[13px] text-text-primary italic leading-relaxed">
+                    &ldquo;{card.example_sentence}&rdquo;
+                  </p>
+                  {card.example_translation && (
+                    <p className="text-[11.5px] text-text-secondary not-italic leading-relaxed">
+                      {card.example_translation}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 

@@ -425,7 +425,14 @@ Tuân thủ nghiêm ngặt mô hình SSR của `@supabase/ssr`:
 - **Component chuẩn**:
   - Sử dụng [`components/ui/skeleton.tsx`](file:///d:/my_project/vocab-app-plus/components/ui/skeleton.tsx) với `animate-pulse` và màu nền `bg-surface-hover/60`.
 - **Triển khai Next.js Streaming**:
-  - Mỗi phân hệ route chính phải có file `loading.tsx` (như `app/(main)/loading.tsx`, `app/(main)/review/loading.tsx`) chứa layout Skeleton tương ứng.
+### 6.10 Tiêu Chuẩn Dữ Liệu Từ Vựng Song Ngữ (Bilingual English-First Standard)
+- **Quy tắc hiển thị English-First**:
+  - Ưu tiên hiển thị định nghĩa tiếng Anh (`definition_en`) nổi bật nhất (phông chữ to, màu sáng `text-white` hoặc `text-text-primary`) để người học tư duy trực tiếp bằng tiếng Anh.
+  - Định nghĩa tiếng Việt (`definition`) hiển thị tinh tế ở dòng phụ bên dưới để đối chiếu và hiểu sâu ngữ nghĩa.
+  - Luôn đảm bảo tương thích ngược: các thẻ cũ nếu chưa có `definition_en` vẫn hiển thị `definition` tiếng Việt trọn vẹn, không bị trống hay vỡ layout.
+- **Ví dụ thực tế kèm bản dịch ngữ cảnh**:
+  - Câu ví dụ tiếng Anh (`example_sentence`) đi kèm nút audio phát âm.
+  - Dưới câu ví dụ tiếng Anh hiển thị bản dịch tiếng Việt (`example_translation`) với sắc thái màu phụ (`text-slate-400` / `text-text-secondary`).
 
 ---
 

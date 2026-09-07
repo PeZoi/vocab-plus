@@ -58,7 +58,9 @@ export type Database = {
           collocations: Json | null
           created_at: string | null
           definition: string
+          definition_en: string | null
           example_sentence: string | null
+          example_translation: string | null
           id: string
           image_url: string | null
           ipa: string | null
@@ -78,7 +80,9 @@ export type Database = {
           collocations?: Json | null
           created_at?: string | null
           definition: string
+          definition_en?: string | null
           example_sentence?: string | null
+          example_translation?: string | null
           id?: string
           image_url?: string | null
           ipa?: string | null
@@ -98,7 +102,9 @@ export type Database = {
           collocations?: Json | null
           created_at?: string | null
           definition?: string
+          definition_en?: string | null
           example_sentence?: string | null
+          example_translation?: string | null
           id?: string
           image_url?: string | null
           ipa?: string | null

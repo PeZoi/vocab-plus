@@ -26,8 +26,10 @@ const manualCardSchema = z.object({
   cefr_level: z.string().optional(),
   tags: z.array(z.string()).optional(),
   ipa: z.string().optional(),
+  definition_en: z.string().optional(),
   definition: z.string().min(1, 'Nghĩa của từ là bắt buộc'),
   example_sentence: z.string().optional(),
+  example_translation: z.string().optional(),
   mnemonic: z.string().optional(),
 });
 
@@ -62,8 +64,10 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
       cefr_level: 'none',
       tags: [],
       ipa: '',
+      definition_en: '',
       definition: '',
       example_sentence: '',
+      example_translation: '',
       mnemonic: '',
     },
   });
@@ -73,8 +77,10 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
       await createCardMutation.mutateAsync({
         word: values.word,
         definition: values.definition,
+        definition_en: values.definition_en || null,
         ipa: values.ipa || null,
         example_sentence: values.example_sentence || null,
+        example_translation: values.example_translation || null,
         part_of_speech: (values.part_of_speech as PartOfSpeech) || null,
         cefr_level: values.cefr_level === 'none' ? null : (values.cefr_level as CEFRLevel) || null,
         tags: values.tags && values.tags.length > 0 ? values.tags : null,
@@ -204,6 +210,19 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
         />
       </div>
 
+      {/* English Definition */}
+      <div>
+        <label className="block text-xs font-semibold text-text-primary mb-1 flex items-center justify-between">
+          <span>Định nghĩa tiếng Anh (English definition)</span>
+          <span className="text-[10px] text-brand font-medium">Ưu tiên hiển thị nổi bật</span>
+        </label>
+        <Textarea
+          placeholder="vd: able to withstand or recover quickly from difficult conditions"
+          rows={2}
+          {...register('definition_en')}
+        />
+      </div>
+
       {/* Definition */}
       <div>
         <label className="block text-xs font-medium text-text-secondary mb-1">
@@ -223,12 +242,24 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
       {/* Example sentence */}
       <div>
         <label className="block text-xs font-medium text-text-secondary mb-1">
-          Câu ví dụ
+          Câu ví dụ (Tiếng Anh)
         </label>
         <Textarea
           placeholder="vd: She is very resilient and never gives up."
           rows={2}
           {...register('example_sentence')}
+        />
+      </div>
+
+      {/* Example translation */}
+      <div>
+        <label className="block text-xs font-medium text-text-secondary mb-1">
+          Dịch câu ví dụ (Tiếng Việt)
+        </label>
+        <Textarea
+          placeholder="vd: Cô ấy rất kiên cường và không bao giờ bỏ cuộc."
+          rows={2}
+          {...register('example_translation')}
         />
       </div>
 

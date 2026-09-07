@@ -101,15 +101,29 @@ export function VocabCardGrid({
               </div>
 
               {/* Definition */}
-              <p className="text-xs sm:text-sm text-text-primary/90 font-medium line-clamp-2 leading-relaxed">
-                {card.definition}
-              </p>
+              <div className="space-y-1">
+                {card.definition_en && (
+                  <p className="text-xs sm:text-sm text-text-primary font-semibold line-clamp-2 leading-snug">
+                    {card.definition_en}
+                  </p>
+                )}
+                <p className={`text-xs ${card.definition_en ? 'text-text-secondary line-clamp-1' : 'text-text-primary/90 font-medium line-clamp-2'} leading-relaxed`}>
+                  {card.definition}
+                </p>
+              </div>
 
               {/* Example sentence snippet */}
               {card.example_sentence && (
-                <p className="text-xs text-text-secondary italic line-clamp-1 pt-0.5">
-                  &ldquo;{card.example_sentence}&rdquo;
-                </p>
+                <div className="pt-0.5 space-y-0.5">
+                  <p className="text-xs text-text-secondary italic line-clamp-1">
+                    &ldquo;{card.example_sentence}&rdquo;
+                  </p>
+                  {card.example_translation && (
+                    <p className="text-[11px] text-text-secondary/70 line-clamp-1">
+                      {card.example_translation}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 

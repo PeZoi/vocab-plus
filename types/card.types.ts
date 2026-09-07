@@ -35,8 +35,10 @@ export interface CardWithProgress extends Card {
 export interface SenseItem {
   part_of_speech: PartOfSpeech;
   definition: string;
+  definition_en?: string;
   vietnamese_hint?: string;
   example_sentence: string;
+  example_translation?: string;
   tags?: string[];
   selected?: boolean;
 }
@@ -72,7 +74,9 @@ export interface CreateCardDto {
   word: string;
   ipa?: string | null;
   definition: string;
+  definition_en?: string | null;
   example_sentence?: string | null;
+  example_translation?: string | null;
   part_of_speech?: PartOfSpeech | null;
   card_type?: CardType;
   source_type?: SourceType;
@@ -90,7 +94,9 @@ export interface UpdateCardDto {
   word?: string;
   ipa?: string | null;
   definition?: string;
+  definition_en?: string | null;
   example_sentence?: string | null;
+  example_translation?: string | null;
   part_of_speech?: PartOfSpeech | null;
   card_type?: CardType;
   cefr_level?: CEFRLevel | null;

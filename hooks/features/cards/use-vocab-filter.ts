@@ -39,7 +39,9 @@ export function useVocabFilter(rawCards: CardWithProgress[] = []) {
         (card) =>
           card.word.toLowerCase().includes(q) ||
           card.definition.toLowerCase().includes(q) ||
-          (card.example_sentence && card.example_sentence.toLowerCase().includes(q))
+          (card.definition_en && card.definition_en.toLowerCase().includes(q)) ||
+          (card.example_sentence && card.example_sentence.toLowerCase().includes(q)) ||
+          (card.example_translation && card.example_translation.toLowerCase().includes(q))
       );
     }
 

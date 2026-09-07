@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       .eq('owner_id', user.id);
 
     if (search) {
-      query = query.or(`word.ilike.%${search}%,definition.ilike.%${search}%,example_sentence.ilike.%${search}%`);
+      query = query.or(`word.ilike.%${search}%,definition.ilike.%${search}%,definition_en.ilike.%${search}%,example_sentence.ilike.%${search}%`);
     }
 
     if (cefr_level && cefr_level !== 'all') {
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 
     const body: CreateCardDto = await request.json();
 
-    if (!body.word || !body.definition) {
+    if (!body.word || (!body.definition && !body.definition_en)) {
       return NextResponse.json(
         { error: 'Từ vựng và Định nghĩa là bắt buộc' },
         { status: 400 }
@@ -96,8 +96,10 @@ export async function POST(request: Request) {
         owner_id: user.id,
         word: body.word.trim(),
         ipa: body.ipa?.trim() || null,
-        definition: body.definition.trim(),
+        definition: body.definition?.trim() || body.definition_en?.trim() || '',
+        definition_en: body.definition_en?.trim() || null,
         example_sentence: body.example_sentence?.trim() || null,
+        example_translation: body.example_translation?.trim() || null,
         part_of_speech: body.part_of_speech || null,
         card_type: body.card_type || 'word',
         source_type: body.source_type || 'manual',

@@ -86,9 +86,11 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
   "senses": [
     {
       "part_of_speech": "noun | verb | adjective | adverb | preposition | conjunction | pronoun | interjection",
+      "definition_en": "Clear, concise, and accurate English definition explaining the meaning in simple terms",
       "definition": "Định nghĩa bằng tiếng Việt rõ ràng, dễ hiểu",
       "vietnamese_hint": "Nghĩa ngắn gọn 1-3 từ tiếng Việt",
       "example_sentence": "Một câu ví dụ tiếng Anh đơn giản, dùng từ vựng cơ bản A2-B1 để minh họa, dễ hiểu trọn câu",
+      "example_translation": "Bản dịch tiếng Việt chính xác và tự nhiên của câu ví dụ tiếng Anh trên",
       "tags": ["#tag1", "#tag2"] (từ nào phổ biến tag được thì ghi không thì để rỗng, tag viết bằng tiếng anh)
     }
   ],
@@ -200,7 +202,13 @@ Yêu cầu trả về DUY NHẤT một JSON hợp lệ (không kèm markdown cod
       return NextResponse.json({ error: 'AI không trả về nội dung' }, { status: 500 });
     }
 
-    const parsed: AIWordAnalysisResponse = JSON.parse(content);
+    let cleanContent = content.trim();
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    const parsed: AIWordAnalysisResponse = JSON.parse(cleanContent);
     return NextResponse.json(parsed);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
