@@ -6,6 +6,8 @@ import { CollectionDeleteDialog } from '@/components/features/collections/collec
 import { CollectionFiltersBar } from '@/components/features/collections/collection-filters-bar';
 import { CollectionTabsNav } from '@/components/features/collections/collection-tabs-nav';
 import { CreateCollectionModal } from '@/components/features/collections/create-collection-modal';
+import { DuplicateResolutionModal } from '@/components/features/collections/duplicate-resolution-modal';
+import { ForkLoadingModal } from '@/components/features/collections/fork-loading-modal';
 import { ForkSuccessDialog } from '@/components/features/collections/fork-success-dialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,6 +40,11 @@ export default function CollectionsPage() {
     setDeleteTarget,
     forkSuccessResult,
     setForkSuccessResult,
+    duplicateAnalysis,
+    setDuplicateAnalysis,
+    handleConfirmSmartFork,
+    forkLoadingState,
+    handleFinishForkSuccess,
   } = useCollectionExplorer();
 
   return (
@@ -170,6 +177,24 @@ export default function CollectionsPage() {
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onSuccess={() => refetch()}
+      />
+
+      {/* Fork Loading Modal with Progress */}
+      <ForkLoadingModal
+        isOpen={forkLoadingState.isOpen}
+        collectionTitle={forkLoadingState.collectionTitle}
+        isSuccess={forkLoadingState.isSuccess}
+        onFinishSuccess={handleFinishForkSuccess}
+      />
+
+      {/* Duplicate Resolution Modal for Smart Fork */}
+      <DuplicateResolutionModal
+        isOpen={!!duplicateAnalysis}
+        onClose={() => setDuplicateAnalysis(null)}
+        collectionTitle={duplicateAnalysis?.collection.title || ''}
+        analysis={duplicateAnalysis?.analysis || null}
+        onConfirm={handleConfirmSmartFork}
+        isSubmitting={forkingId === duplicateAnalysis?.collection.id}
       />
 
       {/* Fork Success Dialog */}

@@ -25,5 +25,6 @@ export const ROUTES = {
     CARDS: '/admin/cards',
     AI_PROVIDERS: '/admin/ai-providers',
     TELEGRAM: '/admin/telegram',
+    SETTINGS: '/admin/settings',
   },
 } as const;

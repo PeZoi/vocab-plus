@@ -3,7 +3,12 @@ import {
   useForkCollectionMutation,
   useToggleLikeMutation,
 } from '@/hooks/features/collections/use-collections';
-import type { Collection, CollectionCategory } from '@/types/collection.types';
+import { collectionsService } from '@/services/collections.service';
+import type {
+  AnalyzeForkResult,
+  Collection,
+  CollectionCategory,
+} from '@/types/collection.types';
 import { useDeferredValue, useState } from 'react';
 
 export function useCollectionExplorer() {
@@ -27,6 +32,24 @@ export function useCollectionExplorer() {
     collection: Collection;
     cardsCount: number;
   } | null>(null);
+  const [duplicateAnalysis, setDuplicateAnalysis] = useState<{
+    collection: Collection;
+    analysis: AnalyzeForkResult;
+  } | null>(null);
+  const [forkLoadingState, setForkLoadingState] = useState<{
+    isOpen: boolean;
+    collectionTitle: string;
+    isSuccess: boolean;
+    pendingResult?: {
+      collection: Collection;
+      cardsCount: number;
+    } | null;
+  }>({
+    isOpen: false,
+    collectionTitle: '',
+    isSuccess: false,
+    pendingResult: null,
+  });
 
   // Query
   const { data: collections = [], isLoading, refetch } = useCollectionsQuery({
@@ -40,22 +63,130 @@ export function useCollectionExplorer() {
   const likeMutation = useToggleLikeMutation();
 
   const handleFork = async (id: string) => {
+    const targetCol = collections.find((c) => c.id === id);
     try {
       setForkingId(id);
+      setForkLoadingState({
+        isOpen: true,
+        collectionTitle: targetCol?.title || '',
+        isSuccess: false,
+        pendingResult: null,
+      });
+
+      // Bước 1: Phân tích trước xem có từ vựng nào bị trùng lặp không
+      const analysis = await collectionsService.analyzeFork(id);
+
+      if (analysis.has_duplicates && targetCol) {
+        // Nếu có từ trùng -> Tạm đóng loading modal, chuyển sang modal giải quyết trùng lặp
+        setForkLoadingState({
+          isOpen: false,
+          collectionTitle: '',
+          isSuccess: false,
+          pendingResult: null,
+        });
+        setDuplicateAnalysis({
+          collection: targetCol,
+          analysis,
+        });
+        return;
+      }
+
+      // Bước 2: Nếu không có từ trùng -> Tiếp tục Fork
       const res = await forkMutation.mutateAsync(id);
       if (res.collection) {
-        setForkSuccessResult({
-          collection: res.collection,
-          cardsCount: res.cards_cloned ?? 0,
+        setForkLoadingState((prev) => ({
+          ...prev,
+          isSuccess: true,
+          pendingResult: {
+            collection: res.collection,
+            cardsCount: res.cards_cloned ?? 0,
+          },
+        }));
+      } else {
+        setForkLoadingState({
+          isOpen: false,
+          collectionTitle: '',
+          isSuccess: false,
+          pendingResult: null,
         });
       }
-      setActiveTab('my');
     } catch (err: unknown) {
+      setForkLoadingState({
+        isOpen: false,
+        collectionTitle: '',
+        isSuccess: false,
+        pendingResult: null,
+      });
       const msg = err instanceof Error ? err.message : 'Lỗi khi fork bộ từ vựng';
       console.error(msg);
     } finally {
       setForkingId(null);
     }
+  };
+
+  const handleConfirmSmartFork = async (selectedCardIds: string[]) => {
+    if (!duplicateAnalysis) return;
+    const targetCol = duplicateAnalysis.collection;
+    const colId = targetCol.id;
+
+    try {
+      setForkingId(colId);
+      // Đóng modal duplicate và bật modal loading
+      setDuplicateAnalysis(null);
+      setForkLoadingState({
+        isOpen: true,
+        collectionTitle: targetCol.title,
+        isSuccess: false,
+        pendingResult: null,
+      });
+
+      const res = await forkMutation.mutateAsync({
+        id: colId,
+        options: { selected_card_ids: selectedCardIds },
+      });
+
+      if (res.collection) {
+        setForkLoadingState((prev) => ({
+          ...prev,
+          isSuccess: true,
+          pendingResult: {
+            collection: res.collection,
+            cardsCount: res.cards_cloned ?? 0,
+          },
+        }));
+      } else {
+        setForkLoadingState({
+          isOpen: false,
+          collectionTitle: '',
+          isSuccess: false,
+          pendingResult: null,
+        });
+      }
+    } catch (err: unknown) {
+      setForkLoadingState({
+        isOpen: false,
+        collectionTitle: '',
+        isSuccess: false,
+        pendingResult: null,
+      });
+      const msg = err instanceof Error ? err.message : 'Lỗi khi clone bộ từ';
+      console.error(msg);
+    } finally {
+      setForkingId(null);
+    }
+  };
+
+  const handleFinishForkSuccess = () => {
+    if (forkLoadingState.pendingResult) {
+      setForkSuccessResult(forkLoadingState.pendingResult);
+    }
+    setForkLoadingState({
+      isOpen: false,
+      collectionTitle: '',
+      isSuccess: false,
+      pendingResult: null,
+    });
+    setActiveTab('my');
   };
 
   const handleToggleLike = async (id: string) => {
@@ -107,5 +238,10 @@ export function useCollectionExplorer() {
     setDeleteTarget,
     forkSuccessResult,
     setForkSuccessResult,
+    duplicateAnalysis,
+    setDuplicateAnalysis,
+    handleConfirmSmartFork,
+    forkLoadingState,
+    handleFinishForkSuccess,
   };
 }

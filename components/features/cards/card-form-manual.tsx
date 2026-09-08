@@ -12,13 +12,20 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CEFR_SELECT_OPTIONS } from '@/constants/cefr';
+import { ROUTES } from '@/constants/routes';
 import { useCreateCardMutation } from '@/hooks/features/cards/use-card-mutation';
+import {
+  useWordDuplicateCheck,
+  type DuplicateCheckResult,
+} from '@/hooks/features/cards/use-word-duplicate-check';
 import { CEFRLevel, PartOfSpeech } from '@/types/card.types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, CheckCircle2, Loader2, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
+import { DuplicateWordDialog } from './duplicate-word-dialog';
 import { ImageSelector } from './image-selector';
 
 const manualCardSchema = z.object({
@@ -48,9 +55,16 @@ const PARTS_OF_SPEECH: { value: PartOfSpeech; label: string }[] = [
 ];
 
 export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
+  const router = useRouter();
   const [successMessage, setSuccessMessage] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = React.useState<string | null>(null);
+
+  // Duplicate check states
+  const { checkDuplicate } = useWordDuplicateCheck();
+  const [duplicateInfo, setDuplicateInfo] = React.useState<DuplicateCheckResult | null>(null);
+  const [pendingValues, setPendingValues] = React.useState<ManualCardFormValues | null>(null);
+
   const createCardMutation = useCreateCardMutation();
 
   const {
@@ -77,7 +91,7 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
 
   const watchedWord = useWatch({ control, name: 'word' });
 
-  const onSubmit = async (values: ManualCardFormValues) => {
+  const executeSave = async (values: ManualCardFormValues, force: boolean = false) => {
     setErrorMessage(null);
     try {
       await createCardMutation.mutateAsync({
@@ -93,11 +107,14 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
         image_url: selectedImageUrl || null,
         mnemonic: values.mnemonic || null,
         source_type: 'manual',
+        force,
       });
 
       setSuccessMessage(true);
       setSelectedImageUrl(null);
       reset();
+      setDuplicateInfo(null);
+      setPendingValues(null);
       setTimeout(() => setSuccessMessage(false), 3000);
       onSuccess?.();
     } catch (err: unknown) {
@@ -105,6 +122,19 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
       const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu thẻ từ vựng.';
       setErrorMessage(msg);
     }
+  };
+
+  const onSubmit = async (values: ManualCardFormValues) => {
+    // Bước 1: Kiểm tra trùng lặp trước khi lưu
+    const dup = checkDuplicate(values.word);
+    if (dup.isDuplicate) {
+      setDuplicateInfo(dup);
+      setPendingValues(values);
+      return;
+    }
+
+    // Bước 2: Lưu trực tiếp nếu không trùng
+    await executeSave(values, false);
   };
 
   return (
@@ -322,6 +352,28 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
           )}
         </Button>
       </div>
+
+      {/* Duplicate Word Dialog */}
+      <DuplicateWordDialog
+        isOpen={Boolean(duplicateInfo?.isDuplicate && pendingValues)}
+        onClose={() => {
+          setDuplicateInfo(null);
+          setPendingValues(null);
+        }}
+        newWord={pendingValues?.word || ''}
+        newDefinition={pendingValues?.definition || ''}
+        newPartOfSpeech={pendingValues?.part_of_speech || null}
+        matchedCard={duplicateInfo?.matchedCard || null}
+        similarity={duplicateInfo?.similarity || 0}
+        threshold={duplicateInfo?.threshold || 80}
+        onConfirmAdd={() => {
+          if (pendingValues) {
+            executeSave(pendingValues, true);
+          }
+        }}
+        onViewExisting={(id) => router.push(ROUTES.APP.VOCAB_DETAIL(id))}
+        isSubmitting={createCardMutation.isPending}
+      />
     </form>
   );
 }

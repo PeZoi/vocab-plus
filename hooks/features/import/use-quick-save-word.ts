@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { importService } from '@/services/import.service';
 import { cardKeys } from '@/constants/query-keys';
 import type { QuickSaveWordDto } from '@/types/imported-text.types';
+import { getBaseWordCandidates } from '@/utils/lemmatizer';
 
 export function useQuickSaveWord() {
   const queryClient = useQueryClient();
@@ -21,7 +22,16 @@ export function useQuickSaveWord() {
 
   const isWordRecentlySaved = useCallback(
     (word: string) => {
-      return recentlySavedWords.has(word.toLowerCase().trim());
+      if (!word) return false;
+      const lower = word.toLowerCase().trim();
+      if (recentlySavedWords.has(lower)) return true;
+
+      // Kiểm tra xem từ gốc của biến thể này có vừa được lưu không
+      const candidates = getBaseWordCandidates(lower);
+      for (const candidate of candidates) {
+        if (recentlySavedWords.has(candidate)) return true;
+      }
+      return false;
     },
     [recentlySavedWords]
   );

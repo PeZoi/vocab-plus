@@ -90,6 +90,7 @@ export interface CreateCardDto {
   mnemonic?: string | null;
   collocations?: CollocationItem[] | null;
   word_family?: WordFamilyItem[] | null;
+  force?: boolean;
 }
 
 export interface UpdateCardDto {

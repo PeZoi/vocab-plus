@@ -66,3 +66,38 @@ export interface CollectionFilterParams {
   search?: string;
   sort_by?: 'popular' | 'newest' | 'card_count' | 'alpha';
 }
+
+export interface DuplicateForkItem {
+  source_card_id: string;
+  source_word: string;
+  source_pos: string | null;
+  source_definition: string;
+  matched_card_id: string;
+  matched_word: string;
+  matched_pos: string | null;
+  matched_definition: string;
+  similarity: number; // 0 - 100
+}
+
+export interface AnalyzeForkResult {
+  has_duplicates: boolean;
+  threshold: number;
+  total_cards: number;
+  new_cards_count: number;
+  duplicates_count: number;
+  duplicate_items: DuplicateForkItem[];
+  new_card_ids: string[];
+}
+
+export interface ForkCollectionOptions {
+  selected_card_ids?: string[];
+}
+
+export interface ForkResult {
+  success: boolean;
+  message: string;
+  collection: Collection;
+  cards_cloned: number;
+  cards_skipped?: number;
+}
+

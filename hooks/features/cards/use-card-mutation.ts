@@ -42,3 +42,15 @@ export function useDeleteCardMutation() {
     },
   });
 }
+
+export function useBulkDeleteCardsMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (cardIds: string[]) => cardsService.bulkDeleteCards(cardIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cardKeys.all });
+      queryClient.invalidateQueries({ queryKey: reviewKeys.stats() });
+    },
+  });
+}

@@ -29,6 +29,7 @@ export function VocabTableView({
   onToggleSelectCard,
   onToggleSelectAll,
 }: VocabTableViewProps) {
+  const isSelectionMode = (selectedCardIds?.size ?? 0) > 0;
   const isAllSelected = cards.length > 0 && cards.every((c) => selectedCardIds?.has(c.id));
   const isSomeSelected = cards.some((c) => selectedCardIds?.has(c.id));
 
@@ -73,7 +74,15 @@ export function VocabTableView({
             return (
               <tr
                 key={card.id}
-                onClick={() => onViewDetail(card)}
+                onClick={(e) => {
+                  // Nếu đang ở chế độ check: click vào dòng sẽ toggle check chứ không navigate
+                  if (isSelectionMode && onToggleSelectCard) {
+                    e.preventDefault();
+                    onToggleSelectCard(card.id);
+                    return;
+                  }
+                  onViewDetail(card);
+                }}
                 className={cn(
                   'transition-colors cursor-pointer group',
                   isSelected ? 'bg-brand/5 hover:bg-brand/10' : 'hover:bg-surface-hover/80'

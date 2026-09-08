@@ -50,3 +50,9 @@ export const imageKeys = {
   search: (query: string) => [...imageKeys.all, 'search', query] as const,
 };
 
+export const adminKeys = {
+  all: ['admin'] as const,
+  settings: () => [...adminKeys.all, 'settings'] as const,
+};
+
+

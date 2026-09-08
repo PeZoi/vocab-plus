@@ -16,15 +16,23 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CEFR_SELECT_OPTIONS } from '@/constants/cefr';
+import { ROUTES } from '@/constants/routes';
 import { useAiAnalyzer } from '@/hooks/features/ai/use-ai-analyzer';
 import { useCreateCardMutation } from '@/hooks/features/cards/use-card-mutation';
+import {
+  useWordDuplicateCheck,
+  type DuplicateCheckResult,
+} from '@/hooks/features/cards/use-word-duplicate-check';
 import type { AIWordAnalysisResponse, CEFRLevel, PartOfSpeech, SenseItem } from '@/types/card.types';
-import { AlertCircle, Loader2, Plus, Sparkles } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, RotateCcw, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { DuplicateWordDialog } from './duplicate-word-dialog';
 import { ImageSelector } from './image-selector';
 
 export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
+  const router = useRouter();
   const [wordInput, setWordInput] = useState('');
   const [contextInput, setContextInput] = useState('');
   const [analysisResult, setAnalysisResult] = useState<AIWordAnalysisResponse | null>(null);
@@ -34,6 +42,11 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [useOriginalWord, setUseOriginalWord] = useState(false);
+
+  // Duplicate check
+  const { checkDuplicate } = useWordDuplicateCheck();
+  const [duplicateInfo, setDuplicateInfo] = useState<DuplicateCheckResult | null>(null);
 
   const aiAnalyzer = useAiAnalyzer();
   const createCardMutation = useCreateCardMutation();
@@ -50,6 +63,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
 
       setSelectedImageUrl(null);
       setAnalysisResult(result);
+      setUseOriginalWord(false);
       const initialSenses = (result.senses || []).map((s) => ({
         ...s,
         tags: Array.isArray(s.tags)
@@ -74,6 +88,11 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
     }
   };
 
+  const currentWord =
+    useOriginalWord && analysisResult?.original_word
+      ? analysisResult.original_word
+      : analysisResult?.word || '';
+
   const toggleSense = (index: number) => {
     setSelectedSenses((prev) => ({
       ...prev,
@@ -93,7 +112,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
     });
   };
 
-  const handleSaveSelected = async () => {
+  const executeSave = async (force: boolean = false) => {
     if (!analysisResult) return;
     setSaveError(null);
 
@@ -110,7 +129,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
       for (const idx of indicesToSave) {
         const sense = editedSenses[idx];
         await createCardMutation.mutateAsync({
-          word: analysisResult.word,
+          word: currentWord,
           ipa: analysisResult.ipa || null,
           definition: sense.definition,
           definition_en: sense.definition_en || null,
@@ -126,9 +145,11 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
           mnemonic: analysisResult.mnemonic || null,
           collocations: analysisResult.collocations || null,
           word_family: analysisResult.word_family || null,
+          force,
         });
       }
 
+      setDuplicateInfo(null);
       setSaveSuccess(true);
       setTimeout(() => {
         setSaveSuccess(false);
@@ -143,6 +164,20 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
       const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu thẻ từ vựng vào kho.';
       setSaveError(msg);
     }
+  };
+
+  const handleSaveSelected = async () => {
+    if (!analysisResult) return;
+
+    // Bước 1: Kiểm tra trùng lặp trước khi lưu
+    const dup = checkDuplicate(currentWord);
+    if (dup.isDuplicate) {
+      setDuplicateInfo(dup);
+      return;
+    }
+
+    // Bước 2: Lưu trực tiếp nếu không trùng
+    await executeSave(false);
   };
 
   return (
@@ -237,8 +272,9 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
               <div>
                 <div className="flex items-center gap-2.5">
                   <h3 className="text-xl font-semibold text-text-primary tracking-tight">
-                    {analysisResult.word}
+                    {currentWord}
                   </h3>
+                  <AudioButton text={currentWord} size="sm" />
                   {analysisResult.ipa && (
                     <span className="font-mono text-xs text-text-secondary bg-base/60 px-2 py-0.5 rounded-md border border-border/70">
                       {analysisResult.ipa}
@@ -254,19 +290,50 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
               </p>
             </div>
 
-            {/* Spelling Correction Notice */}
-            {analysisResult.is_corrected && (
+            {/* Base Form / Spelling Correction Notice */}
+            {analysisResult.is_corrected && analysisResult.original_word && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>
-                  AI đã tự động sửa lỗi chính tả từ{' '}
-                  <strong className="line-through opacity-75">{analysisResult.original_word}</strong>{' '}
-                  thành <strong className="text-amber-200">{analysisResult.word}</strong>
-                </span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                  <div className="min-w-0 leading-relaxed">
+                    {useOriginalWord ? (
+                      <span>
+                        Đang giữ nguyên từ ban đầu bạn nhập:{' '}
+                        <strong className="text-amber-100 font-semibold">{analysisResult.original_word}</strong>{' '}
+                        <span className="text-amber-300/70">(từ gốc AI đề xuất: {analysisResult.word})</span>
+                      </span>
+                    ) : (
+                      <span>
+                        AI đã tự động chuyển về từ gốc:{' '}
+                        <strong className="text-amber-100 font-semibold">{analysisResult.word}</strong>{' '}
+                        <span className="text-amber-300/70">
+                          (từ ban đầu: <span className="line-through opacity-75">{analysisResult.original_word}</span>)
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const nextUseOriginal = !useOriginalWord;
+                    setUseOriginalWord(nextUseOriginal);
+                    setWordInput(nextUseOriginal ? analysisResult.original_word! : analysisResult.word);
+                  }}
+                  className="h-7 px-2.5 text-xs border-amber-500/40 text-amber-200 hover:bg-amber-500/20 hover:text-white shrink-0 self-start sm:self-auto transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                  {useOriginalWord
+                    ? `Dùng từ gốc "${analysisResult.word}"`
+                    : `Giữ nguyên "${analysisResult.original_word}"`}
+                </Button>
               </motion.div>
             )}
 
@@ -569,6 +636,29 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Duplicate Word Dialog */}
+      <DuplicateWordDialog
+        isOpen={Boolean(duplicateInfo?.isDuplicate && analysisResult)}
+        onClose={() => setDuplicateInfo(null)}
+        newWord={currentWord}
+        newDefinition={
+          editedSenses.find((s, idx) => selectedSenses[idx])?.definition ||
+          editedSenses[0]?.definition ||
+          ''
+        }
+        newPartOfSpeech={
+          editedSenses.find((s, idx) => selectedSenses[idx])?.part_of_speech ||
+          editedSenses[0]?.part_of_speech ||
+          null
+        }
+        matchedCard={duplicateInfo?.matchedCard || null}
+        similarity={duplicateInfo?.similarity || 0}
+        threshold={duplicateInfo?.threshold || 80}
+        onConfirmAdd={() => executeSave(true)}
+        onViewExisting={(id) => router.push(ROUTES.APP.VOCAB_DETAIL(id))}
+        isSubmitting={createCardMutation.isPending}
+      />
     </div>
   );
 }

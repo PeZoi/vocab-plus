@@ -2,18 +2,25 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { DuplicateWordDialog } from '@/components/features/cards/duplicate-word-dialog';
+import { ImageSelector } from '@/components/features/cards/image-selector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '@/constants/routes';
 import { useAiAnalyzer } from '@/hooks/features/ai/use-ai-analyzer';
 import { useCreateCardMutation } from '@/hooks/features/cards/use-card-mutation';
+import {
+  useWordDuplicateCheck,
+  type DuplicateCheckResult,
+} from '@/hooks/features/cards/use-word-duplicate-check';
 import type { AIWordAnalysisResponse, CardWithProgress, CEFRLevel, CollocationItem, CreateCardDto } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
 import type { ReaderToken } from '@/utils/text-extractor';
-import { AlertCircle, BookmarkPlus, Check, Lightbulb, Loader2, Sparkles, X } from 'lucide-react';
+import { AlertCircle, BookmarkPlus, Check, Lightbulb, Loader2, RotateCcw, Sparkles, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { ImageSelector } from '@/components/features/cards/image-selector';
 
 interface WordQuickPopoverProps {
   token: ReaderToken | null;
@@ -28,13 +35,25 @@ export function WordQuickPopover({
   knownCard,
   onClose,
 }: WordQuickPopoverProps) {
+  const router = useRouter();
   const { mutateAsync: analyzeWord, isPending: isAnalyzing } = useAiAnalyzer();
   const { mutateAsync: createCard, isPending: isSaving } = useCreateCardMutation();
+
+  // Duplicate check
+  const { checkDuplicate } = useWordDuplicateCheck();
+  const [duplicateInfo, setDuplicateInfo] = useState<DuplicateCheckResult | null>(null);
 
   const [analyzedData, setAnalyzedData] = useState<AIWordAnalysisResponse | null>(null);
   const [justSavedCard, setJustSavedCard] = useState<CardWithProgress | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [useOriginalWord, setUseOriginalWord] = useState(false);
+
+  const word = token ? token.clean : '';
+  const effectiveWord =
+    useOriginalWord && analyzedData?.original_word
+      ? analyzedData.original_word
+      : (analyzedData?.is_corrected ? analyzedData.word : word);
 
   // Map analyzed data into a temporary CardWithProgress for display
   const tempCard = React.useMemo(() => {
@@ -42,7 +61,7 @@ export function WordQuickPopover({
     const primarySense = analyzedData.senses[0] || {};
     return {
       id: 'temp',
-      word: analyzedData.word,
+      word: effectiveWord,
       cefr_level: analyzedData.cefr_level,
       ipa: analyzedData.ipa,
       part_of_speech: primarySense?.part_of_speech,
@@ -56,16 +75,15 @@ export function WordQuickPopover({
       word_family: analyzedData.word_family as unknown as import('@/types/database.types').Json,
       image_url: selectedImageUrl || null,
     } as unknown as CardWithProgress;
-  }, [analyzedData, contextSentence, selectedImageUrl]);
+  }, [analyzedData, contextSentence, selectedImageUrl, effectiveWord]);
 
   if (!token) return null;
 
-  const word = token.clean;
   const isAlreadySaved = Boolean(knownCard) || Boolean(justSavedCard);
   const activeCard = knownCard || justSavedCard || tempCard;
   const collocations = (activeCard?.collocations as unknown as CollocationItem[]) || [];
 
-  const handleSave = async () => {
+  const executeSave = async (force: boolean = false) => {
     if (!analyzedData) return;
     setErrorMsg(null);
     
@@ -78,7 +96,7 @@ export function WordQuickPopover({
       }
 
       const payload: CreateCardDto = {
-        word: analyzedData.is_corrected ? analyzedData.word : word,
+        word: effectiveWord,
         ipa: analyzedData.ipa,
         definition: primarySense.definition || primarySense.definition_en || '',
         definition_en: primarySense.definition_en,
@@ -93,10 +111,12 @@ export function WordQuickPopover({
         collocations: analyzedData.collocations,
         word_family: analyzedData.word_family,
         image_url: selectedImageUrl || null,
+        force,
       };
 
       const newCard = await createCard(payload);
       setJustSavedCard(newCard as CardWithProgress);
+      setDuplicateInfo(null);
     } catch (err: unknown) {
       console.error('Lỗi khi lưu từ vựng:', err);
       const msg = err instanceof Error ? err.message : 'Có lỗi khi lưu từ vựng.';
@@ -104,10 +124,26 @@ export function WordQuickPopover({
     }
   };
 
+  const handleSave = async () => {
+    if (!analyzedData) return;
+
+    // Bước 1: Kiểm tra trùng lặp trước khi lưu
+    const targetWord = effectiveWord;
+    const dup = checkDuplicate(targetWord);
+    if (dup.isDuplicate) {
+      setDuplicateInfo(dup);
+      return;
+    }
+
+    // Bước 2: Lưu trực tiếp nếu không trùng
+    await executeSave(false);
+  };
+
   const handleAnalyze = () => {
     if (!token) return;
     setErrorMsg(null);
     setSelectedImageUrl(null);
+    setUseOriginalWord(false);
     analyzeWord({ word: token.clean, context_sentence: contextSentence })
       .then((res) => setAnalyzedData(res))
       .catch((err) => {
@@ -142,10 +178,11 @@ export function WordQuickPopover({
   };
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
-        {/* Backdrop click */}
-        <div className="fixed inset-0" onClick={onClose} />
+    <>
+      <AnimatePresence>
+        <div key="quick-popover-wrapper" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+          {/* Backdrop click */}
+          <div className="fixed inset-0" onClick={onClose} />
 
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.98 }}
@@ -160,9 +197,14 @@ export function WordQuickPopover({
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-xl sm:text-2xl font-bold text-text-primary capitalize tracking-tight truncate">
-                    {activeCard?.word || word}
+                    {activeCard?.word || effectiveWord}
                   </h3>
-                  <AudioButton text={activeCard?.word || word} className="w-8 h-8 shrink-0" />
+                  {knownCard && token && knownCard.word.toLowerCase() !== token.clean.toLowerCase() && (
+                    <span className="text-xs text-text-secondary font-normal bg-base px-2 py-0.5 rounded-md border border-border/80">
+                      từ trong bài: <strong className="text-text-primary font-medium">{token.clean}</strong>
+                    </span>
+                  )}
+                  <AudioButton text={activeCard?.word || effectiveWord} className="w-8 h-8 shrink-0" />
                   {activeCard?.cefr_level && (
                     <CEFRBadge level={activeCard.cefr_level as CEFRLevel} />
                   )}
@@ -208,6 +250,44 @@ export function WordQuickPopover({
                 </div>
               )}
             </div>
+
+            {/* Base Form / Spelling Notice Banner with Revert Button */}
+            {analyzedData && analyzedData.is_corrected && analyzedData.original_word && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-amber-200 animate-in fade-in-50 duration-200">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                  <div className="min-w-0 leading-relaxed">
+                    {useOriginalWord ? (
+                      <span>
+                        Đang giữ nguyên từ trong bài:{' '}
+                        <strong className="text-amber-100 font-semibold">{analyzedData.original_word}</strong>{' '}
+                        <span className="text-amber-300/70">(từ gốc AI đề xuất: {analyzedData.word})</span>
+                      </span>
+                    ) : (
+                      <span>
+                        AI đã đưa về từ gốc:{' '}
+                        <strong className="text-amber-100 font-semibold">{analyzedData.word}</strong>{' '}
+                        <span className="text-amber-300/70">
+                          (từ trong bài: <span className="line-through opacity-75">{analyzedData.original_word}</span>)
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setUseOriginalWord(!useOriginalWord)}
+                  className="h-7 px-2.5 text-[10px] sm:text-xs border-amber-500/40 text-amber-200 hover:bg-amber-500/20 hover:text-white shrink-0 self-start sm:self-auto cursor-pointer transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                  {useOriginalWord
+                    ? `Dùng từ gốc "${analyzedData.word}"`
+                    : `Giữ nguyên "${analyzedData.original_word}"`}
+                </Button>
+              </div>
+            )}
 
             {/* Error Notification Banner */}
             {errorMsg && (
@@ -296,14 +376,16 @@ export function WordQuickPopover({
                 {/* Tags */}
                 {activeCard.tags && activeCard.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-2 border-t border-border/40">
-                    {activeCard.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[10px] text-brand/80 bg-brand/10 px-2 py-0.5 rounded border border-brand/20 font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                    {activeCard.tags
+                      .filter((tag) => typeof tag === 'string' && tag.trim().length > 0)
+                      .map((tag, idx) => (
+                        <span
+                          key={`tag-${tag}-${idx}`}
+                          className="text-[10px] text-brand/80 bg-brand/10 px-2 py-0.5 rounded border border-brand/20 font-medium"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                   </div>
                 )}
 
@@ -373,7 +455,11 @@ export function WordQuickPopover({
                 <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                   <Check className="w-3.5 h-3.5" />
                 </div>
-                <span>Đã lưu vào kho từ vựng</span>
+                <span>
+                  {knownCard && token && knownCard.word.toLowerCase() !== token.clean.toLowerCase()
+                    ? `Đã lưu từ gốc (${knownCard.word}) vào kho từ`
+                    : 'Đã lưu vào kho từ vựng'}
+                </span>
               </div>
             ) : analyzedData ? (
               <Button
@@ -428,6 +514,29 @@ export function WordQuickPopover({
         </motion.div>
       </div>
     </AnimatePresence>
-  );
+
+    {/* Duplicate Word Dialog */}
+    <DuplicateWordDialog
+      isOpen={Boolean(duplicateInfo?.isDuplicate && analyzedData)}
+      onClose={() => setDuplicateInfo(null)}
+      newWord={effectiveWord}
+      newDefinition={
+        analyzedData?.senses[0]?.definition ||
+        analyzedData?.senses[0]?.definition_en ||
+        ''
+      }
+      newPartOfSpeech={analyzedData?.senses[0]?.part_of_speech || null}
+      matchedCard={duplicateInfo?.matchedCard || null}
+      similarity={duplicateInfo?.similarity || 0}
+      threshold={duplicateInfo?.threshold || 80}
+      onConfirmAdd={() => executeSave(true)}
+      onViewExisting={(id) => {
+        onClose();
+        router.push(ROUTES.APP.VOCAB_DETAIL(id));
+      }}
+      isSubmitting={isSaving}
+    />
+  </>
+);
 }
 

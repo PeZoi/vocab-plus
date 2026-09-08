@@ -50,9 +50,25 @@ export async function POST(
       card: Tables<'cards'> | null;
     };
 
-    const cardsToClone = ((cardLinks || []) as unknown as RawForkCardLink[])
+    const allCards = ((cardLinks || []) as unknown as RawForkCardLink[])
       .map((l) => l.card)
       .filter((card): card is Tables<'cards'> => card !== null);
+
+    // Đọc body nếu có truyền danh sách thẻ cụ thể cần clone
+    let selectedCardIds: string[] | null = null;
+    try {
+      const body = await request.json();
+      if (body && Array.isArray(body.selected_card_ids)) {
+        selectedCardIds = body.selected_card_ids;
+      }
+    } catch {
+      // Gọi thông thường không có body JSON
+    }
+
+    const cardsToClone = selectedCardIds !== null
+      ? allCards.filter((c) => selectedCardIds!.includes(c.id))
+      : allCards;
+    const skippedCount = allCards.length - cardsToClone.length;
 
     // 3. Create a personal cloned collection for the user
     const { data: clonedCollection, error: createColError } = await supabase
@@ -142,11 +158,16 @@ export async function POST(
       })
       .eq('id', id);
 
+    const successMsg = skippedCount > 0
+      ? `Đã sao chép thành công ${clonedCount} thẻ từ vựng vào kho cá nhân (đã bỏ qua ${skippedCount} từ trùng lặp)!`
+      : `Đã sao chép thành công ${clonedCount} thẻ từ vựng vào kho cá nhân!`;
+
     return NextResponse.json({
       success: true,
-      message: `Đã sao chép thành công ${clonedCount} thẻ từ vựng vào kho cá nhân!`,
+      message: successMsg,
       collection: clonedCollection,
       cards_cloned: clonedCount,
+      cards_skipped: skippedCount,
     }, { status: 201 });
   } catch (err: unknown) {
     console.error('Fork collection error:', err);

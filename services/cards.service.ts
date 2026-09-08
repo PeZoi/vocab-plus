@@ -42,4 +42,13 @@ export const cardsService = {
   deleteCard: (id: string): Promise<{ success: boolean; message: string }> => {
     return apiClient.delete(`/cards/${id}`);
   },
+
+  /**
+   * Xóa hàng loạt thẻ từ vựng đã chọn
+   */
+  bulkDeleteCards: (
+    cardIds: string[]
+  ): Promise<{ success: boolean; message: string; deleted_count: number }> => {
+    return apiClient.delete('/cards', { data: { card_ids: cardIds } });
+  },
 };

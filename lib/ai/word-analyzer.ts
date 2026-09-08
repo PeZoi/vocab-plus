@@ -59,13 +59,17 @@ ${safeContext ? `Context from reading: "${safeContext}".\n` : ''}
 REQUIREMENTS:
 1. Context priority: ${safeContext ? `Provide the definition and sense matching the context above as the FIRST sense in "senses".` : `Provide the most common sense as the first sense.`}
 2. Accurate translation: ${safeContext ? `Translate the full context sentence accurately and naturally into Vietnamese for "context_translation".` : `Provide an empty string "" for "context_translation".`}
-3. Spelling rule: If misspelled, correct it in "word" and set "is_corrected": true with "original_word": "${safeWord}". Otherwise set "is_corrected": false.
+3. Base Form (Lemmatization) & Spelling Rule (BẮT BUỘC):
+- If "${safeWord}" is an inflected, conjugated, past tense, plural, comparative, or superlative form (e.g. verbs: "bought" -> "buy", "goes"/"went"/"gone" -> "go", "studied" -> "study", "running" -> "run"; nouns: "cats" -> "cat", "children" -> "child"; adjectives: "better" -> "good", "happier" -> "happy"), you MUST convert it to its standard dictionary base/root form (lemma) in "word" (e.g. "buy", "go", "study", "run", "cat", "child", "good", "happy").
+- If "${safeWord}" has a typo or is misspelled, correct the spelling in "word".
+- Whenever "word" differs from "${safeWord}" (either converted to base form OR spelling-corrected): set "is_corrected": true and "original_word": "${safeWord}".
+- If "${safeWord}" is already in its standard dictionary base form and correctly spelled: set "is_corrected": false and "original_word": "${safeWord}".
 4. Topic tags: Include 1-3 English topic tags with '#' in "tags" (e.g., ["#work", "#daily"]) if relevant, otherwise an empty array [].
 
 CRITICAL INSTRUCTION:
 Do not include <think> tags or internal reasoning. Return ONLY a single valid JSON object adhering to this schema:
 {
-  "word": "standard English word",
+  "word": "dictionary base form in standard English (e.g. 'buy' instead of 'bought', 'go' instead of 'goes')",
   "original_word": "${safeWord}",
   "is_corrected": false,
   "ipa": "/.../",
@@ -126,7 +130,7 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
           {
             role: 'system',
             content:
-              'You are an expert English-Vietnamese lexicographer and linguist. Analyze vocabulary accurately and return pure JSON without <think> tags or internal reasoning.',
+              'You are an expert English-Vietnamese lexicographer and linguist. Analyze vocabulary accurately, always normalizing inflected/conjugated words to their standard dictionary base form (lemma) (e.g. "bought" -> "buy", "goes" -> "go"), and return pure JSON without <think> tags or internal reasoning.',
           },
           { role: 'user', content: prompt },
         ],
@@ -192,6 +196,17 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
     throw new Error('AI không trả về nội dung phân tích từ vựng');
   }
 
-  return extractAndParseJson<AIWordAnalysisResponse>(rawContent);
+  const parsed = extractAndParseJson<AIWordAnalysisResponse>(rawContent);
+
+  // Chuẩn hóa: nếu từ trả về khác với từ gốc ban đầu (không phân biệt hoa thường), đảm bảo is_corrected = true
+  if (
+    parsed.word &&
+    parsed.original_word &&
+    parsed.word.trim().toLowerCase() !== parsed.original_word.trim().toLowerCase()
+  ) {
+    parsed.is_corrected = true;
+  }
+
+  return parsed;
 }
 

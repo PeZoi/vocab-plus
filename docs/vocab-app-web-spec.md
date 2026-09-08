@@ -17,7 +17,7 @@
 4. **Chế độ ôn tập Active Recall đa dạng**:
    - **Flashcard 3D FSRS**: Lật thẻ trực quan với 4 mức đánh giá (Again, Hard, Good, Easy) cùng phím tắt tiện lợi.
    - **Cloze Deletion (Điền khuyết ngữ cảnh)**: Ẩn từ mục tiêu trong câu ví dụ dạng `[_____]` để rèn luyện khả năng nhớ chủ động trong câu.
-5. **Hỗ trợ AI học sâu**: AI Word Analyzer tự động phân tích cấp độ CEFR, tầng nghĩa, collocations; AI sinh mnemonic, hình ảnh liên tưởng (Dual-Coding), chấm câu viết ngữ pháp.
+5. **Hỗ trợ AI học sâu**: AI Word Analyzer tự động phân tích cấp độ CEFR, tầng nghĩa, collocations; hình ảnh liên tưởng (Dual-Coding), chấm câu viết ngữ pháp và gợi ý bản xứ.
 6. **Nhắc nhở & báo cáo qua Telegram**: Theo "giờ vàng" cá nhân hóa dựa trên hiệu suất học thực tế qua `pg_cron`.
 7. **Kho từ vựng & Quản lý từ vựng tập trung (`/vocab`)**: Trang quản trị toàn bộ vốn từ vựng cá nhân, tích hợp tìm kiếm tức thời, lọc đa chiều (CEFR, Tags, Trạng thái FSRS, Loại từ), sắp xếp linh hoạt, xem chi tiết thẻ, chỉnh sửa, xóa và thao tác hàng loạt.
 8. **Trang Admin quản trị toàn diện**: Giám sát hệ thống và cấu hình AI provider động (Groq, Gemini, OpenAI...).
@@ -401,11 +401,10 @@ create table public.imported_texts (
 ---
 
 ### 🟫 Phase 5 — AI Hỗ Trợ Học Sâu & Dual-Coding
-- **Visual Mnemonic & Dual-Coding**:
-  - Gợi ý hình ảnh liên tưởng thông qua Pexels API hoặc mô tả hình ảnh gợi nhớ bằng AI.
-  - Kích hoạt cơ chế ghi nhớ kép (Dual-Coding: Ngôn ngữ + Hình ảnh) giúp tăng 200% tỷ lệ lưu giữ từ vựng dài hạn.
-- **Mnemonic Generator**: Tạo câu chuyện ngắn hoặc mẹo nhớ bằng âm thanh tương tự sinh động.
-- **Sentence Writing & AI Grader**: Người dùng tự đặt câu với từ mới, AI chấm đúng/sai ngữ pháp và gợi ý cách dùng từ tự nhiên hơn (natural collocations).
+- **Visual Dual-Coding**:
+  - Tích hợp hình ảnh liên tưởng chất lượng cao thông qua Pexels API trong toàn bộ phân hệ Luyện tập & Kiểm tra (Trắc nghiệm, Điền khuyết, Đặt câu).
+  - Kích hoạt cơ chế ghi nhớ kép (Dual-Coding: Ngôn ngữ + Thị giác) giúp tăng tỷ lệ lưu giữ từ vựng dài hạn trong vỏ não.
+- **Sentence Writing & AI Grader Sandbox**: Người dùng tự đặt câu với từ mới trên trang chi tiết từ vựng, AI chấm điểm ngữ pháp, độ tự nhiên (0-100), phân tích lỗi sai và gợi ý cách diễn đạt tự nhiên chuẩn bản xứ kèm phát âm audio.
 
 ---
 
@@ -496,7 +495,7 @@ create table public.imported_texts (
 | **M2** | Collections & Chia sẻ cộng đồng (Tạo bộ từ, Public lên Thư viện, 1-Click Fork/Clone) + Custom Study Session theo Tag |
 | **M3** | Smart Contextual Reader (Đọc bài tương tác, bôi đen lưu từ kèm câu gốc ngữ cảnh) + Batch Import |
 | **M4** | Chế độ ôn tập Cloze Deletion (Điền khuyết ngữ cảnh) + Flashcard 3D |
-| **M5** | AI học sâu: Dual-Coding ảnh Pexels + Sinh Mnemonic + AI Grader chấm câu viết |
+| **M5** | AI học sâu: Dual-Coding ảnh Pexels + AI Grader chấm câu viết & gợi ý bản xứ |
 | **M6** | Tích hợp Telegram: Liên kết tài khoản + Thuật toán Giờ vàng + Nhắc nhở tự động qua `pg_cron` |
 | **M7** | Admin Dashboard hoàn chỉnh + Cấu hình AI Provider động linh hoạt |
 | **M8** | Collocations, Word Families, Phrasal Verbs, Dictation & Minimal Pairs |

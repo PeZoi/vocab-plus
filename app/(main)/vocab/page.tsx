@@ -1,6 +1,7 @@
 'use client';
 
 import { EmptyState } from '@/components/common/empty-state';
+import { BulkDeleteCardsDialog } from '@/components/features/cards/bulk-delete-cards-dialog';
 import { CardDeleteDialog } from '@/components/features/cards/card-delete-dialog';
 import { CardEditModal } from '@/components/features/cards/card-edit-modal';
 import { VocabCardGrid } from '@/components/features/cards/vocab-card-grid';
@@ -15,7 +16,7 @@ import { ROUTES } from '@/constants/routes';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
 import { useVocabFilter } from '@/hooks/features/cards/use-vocab-filter';
 import type { CardWithProgress } from '@/types/card.types';
-import { BookOpen, FolderPlus, Play, SearchX } from 'lucide-react';
+import { BookOpen, FolderPlus, Play, SearchX, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -25,6 +26,7 @@ export default function VocabPage() {
   // Modal states
   const [editCard, setEditCard] = useState<CardWithProgress | null>(null);
   const [deleteCard, setDeleteCard] = useState<CardWithProgress | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [addToCollectionCard, setAddToCollectionCard] = useState<CardWithProgress | null>(null);
   const [bulkAddToCollectionCards, setBulkAddToCollectionCards] = useState<CardWithProgress[] | null>(null);
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
@@ -158,6 +160,7 @@ export default function VocabPage() {
           onAddToCollection={(card) => setAddToCollectionCard(card)}
           selectedCardIds={selectedCardIds}
           onToggleSelectCard={handleToggleSelectCard}
+          onToggleSelectAll={handleToggleSelectAll}
         />
       ) : (
         <VocabTableView
@@ -208,9 +211,30 @@ export default function VocabPage() {
 
           <Button
             size="sm"
+            variant="danger"
+            onClick={() => setIsBulkDeleteOpen(true)}
+            className="h-8 gap-1.5 text-xs font-semibold shadow-xs"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Xóa ({selectedCardIds.size})</span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleToggleSelectAll}
+            className="h-8 px-2 text-xs text-text-secondary hover:text-text-primary hidden sm:inline-flex"
+          >
+            {filteredCards.length > 0 && filteredCards.every((c) => selectedCardIds.has(c.id))
+              ? 'Bỏ chọn tất cả'
+              : `Chọn tất cả (${filteredCards.length})`}
+          </Button>
+
+          <Button
+            size="sm"
             variant="ghost"
             onClick={() => setSelectedCardIds(new Set())}
-            className="h-8 px-2.5 text-xs text-text-secondary hover:text-text-primary"
+            className="h-8 px-2 text-xs text-text-secondary hover:text-text-primary sm:hidden"
           >
             Bỏ chọn
           </Button>
@@ -230,6 +254,16 @@ export default function VocabPage() {
         isOpen={!!deleteCard}
         onClose={() => setDeleteCard(null)}
         onSuccess={() => refetch()}
+      />
+
+      <BulkDeleteCardsDialog
+        cardIds={Array.from(selectedCardIds)}
+        isOpen={isBulkDeleteOpen}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        onSuccess={() => {
+          setSelectedCardIds(new Set());
+          refetch();
+        }}
       />
 
       <AddToCollectionModal

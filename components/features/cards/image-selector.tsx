@@ -56,7 +56,7 @@ export function ImageSelector({
         <div className="flex items-center gap-2">
           <ImageIcon className="w-4 h-4 text-brand" />
           <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
-            Ảnh minh họa liên tưởng (Dual-Coding)
+            Ảnh minh họa liên tưởng
           </span>
         </div>
 

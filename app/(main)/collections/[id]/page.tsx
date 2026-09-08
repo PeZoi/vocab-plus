@@ -5,11 +5,14 @@ import { CollectionDeleteDialog } from '@/components/features/collections/collec
 import { CreateCollectionModal } from '@/components/features/collections/create-collection-modal';
 import { CollectionDetailBanner } from '@/components/features/collections/detail/collection-detail-banner';
 import { CollectionDetailWordList } from '@/components/features/collections/detail/collection-detail-word-list';
+import { DuplicateResolutionModal } from '@/components/features/collections/duplicate-resolution-modal';
+import { ForkLoadingModal } from '@/components/features/collections/fork-loading-modal';
 import { ForkSuccessDialog } from '@/components/features/collections/fork-success-dialog';
 import { SelectCardsModal } from '@/components/features/collections/select-cards-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
-import type { Collection } from '@/types/collection.types';
+import { collectionsService } from '@/services/collections.service';
+import type { AnalyzeForkResult, Collection } from '@/types/collection.types';
 import {
   useCollectionDetailQuery,
   useForkCollectionMutation,
@@ -34,6 +37,21 @@ export default function CollectionDetailPage() {
     collection: Collection;
     cardsCount: number;
   } | null>(null);
+  const [duplicateAnalysis, setDuplicateAnalysis] = useState<AnalyzeForkResult | null>(null);
+  const [forkLoadingState, setForkLoadingState] = useState<{
+    isOpen: boolean;
+    collectionTitle: string;
+    isSuccess: boolean;
+    pendingResult?: {
+      collection: Collection;
+      cardsCount: number;
+    } | null;
+  }>({
+    isOpen: false,
+    collectionTitle: '',
+    isSuccess: false,
+    pendingResult: null,
+  });
 
   const { data: collection, isLoading, isError, refetch } = useCollectionDetailQuery(id);
   const forkMutation = useForkCollectionMutation();
@@ -76,19 +94,116 @@ export default function CollectionDetailPage() {
   const handleFork = async () => {
     try {
       setIsForking(true);
+      setForkLoadingState({
+        isOpen: true,
+        collectionTitle: collection.title,
+        isSuccess: false,
+        pendingResult: null,
+      });
+
+      // Bước 1: Phân tích trùng lặp trước
+      const analysis = await collectionsService.analyzeFork(collection.id);
+      if (analysis.has_duplicates) {
+        setForkLoadingState({
+          isOpen: false,
+          collectionTitle: '',
+          isSuccess: false,
+          pendingResult: null,
+        });
+        setDuplicateAnalysis(analysis);
+        return;
+      }
+
+      // Bước 2: Không có trùng -> Clone toàn bộ
       const res = await forkMutation.mutateAsync(collection.id);
       if (res.collection) {
-        setForkSuccessResult({
-          collection: res.collection,
-          cardsCount: res.cards_cloned ?? collection.cards?.length ?? 0,
+        setForkLoadingState((prev) => ({
+          ...prev,
+          isSuccess: true,
+          pendingResult: {
+            collection: res.collection,
+            cardsCount: res.cards_cloned ?? collection.cards?.length ?? 0,
+          },
+        }));
+      } else {
+        setForkLoadingState({
+          isOpen: false,
+          collectionTitle: '',
+          isSuccess: false,
+          pendingResult: null,
         });
       }
     } catch (err: unknown) {
+      setForkLoadingState({
+        isOpen: false,
+        collectionTitle: '',
+        isSuccess: false,
+        pendingResult: null,
+      });
       const msg = err instanceof Error ? err.message : 'Lỗi khi fork bộ từ';
       console.error(msg);
     } finally {
       setIsForking(false);
     }
+  };
+
+  const handleConfirmSmartFork = async (selectedCardIds: string[]) => {
+    try {
+      setIsForking(true);
+      setDuplicateAnalysis(null);
+      setForkLoadingState({
+        isOpen: true,
+        collectionTitle: collection.title,
+        isSuccess: false,
+        pendingResult: null,
+      });
+
+      const res = await forkMutation.mutateAsync({
+        id: collection.id,
+        options: { selected_card_ids: selectedCardIds },
+      });
+
+      if (res.collection) {
+        setForkLoadingState((prev) => ({
+          ...prev,
+          isSuccess: true,
+          pendingResult: {
+            collection: res.collection,
+            cardsCount: res.cards_cloned ?? 0,
+          },
+        }));
+      } else {
+        setForkLoadingState({
+          isOpen: false,
+          collectionTitle: '',
+          isSuccess: false,
+          pendingResult: null,
+        });
+      }
+    } catch (err: unknown) {
+      setForkLoadingState({
+        isOpen: false,
+        collectionTitle: '',
+        isSuccess: false,
+        pendingResult: null,
+      });
+      const msg = err instanceof Error ? err.message : 'Lỗi khi clone bộ từ';
+      console.error(msg);
+    } finally {
+      setIsForking(false);
+    }
+  };
+
+  const handleFinishForkSuccess = () => {
+    if (forkLoadingState.pendingResult) {
+      setForkSuccessResult(forkLoadingState.pendingResult);
+    }
+    setForkLoadingState({
+      isOpen: false,
+      collectionTitle: '',
+      isSuccess: false,
+      pendingResult: null,
+    });
   };
 
   const handleToggleLike = async () => {
@@ -161,6 +276,24 @@ export default function CollectionDetailPage() {
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
         onSuccess={() => router.push(ROUTES.APP.COLLECTIONS)}
+      />
+
+      {/* Fork Loading Modal with Progress */}
+      <ForkLoadingModal
+        isOpen={forkLoadingState.isOpen}
+        collectionTitle={forkLoadingState.collectionTitle}
+        isSuccess={forkLoadingState.isSuccess}
+        onFinishSuccess={handleFinishForkSuccess}
+      />
+
+      {/* Duplicate Resolution Modal for Smart Fork */}
+      <DuplicateResolutionModal
+        isOpen={!!duplicateAnalysis}
+        onClose={() => setDuplicateAnalysis(null)}
+        collectionTitle={collection.title}
+        analysis={duplicateAnalysis}
+        onConfirm={handleConfirmSmartFork}
+        isSubmitting={isForking}
       />
 
       {/* Fork Success Dialog */}

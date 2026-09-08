@@ -22,7 +22,11 @@ export function useVocabFilter(rawCards: CardWithProgress[] = []) {
     const tagSet = new Set<string>();
     rawCards.forEach((card) => {
       if (card.tags && Array.isArray(card.tags)) {
-        card.tags.forEach((tag) => tagSet.add(tag));
+        card.tags.forEach((tag) => {
+          if (typeof tag === 'string' && tag.trim().length > 0) {
+            tagSet.add(tag.trim());
+          }
+        });
       }
     });
     return Array.from(tagSet).sort();

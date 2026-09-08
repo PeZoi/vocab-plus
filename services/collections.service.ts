@@ -1,9 +1,12 @@
 import { apiClient } from '@/lib/axios';
 import type {
+  AnalyzeForkResult,
   Collection,
   CollectionFilterParams,
   CollectionWithCards,
   CreateCollectionDto,
+  ForkCollectionOptions,
+  ForkResult,
   UpdateCollectionDto,
 } from '@/types/collection.types';
 
@@ -28,13 +31,12 @@ export const collectionsService = {
     return apiClient.delete(`/collections/${id}`);
   },
 
-  forkCollection: (id: string): Promise<{
-    success: boolean;
-    message: string;
-    collection: Collection;
-    cards_cloned: number;
-  }> => {
-    return apiClient.post(`/collections/${id}/fork`);
+  analyzeFork: (id: string): Promise<AnalyzeForkResult> => {
+    return apiClient.post(`/collections/${id}/analyze-fork`);
+  },
+
+  forkCollection: (id: string, options?: ForkCollectionOptions): Promise<ForkResult> => {
+    return apiClient.post(`/collections/${id}/fork`, options);
   },
 
   toggleLikeCollection: (id: string): Promise<{

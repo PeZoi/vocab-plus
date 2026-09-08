@@ -3,6 +3,7 @@ import { collectionsService } from '@/services/collections.service';
 import type {
   CollectionFilterParams,
   CreateCollectionDto,
+  ForkCollectionOptions,
   UpdateCollectionDto,
 } from '@/types/collection.types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -67,7 +68,12 @@ export function useForkCollectionMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => collectionsService.forkCollection(id),
+    mutationFn: (variables: string | { id: string; options?: ForkCollectionOptions }) => {
+      if (typeof variables === 'string') {
+        return collectionsService.forkCollection(variables);
+      }
+      return collectionsService.forkCollection(variables.id, variables.options);
+    },
     onSuccess: () => {
       // Invalidate collections, cards and review queues because new cards were added to user's deck!
       queryClient.invalidateQueries({ queryKey: collectionKeys.all });

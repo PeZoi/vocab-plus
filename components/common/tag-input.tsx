@@ -65,24 +65,26 @@ export function TagInput({
     >
       <TagIcon className="w-3.5 h-3.5 text-text-secondary ml-1 mr-0.5 shrink-0" />
 
-      {value.map((tag) => (
-        <span
-          key={tag}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand/10 text-brand border border-brand/20 text-xs font-medium group transition-colors select-none"
-        >
-          <span>{tag}</span>
-          {!disabled && (
-            <button
-              type="button"
-              onClick={() => handleRemoveTag(tag)}
-              className="text-brand/60 hover:text-danger hover:bg-danger/10 rounded p-0.5 transition-colors outline-none"
-              title={`Xóa tag ${tag}`}
-            >
-              <X className="w-3 h-3" />
-            </button>
-          )}
-        </span>
-      ))}
+      {value
+        .filter((tag) => typeof tag === 'string' && tag.trim().length > 0)
+        .map((tag, idx) => (
+          <span
+            key={`tag-${tag}-${idx}`}
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand/10 text-brand border border-brand/20 text-xs font-medium group transition-colors select-none"
+          >
+            <span>{tag}</span>
+            {!disabled && (
+              <button
+                type="button"
+                onClick={() => handleRemoveTag(tag)}
+                className="text-brand/60 hover:text-danger hover:bg-danger/10 rounded p-0.5 transition-colors outline-none"
+                title={`Xóa tag ${tag}`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </span>
+        ))}
 
       {!disabled && value.length < maxTags && (
         <input

@@ -17,6 +17,7 @@ interface VocabCardGridProps {
   onAddToCollection?: (card: CardWithProgress) => void;
   selectedCardIds?: Set<string>;
   onToggleSelectCard?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export function VocabCardGrid({
@@ -27,25 +28,71 @@ export function VocabCardGrid({
   onAddToCollection,
   selectedCardIds,
   onToggleSelectCard,
+  onToggleSelectAll,
 }: VocabCardGridProps) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
-      {cards.map((card) => {
-        const userCard = card.user_card;
-        const isDue = userCard?.due_at ? new Date(userCard.due_at) <= new Date() : false;
-        const isSelected = selectedCardIds?.has(card.id);
+  const isSelectionMode = (selectedCardIds?.size ?? 0) > 0;
+  const isAllSelected = cards.length > 0 && cards.every((c) => selectedCardIds?.has(c.id));
+  const isSomeSelected = cards.some((c) => selectedCardIds?.has(c.id));
 
-        return (
-          <div
-            key={card.id}
-            onClick={() => onViewDetail(card)}
-            className={cn(
-              'group relative p-4 rounded-2xl bg-surface/90 border transition-all hover:shadow-md cursor-pointer flex flex-col justify-between space-y-3',
-              isSelected
-                ? 'border-brand ring-1 ring-brand/50 shadow-xs shadow-brand/10'
-                : 'border-border/80 hover:border-brand/40'
-            )}
+  return (
+    <div className="space-y-3">
+      {/* Selection Control Bar */}
+      {onToggleSelectAll && cards.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-surface/60 border border-border/60 text-xs">
+          <button
+            type="button"
+            onClick={onToggleSelectAll}
+            className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors cursor-pointer select-none"
           >
+            <div
+              className={cn(
+                'w-4 h-4 rounded border flex items-center justify-center transition-all',
+                isAllSelected
+                  ? 'bg-brand border-brand text-white shadow-xs'
+                  : isSomeSelected
+                  ? 'border-brand/80 bg-brand/20 text-brand'
+                  : 'border-border/80 bg-base/70'
+              )}
+            >
+              {isAllSelected && <Check className="w-3 h-3 stroke-[3]" />}
+              {!isAllSelected && isSomeSelected && <div className="w-1.5 h-1.5 rounded-xs bg-brand" />}
+            </div>
+            <span className="font-medium">
+              {isAllSelected
+                ? `Đã chọn tất cả (${cards.length} từ)`
+                : isSomeSelected
+                ? `Đã chọn ${selectedCardIds?.size ?? 0} / ${cards.length} từ (Bấm để chọn tất cả)`
+                : `Chọn tất cả (${cards.length} từ)`}
+            </span>
+          </button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+        {cards.map((card) => {
+          const userCard = card.user_card;
+          const isDue = userCard?.due_at ? new Date(userCard.due_at) <= new Date() : false;
+          const isSelected = selectedCardIds?.has(card.id);
+
+          return (
+            <div
+              key={card.id}
+              onClick={(e) => {
+                // Nếu đang ở chế độ check: click vào card sẽ toggle check chứ không navigate
+                if (isSelectionMode && onToggleSelectCard) {
+                  e.preventDefault();
+                  onToggleSelectCard(card.id);
+                  return;
+                }
+                onViewDetail(card);
+              }}
+              className={cn(
+                'group relative p-4 rounded-2xl bg-surface/90 border transition-all hover:shadow-md cursor-pointer flex flex-col justify-between space-y-3',
+                isSelected
+                  ? 'border-brand ring-1 ring-brand/50 shadow-xs shadow-brand/10'
+                  : 'border-border/80 hover:border-brand/40'
+              )}
+            >
             {/* Header: Badges, Checkbox & Actions */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -205,6 +252,7 @@ export function VocabCardGrid({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

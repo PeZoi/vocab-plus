@@ -24,6 +24,14 @@ export interface TestAIProviderResponse {
   error?: string;
 }
 
+export interface SystemSetting {
+  key: string;
+  value: Record<string, unknown>;
+  description: string | null;
+  updated_by: string | null;
+  updated_at: string;
+}
+
 export const adminService = {
   /**
    * Lấy danh sách cấu hình các nhà cung cấp AI toàn hệ thống
@@ -44,5 +52,19 @@ export const adminService = {
    */
   testAIProvider: (payload: TestAIProviderDto): Promise<TestAIProviderResponse> => {
     return apiClient.post('/admin/ai-providers/test', payload);
+  },
+
+  /**
+   * Lấy toàn bộ cấu hình hệ thống
+   */
+  getSystemSettings: (): Promise<SystemSetting[]> => {
+    return apiClient.get('/admin/settings');
+  },
+
+  /**
+   * Cập nhật một cấu hình hệ thống
+   */
+  updateSystemSetting: (key: string, value: Record<string, unknown>): Promise<SystemSetting> => {
+    return apiClient.patch('/admin/settings', { key, value });
   },
 };

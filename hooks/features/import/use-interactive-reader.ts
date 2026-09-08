@@ -7,6 +7,7 @@ import {
   calculateReadingStats,
   type ReaderToken,
 } from '@/utils/text-extractor';
+import { getBaseWordCandidates } from '@/utils/lemmatizer';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
 import { useQuickSaveWord } from './use-quick-save-word';
 
@@ -20,32 +21,78 @@ export function useInteractiveReader(initialText: string = '', initialTitle: str
   const { data: cards = [], isLoading: isLoadingCards } = useCardsQuery();
   const { isWordRecentlySaved } = useQuickSaveWord();
 
-  // Tạo Map từ vựng đã học để tra cứu O(1)
+  // Tạo Map từ vựng đã học để tra cứu O(1) (Bao gồm cả từ gốc và các từ trong họ từ word_family)
   const knownWordsMap = useMemo(() => {
     const map = new Map<string, (typeof cards)[0]>();
     cards.forEach((card) => {
       if (card.word) {
-        map.set(card.word.toLowerCase().trim(), card);
+        const baseWord = card.word.toLowerCase().trim();
+        map.set(baseWord, card);
+
+        // Ánh xạ thêm các từ trong word_family nếu có
+        if (card.word_family && Array.isArray(card.word_family)) {
+          card.word_family.forEach((wf: unknown) => {
+            const familyWord =
+              typeof wf === 'string'
+                ? wf
+                : typeof wf === 'object' && wf !== null && 'word' in wf
+                ? (wf as { word: string }).word
+                : '';
+            if (typeof familyWord === 'string') {
+              const cleanFamily = familyWord.toLowerCase().trim();
+              if (cleanFamily && !map.has(cleanFamily)) {
+                map.set(cleanFamily, card);
+              }
+            }
+          });
+        }
       }
     });
     return map;
   }, [cards]);
 
-  // Kiểm tra xem một từ đã có trong kho từ (hoặc vừa lưu xong) chưa
+  // Kiểm tra xem một từ (hoặc các biến thể thì/dạng số nhiều/bất quy tắc của nó) đã có trong kho từ chưa
   const isKnownWord = useCallback(
     (cleanWord: string) => {
       if (!cleanWord) return false;
       const lower = cleanWord.toLowerCase().trim();
-      return knownWordsMap.has(lower) || isWordRecentlySaved(lower);
+      
+      // 1. Kiểm tra trực tiếp
+      if (knownWordsMap.has(lower) || isWordRecentlySaved(lower)) {
+        return true;
+      }
+
+      // 2. Kiểm tra qua các ứng viên từ gốc (Lemmatizer)
+      const candidates = getBaseWordCandidates(lower);
+      for (const candidate of candidates) {
+        if (knownWordsMap.has(candidate) || isWordRecentlySaved(candidate)) {
+          return true;
+        }
+      }
+
+      return false;
     },
     [knownWordsMap, isWordRecentlySaved]
   );
 
-  // Lấy thông tin thẻ đã lưu của từ
+  // Lấy thông tin thẻ đã lưu của từ (trực tiếp hoặc thông qua từ gốc)
   const getKnownCardInfo = useCallback(
     (cleanWord: string) => {
       if (!cleanWord) return undefined;
-      return knownWordsMap.get(cleanWord.toLowerCase().trim());
+      const lower = cleanWord.toLowerCase().trim();
+
+      // 1. Khớp trực tiếp
+      const directCard = knownWordsMap.get(lower);
+      if (directCard) return directCard;
+
+      // 2. Khớp qua từ gốc (Lemmatizer)
+      const candidates = getBaseWordCandidates(lower);
+      for (const candidate of candidates) {
+        const candidateCard = knownWordsMap.get(candidate);
+        if (candidateCard) return candidateCard;
+      }
+
+      return undefined;
     },
     [knownWordsMap]
   );

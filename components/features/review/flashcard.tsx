@@ -69,14 +69,16 @@ export function Flashcard({ card, isFlipped, onFlip }: FlashcardProps) {
             {/* Tags display */}
             {card.tags && card.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 items-center justify-center pt-1">
-                {card.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[11px] text-brand/80 bg-brand/10 px-2 py-0.5 rounded-md border border-brand/20 font-medium"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {card.tags
+                  .filter((tag) => typeof tag === 'string' && tag.trim().length > 0)
+                  .map((tag, idx) => (
+                    <span
+                      key={`tag-${tag}-${idx}`}
+                      className="text-[11px] text-brand/80 bg-brand/10 px-2 py-0.5 rounded-md border border-brand/20 font-medium"
+                    >
+                      {tag}
+                    </span>
+                  ))}
               </div>
             )}
           </div>
