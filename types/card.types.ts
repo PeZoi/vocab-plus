@@ -30,6 +30,7 @@ export type VocabSortOption =
 
 export interface CardWithProgress extends Card {
   user_card?: UserCard | null;
+  is_owner?: boolean;
 }
 
 export interface SenseItem {

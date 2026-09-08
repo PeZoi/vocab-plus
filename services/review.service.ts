@@ -19,6 +19,7 @@ export const reviewService = {
     collection_id?: string;
     tag?: string;
     cefr_level?: string;
+    card_ids?: string;
   }): Promise<ReviewCardItem[]> => {
     return apiClient.get('/review/due', { params });
   },

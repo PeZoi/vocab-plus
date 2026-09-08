@@ -65,7 +65,9 @@ export async function GET(
     const isSaved = Array.isArray(collection.user_collections) && collection.user_collections.some((s: { user_id: string }) => s.user_id === user.id);
     const isOwner = collection.creator_id === user.id;
 
-    const { collection_likes, user_collections, ...rest } = collection;
+    const rest = { ...collection };
+    delete (rest as Record<string, unknown>).collection_likes;
+    delete (rest as Record<string, unknown>).user_collections;
 
     return NextResponse.json({
       ...rest,

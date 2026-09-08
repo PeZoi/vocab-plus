@@ -3,9 +3,10 @@
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { CardWithProgress } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
-import { AlertTriangle, Edit2, Eye, FolderPlus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Check, Edit2, Eye, FolderPlus, Trash2 } from 'lucide-react';
 
 interface VocabTableViewProps {
   cards: CardWithProgress[];
@@ -13,6 +14,9 @@ interface VocabTableViewProps {
   onEdit: (card: CardWithProgress) => void;
   onDelete: (card: CardWithProgress) => void;
   onAddToCollection?: (card: CardWithProgress) => void;
+  selectedCardIds?: Set<string>;
+  onToggleSelectCard?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export function VocabTableView({
@@ -21,12 +25,36 @@ export function VocabTableView({
   onEdit,
   onDelete,
   onAddToCollection,
+  selectedCardIds,
+  onToggleSelectCard,
+  onToggleSelectAll,
 }: VocabTableViewProps) {
+  const isAllSelected = cards.length > 0 && cards.every((c) => selectedCardIds?.has(c.id));
+  const isSomeSelected = cards.some((c) => selectedCardIds?.has(c.id));
+
   return (
     <div className="w-full overflow-x-auto rounded-2xl border border-border/80 bg-surface/80">
       <table className="w-full text-left border-collapse text-xs">
         <thead>
           <tr className="border-b border-border/80 bg-base/60 text-text-secondary font-medium">
+            {onToggleSelectCard && (
+              <th className="py-3 px-3 w-8">
+                <button
+                  type="button"
+                  onClick={onToggleSelectAll}
+                  className={cn(
+                    'w-4 h-4 rounded border flex items-center justify-center transition-all',
+                    isAllSelected
+                      ? 'bg-brand border-brand text-white shadow-xs'
+                      : isSomeSelected
+                      ? 'border-brand/80 bg-brand/20'
+                      : 'border-border/80 bg-base/70 hover:border-brand/60'
+                  )}
+                >
+                  {isAllSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                </button>
+              </th>
+            )}
             <th className="py-3 px-4 font-semibold">Từ vựng</th>
             <th className="py-3 px-3 font-semibold">Cấp độ</th>
             <th className="py-3 px-3 font-semibold">Từ loại</th>
@@ -40,13 +68,34 @@ export function VocabTableView({
           {cards.map((card) => {
             const userCard = card.user_card;
             const isDue = userCard?.due_at ? new Date(userCard.due_at) <= new Date() : false;
+            const isSelected = selectedCardIds?.has(card.id);
 
             return (
               <tr
                 key={card.id}
                 onClick={() => onViewDetail(card)}
-                className="hover:bg-surface-hover/80 transition-colors cursor-pointer group"
+                className={cn(
+                  'transition-colors cursor-pointer group',
+                  isSelected ? 'bg-brand/5 hover:bg-brand/10' : 'hover:bg-surface-hover/80'
+                )}
               >
+                {/* Checkbox */}
+                {onToggleSelectCard && (
+                  <td className="py-3 px-3 w-8" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => onToggleSelectCard(card.id)}
+                      className={cn(
+                        'w-4 h-4 rounded border flex items-center justify-center transition-all',
+                        isSelected
+                          ? 'bg-brand border-brand text-white shadow-xs'
+                          : 'border-border/80 bg-base/70 hover:border-brand/60'
+                      )}
+                    >
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </button>
+                  </td>
+                )}
                 {/* Word & IPA */}
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">

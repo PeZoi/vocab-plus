@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { CEFR_FILTER_OPTIONS } from '@/constants/cefr';
 import type { CEFRLevel, FSRSState, VocabSortOption } from '@/types/card.types';
-import { Filter, RotateCcw } from 'lucide-react';
+import { Filter, Play, RotateCcw } from 'lucide-react';
 
 interface VocabFiltersBarProps {
   availableTags: string[];
@@ -24,6 +24,8 @@ interface VocabFiltersBarProps {
   onSortChange: (val: VocabSortOption) => void;
   onResetFilters: () => void;
   isFiltered: boolean;
+  onStartCustomStudy?: () => void;
+  filteredCount?: number;
 }
 
 const FSRS_STATE_OPTIONS: { value: FSRSState; label: string }[] = [
@@ -56,6 +58,8 @@ export function VocabFiltersBar({
   onSortChange,
   onResetFilters,
   isFiltered,
+  onStartCustomStudy,
+  filteredCount,
 }: VocabFiltersBarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-surface/50 border border-border/60">
@@ -153,6 +157,20 @@ export function VocabFiltersBar({
         >
           <RotateCcw className="w-3 h-3" />
           <span className="hidden sm:inline">Đặt lại</span>
+        </Button>
+      )}
+
+      {/* Custom Study Quick Action Button when filtered by Tag or CEFR */}
+      {(selectedTag !== 'all' || cefrLevel !== 'all') && onStartCustomStudy && (filteredCount ?? 0) > 0 && (
+        <Button
+          type="button"
+          size="sm"
+          onClick={onStartCustomStudy}
+          className="h-8 px-2.5 text-xs bg-brand hover:bg-brand-hover text-white gap-1.5 shadow-xs shadow-brand/20 ml-auto font-medium"
+          title="Bắt đầu phiên ôn tập tùy chỉnh cho các thẻ theo bộ lọc hiện tại"
+        >
+          <Play className="w-3.5 h-3.5 fill-current" />
+          <span>Ôn tập nhóm này ({filteredCount})</span>
         </Button>
       )}
     </div>

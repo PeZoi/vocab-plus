@@ -16,7 +16,7 @@ export function MobileBottomNav() {
     { label: 'Tổng quan', href: ROUTES.APP.DASHBOARD, icon: LayoutDashboard },
     { label: 'Kho từ', href: ROUTES.APP.VOCAB, icon: BookOpen },
     {
-      label: 'Ôn tập',
+      label: 'Học từ',
       href: ROUTES.APP.REVIEW,
       icon: Layers,
       badge: dueCount > 0 ? dueCount : undefined,

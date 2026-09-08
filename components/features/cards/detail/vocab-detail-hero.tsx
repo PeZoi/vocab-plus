@@ -5,6 +5,7 @@ import { CEFRBadge } from '@/components/common/cefr-badge';
 import type { CardWithProgress } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
 import { BookOpen, Lightbulb, Quote, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import React from 'react';
 
 interface VocabDetailHeroProps {
@@ -75,6 +76,22 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
             </div>
           )}
         </div>
+
+        {/* Dual-Coding Image Banner */}
+        {card.image_url && (
+          <div className="p-6 sm:p-7 bg-base/20 border-t border-border/40">
+            <div className="relative w-full h-52 sm:h-64 rounded-xl overflow-hidden border border-border/70 shadow-sm bg-base">
+              <Image
+                src={card.image_url}
+                alt={card.word}
+                fill
+                sizes="(max-width: 640px) 100vw, 640px"
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          </div>
+        )}
 
         {/* Core Definition Section (Bilingual - English Primary) */}
         <div className="p-6 sm:p-7 space-y-3.5">

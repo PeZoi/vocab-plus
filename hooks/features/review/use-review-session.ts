@@ -10,6 +10,7 @@ export function useReviewSession(params?: {
   collection_id?: string;
   tag?: string;
   cefr_level?: string;
+  card_ids?: string;
 }) {
   const queryClient = useQueryClient();
 

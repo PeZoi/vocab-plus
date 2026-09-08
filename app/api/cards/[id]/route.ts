@@ -23,14 +23,16 @@ export async function GET(request: Request, { params }: RouteParams) {
       .from('cards')
       .select('*, user_cards(*)')
       .eq('id', id)
-      .eq('owner_id', user.id)
       .single();
 
     if (error || !data) {
       return NextResponse.json({ error: 'Không tìm thấy thẻ từ vựng' }, { status: 404 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({
+      ...data,
+      is_owner: data.owner_id === user.id,
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
     return NextResponse.json({ error: msg }, { status: 500 });

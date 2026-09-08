@@ -23,7 +23,7 @@ export function DashboardCefrDistribution({
         <div className="flex items-center gap-2">
           <BarChart2 className="w-4 h-4 text-brand" />
           <h3 className="text-xs font-semibold uppercase tracking-wider text-text-primary">
-            Phân bổ Cấp độ CEFR
+            Phân bổ Cấp độ
           </h3>
         </div>
         <span className="text-[11px] text-text-secondary">Chuẩn quốc tế</span>

@@ -11,7 +11,9 @@ import { formatIPA } from '@/utils/formatters';
 import type { ReaderToken } from '@/utils/text-extractor';
 import { AlertCircle, BookmarkPlus, Check, Lightbulb, Loader2, Sparkles, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import Image from 'next/image';
 import React, { useState } from 'react';
+import { ImageSelector } from '@/components/features/cards/image-selector';
 
 interface WordQuickPopoverProps {
   token: ReaderToken | null;
@@ -32,6 +34,7 @@ export function WordQuickPopover({
   const [analyzedData, setAnalyzedData] = useState<AIWordAnalysisResponse | null>(null);
   const [justSavedCard, setJustSavedCard] = useState<CardWithProgress | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   // Map analyzed data into a temporary CardWithProgress for display
   const tempCard = React.useMemo(() => {
@@ -51,8 +54,9 @@ export function WordQuickPopover({
       mnemonic: analyzedData.mnemonic,
       collocations: analyzedData.collocations as unknown as import('@/types/database.types').Json,
       word_family: analyzedData.word_family as unknown as import('@/types/database.types').Json,
+      image_url: selectedImageUrl || null,
     } as unknown as CardWithProgress;
-  }, [analyzedData, contextSentence]);
+  }, [analyzedData, contextSentence, selectedImageUrl]);
 
   if (!token) return null;
 
@@ -88,6 +92,7 @@ export function WordQuickPopover({
         mnemonic: analyzedData.mnemonic,
         collocations: analyzedData.collocations,
         word_family: analyzedData.word_family,
+        image_url: selectedImageUrl || null,
       };
 
       const newCard = await createCard(payload);
@@ -102,6 +107,7 @@ export function WordQuickPopover({
   const handleAnalyze = () => {
     if (!token) return;
     setErrorMsg(null);
+    setSelectedImageUrl(null);
     analyzeWord({ word: token.clean, context_sentence: contextSentence })
       .then((res) => setAnalyzedData(res))
       .catch((err) => {
@@ -300,6 +306,35 @@ export function WordQuickPopover({
                     ))}
                   </div>
                 )}
+
+                {/* Ảnh minh họa nếu từ đã được lưu */}
+                {isAlreadySaved && activeCard.image_url && (
+                  <div className="pt-2 border-t border-border/40">
+                    <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider block mb-2">
+                      Ảnh minh họa (Dual-Coding):
+                    </span>
+                    <div className="relative w-full h-36 sm:h-44 rounded-xl overflow-hidden border border-border/70 shadow-xs bg-base/50">
+                      <Image
+                        src={activeCard.image_url}
+                        alt={activeCard.word}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 400px"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Chọn ảnh minh họa Pexels (Dual-Coding) khi thêm từ mới */}
+                {!isAlreadySaved && analyzedData && (
+                  <div className="pt-2 border-t border-border/40">
+                    <ImageSelector
+                      defaultQuery={analyzedData.word}
+                      selectedImageUrl={selectedImageUrl}
+                      onSelectImage={setSelectedImageUrl}
+                    />
+                  </div>
+                )}
               </div>
             ) : isAnalyzing ? (
               <div className="text-center py-6 px-3 rounded-xl bg-surface-hover/30 border border-dashed border-border/80 text-xs text-text-secondary space-y-3">
@@ -338,7 +373,7 @@ export function WordQuickPopover({
                 <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                   <Check className="w-3.5 h-3.5" />
                 </div>
-                <span>Đã lưu vào kho từ vựng (FSRS)</span>
+                <span>Đã lưu vào kho từ vựng</span>
               </div>
             ) : analyzedData ? (
               <Button

@@ -67,27 +67,31 @@ export function VocabDetailHeader({
           <span className="hidden sm:inline">Bộ sưu tập</span>
         </Button>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onOpenEdit}
-          className="gap-1.5 text-xs text-slate-300 border-border/70 hover:text-white hover:border-brand/40"
-        >
-          <Edit2 className="w-3.5 h-3.5 text-blue-400" />
-          <span>Chỉnh sửa</span>
-        </Button>
+        {card.is_owner !== false && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenEdit}
+              className="gap-1.5 text-xs text-slate-300 border-border/70 hover:text-white hover:border-brand/40"
+            >
+              <Edit2 className="w-3.5 h-3.5 text-blue-400" />
+              <span>Chỉnh sửa</span>
+            </Button>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onOpenDelete}
-          className="p-2 text-slate-400 hover:bg-danger/10 hover:text-danger rounded-lg transition-colors"
-          title="Xóa thẻ từ vựng"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onOpenDelete}
+              className="p-2 text-slate-400 hover:bg-danger/10 hover:text-danger rounded-lg transition-colors"
+              title="Xóa thẻ từ vựng"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -9,12 +9,13 @@ import { VocabListHeader } from '@/components/features/cards/vocab-list-header';
 import { VocabTableView } from '@/components/features/cards/vocab-table-view';
 import { AddToCollectionModal } from '@/components/features/collections/add-to-collection-modal';
 import { CreateCollectionModal } from '@/components/features/collections/create-collection-modal';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
 import { useVocabFilter } from '@/hooks/features/cards/use-vocab-filter';
 import type { CardWithProgress } from '@/types/card.types';
-import { BookOpen, SearchX } from 'lucide-react';
+import { BookOpen, FolderPlus, Play, SearchX } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -25,7 +26,11 @@ export default function VocabPage() {
   const [editCard, setEditCard] = useState<CardWithProgress | null>(null);
   const [deleteCard, setDeleteCard] = useState<CardWithProgress | null>(null);
   const [addToCollectionCard, setAddToCollectionCard] = useState<CardWithProgress | null>(null);
+  const [bulkAddToCollectionCards, setBulkAddToCollectionCards] = useState<CardWithProgress[] | null>(null);
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
+
+  // Selection states for bulk actions
+  const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
 
   // Fetch all user cards
   const { data: rawCards = [], isLoading, refetch } = useCardsQuery();
@@ -49,6 +54,24 @@ export default function VocabPage() {
     isFiltered,
     resetFilters,
   } = useVocabFilter(rawCards);
+
+  const handleToggleSelectCard = (id: string) => {
+    setSelectedCardIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    const isAll = filteredCards.length > 0 && filteredCards.every((c) => selectedCardIds.has(c.id));
+    if (isAll) {
+      setSelectedCardIds(new Set());
+    } else {
+      setSelectedCardIds(new Set(filteredCards.map((c) => c.id)));
+    }
+  };
 
   return (
     <div className="space-y-5 pb-12 max-w-7xl mx-auto">
@@ -76,6 +99,13 @@ export default function VocabPage() {
           onSortChange={setSortBy}
           onResetFilters={resetFilters}
           isFiltered={isFiltered}
+          filteredCount={filteredCards.length}
+          onStartCustomStudy={() => {
+            const query = new URLSearchParams();
+            if (selectedTag !== 'all') query.set('tag', selectedTag.replace('#', ''));
+            if (cefrLevel !== 'all') query.set('cefr_level', cefrLevel);
+            router.push(`${ROUTES.APP.REVIEW}?${query.toString()}`);
+          }}
         />
       )}
 
@@ -126,6 +156,8 @@ export default function VocabPage() {
           onEdit={(card) => setEditCard(card)}
           onDelete={(card) => setDeleteCard(card)}
           onAddToCollection={(card) => setAddToCollectionCard(card)}
+          selectedCardIds={selectedCardIds}
+          onToggleSelectCard={handleToggleSelectCard}
         />
       ) : (
         <VocabTableView
@@ -134,7 +166,55 @@ export default function VocabPage() {
           onEdit={(card) => setEditCard(card)}
           onDelete={(card) => setDeleteCard(card)}
           onAddToCollection={(card) => setAddToCollectionCard(card)}
+          selectedCardIds={selectedCardIds}
+          onToggleSelectCard={handleToggleSelectCard}
+          onToggleSelectAll={handleToggleSelectAll}
         />
+      )}
+
+      {/* Floating Bulk Actions Bar */}
+      {selectedCardIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface/95 border border-brand/40 backdrop-blur-md rounded-2xl shadow-2xl p-2.5 sm:px-4 flex items-center gap-3 animate-in fade-in-50 slide-in-from-bottom-4 duration-200">
+          <span className="text-xs font-semibold text-text-primary px-1">
+            Đã chọn <strong className="text-brand font-bold">{selectedCardIds.size}</strong> từ
+          </span>
+
+          <div className="h-4 w-px bg-border/80" />
+
+          <Button
+            size="sm"
+            onClick={() => {
+              const ids = Array.from(selectedCardIds).join(',');
+              router.push(`${ROUTES.APP.REVIEW}?card_ids=${ids}`);
+            }}
+            className="h-8 gap-1.5 text-xs bg-brand hover:bg-brand-hover text-white font-semibold shadow-xs"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>Ôn tập ngay ({selectedCardIds.size})</span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const picked = rawCards.filter((c) => selectedCardIds.has(c.id));
+              setBulkAddToCollectionCards(picked);
+            }}
+            className="h-8 gap-1.5 text-xs border-border/80 text-text-primary hover:bg-surface-hover font-medium"
+          >
+            <FolderPlus className="w-3.5 h-3.5 text-brand" />
+            <span>Thêm vào bộ từ</span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setSelectedCardIds(new Set())}
+            className="h-8 px-2.5 text-xs text-text-secondary hover:text-text-primary"
+          >
+            Bỏ chọn
+          </Button>
+        </div>
       )}
 
       {/* Modals */}
@@ -154,10 +234,16 @@ export default function VocabPage() {
 
       <AddToCollectionModal
         card={addToCollectionCard}
-        isOpen={!!addToCollectionCard}
-        onClose={() => setAddToCollectionCard(null)}
+        cards={bulkAddToCollectionCards || undefined}
+        isOpen={Boolean(addToCollectionCard || bulkAddToCollectionCards)}
+        onClose={() => {
+          setAddToCollectionCard(null);
+          setBulkAddToCollectionCards(null);
+          setSelectedCardIds(new Set());
+        }}
         onCreateNewCollection={() => {
           setAddToCollectionCard(null);
+          setBulkAddToCollectionCards(null);
           setIsCreateCollectionOpen(true);
         }}
       />

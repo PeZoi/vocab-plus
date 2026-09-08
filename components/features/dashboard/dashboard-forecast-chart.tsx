@@ -23,7 +23,7 @@ export function DashboardForecastChart({ forecast }: DashboardForecastChartProps
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand" />
           <h3 className="text-xs font-semibold uppercase tracking-wider text-text-primary">
-            Dự báo lượt ôn tập 7 ngày tới (FSRS)
+            Dự báo lượt ôn tập 7 ngày tới
           </h3>
         </div>
         <span className="text-[11px] text-text-secondary">Lịch tự động theo trí nhớ</span>

@@ -16,7 +16,8 @@ import { BookOpen, Check, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface AddToCollectionModalProps {
-  card: CardWithProgress | null;
+  card?: CardWithProgress | null;
+  cards?: CardWithProgress[];
   isOpen: boolean;
   onClose: () => void;
   onCreateNewCollection?: () => void;
@@ -24,6 +25,7 @@ interface AddToCollectionModalProps {
 
 export function AddToCollectionModal({
   card,
+  cards,
   isOpen,
   onClose,
   onCreateNewCollection,
@@ -35,6 +37,8 @@ export function AddToCollectionModal({
   const { data: collections = [], isLoading } = useCollectionsQuery({ tab: 'my' });
   const addCardsMutation = useAddCardsToCollectionMutation();
 
+  const activeCards = cards && cards.length > 0 ? cards : card ? [card] : [];
+
   const handleToggle = (id: string) => {
     setSelectedColIds((prev) => ({
       ...prev,
@@ -43,15 +47,16 @@ export function AddToCollectionModal({
   };
 
   const handleConfirm = async () => {
-    if (!card) return;
+    if (activeCards.length === 0) return;
     const targetIds = Object.keys(selectedColIds).filter((id) => !!selectedColIds[id]);
     if (targetIds.length === 0) return;
 
     try {
+      const cardIds = activeCards.map((c) => c.id);
       for (const colId of targetIds) {
         await addCardsMutation.mutateAsync({
           collectionId: colId,
-          cardIds: [card.id],
+          cardIds,
         });
       }
       setIsSuccess(true);
@@ -64,62 +69,82 @@ export function AddToCollectionModal({
     }
   };
 
-  if (!card) return null;
+  if (activeCards.length === 0) return null;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Thêm vào Bộ sưu tập"
+      title={
+        activeCards.length > 1
+          ? `Thêm ${activeCards.length} từ vào Bộ sưu tập`
+          : 'Thêm vào Bộ sưu tập'
+      }
       className="max-w-md"
     >
       <div className="space-y-4 pt-1">
         {/* Card info preview */}
-        <div className="p-3.5 rounded-xl bg-base/60 border border-border/70 flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-sm text-text-primary">
-                {card.word}
-              </span>
-              {card.ipa && (
-                <span className="text-[11px] font-mono text-text-secondary whitespace-nowrap">
-                  {formatIPA(card.ipa)}
+        {activeCards.length === 1 ? (
+          <div className="p-3.5 rounded-xl bg-base/60 border border-border/70 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-sm text-text-primary">
+                  {activeCards[0].word}
                 </span>
-              )}
-              {card.cefr_level && (
-                <CEFRBadge level={card.cefr_level} size="sm" />
-              )}
-              {card.part_of_speech && (
-                <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-medium">
-                  {card.part_of_speech}
-                </Badge>
-              )}
-            </div>
-            <div className="space-y-0.5">
-              {card.definition_en && (
-                <p className="text-xs font-medium text-text-primary line-clamp-1">
-                  {card.definition_en}
-                </p>
-              )}
-              <p className={`text-xs ${card.definition_en ? 'text-text-secondary line-clamp-1' : 'text-text-primary line-clamp-2'}`}>
-                {card.definition}
-              </p>
-            </div>
-            {card.tags && card.tags.length > 0 && (
-              <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                {card.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[9.5px] font-medium px-1.5 py-0.2 rounded bg-brand/10 text-brand/80 border border-brand/20 leading-tight"
-                  >
-                    {tag}
+                {activeCards[0].ipa && (
+                  <span className="text-[11px] font-mono text-text-secondary whitespace-nowrap">
+                    {formatIPA(activeCards[0].ipa)}
                   </span>
-                ))}
+                )}
+                {activeCards[0].cefr_level && (
+                  <CEFRBadge level={activeCards[0].cefr_level} size="sm" />
+                )}
+                {activeCards[0].part_of_speech && (
+                  <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-medium">
+                    {activeCards[0].part_of_speech}
+                  </Badge>
+                )}
               </div>
-            )}
+              <div className="space-y-0.5">
+                {activeCards[0].definition_en && (
+                  <p className="text-xs font-medium text-text-primary line-clamp-1">
+                    {activeCards[0].definition_en}
+                  </p>
+                )}
+                <p className={`text-xs ${activeCards[0].definition_en ? 'text-text-secondary line-clamp-1' : 'text-text-primary line-clamp-2'}`}>
+                  {activeCards[0].definition}
+                </p>
+              </div>
+              {activeCards[0].tags && activeCards[0].tags.length > 0 && (
+                <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                  {activeCards[0].tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[9.5px] font-medium px-1.5 py-0.2 rounded bg-brand/10 text-brand/80 border border-brand/20 leading-tight"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <AudioButton text={activeCards[0].word} size="sm" />
           </div>
-          <AudioButton text={card.word} size="sm" />
-        </div>
+        ) : (
+          <div className="p-3.5 rounded-xl bg-base/60 border border-border/70 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-text-primary">
+                Đã chọn {activeCards.length} từ vựng
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand/10 text-brand border border-brand/20 font-semibold">
+                Thao tác hàng loạt
+              </span>
+            </div>
+            <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
+              {activeCards.map((c) => c.word).join(', ')}
+            </p>
+          </div>
+        )}
 
         {/* Collections checklist */}
         <div className="space-y-2">

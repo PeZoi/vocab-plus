@@ -5,9 +5,11 @@ import { CollectionDeleteDialog } from '@/components/features/collections/collec
 import { CreateCollectionModal } from '@/components/features/collections/create-collection-modal';
 import { CollectionDetailBanner } from '@/components/features/collections/detail/collection-detail-banner';
 import { CollectionDetailWordList } from '@/components/features/collections/detail/collection-detail-word-list';
+import { ForkSuccessDialog } from '@/components/features/collections/fork-success-dialog';
 import { SelectCardsModal } from '@/components/features/collections/select-cards-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
+import type { Collection } from '@/types/collection.types';
 import {
   useCollectionDetailQuery,
   useForkCollectionMutation,
@@ -28,6 +30,10 @@ export default function CollectionDetailPage() {
   const [isSelectCardsOpen, setIsSelectCardsOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isForking, setIsForking] = useState(false);
+  const [forkSuccessResult, setForkSuccessResult] = useState<{
+    collection: Collection;
+    cardsCount: number;
+  } | null>(null);
 
   const { data: collection, isLoading, isError, refetch } = useCollectionDetailQuery(id);
   const forkMutation = useForkCollectionMutation();
@@ -71,13 +77,15 @@ export default function CollectionDetailPage() {
     try {
       setIsForking(true);
       const res = await forkMutation.mutateAsync(collection.id);
-      alert(res.message || 'Đã clone bộ từ vựng thành công!');
-      if (res.collection?.id) {
-        router.push(ROUTES.APP.COLLECTION_DETAIL(res.collection.id));
+      if (res.collection) {
+        setForkSuccessResult({
+          collection: res.collection,
+          cardsCount: res.cards_cloned ?? collection.cards?.length ?? 0,
+        });
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi khi clone bộ từ';
-      alert(msg);
+      const msg = err instanceof Error ? err.message : 'Lỗi khi fork bộ từ';
+      console.error(msg);
     } finally {
       setIsForking(false);
     }
@@ -153,6 +161,14 @@ export default function CollectionDetailPage() {
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
         onSuccess={() => router.push(ROUTES.APP.COLLECTIONS)}
+      />
+
+      {/* Fork Success Dialog */}
+      <ForkSuccessDialog
+        isOpen={!!forkSuccessResult}
+        onClose={() => setForkSuccessResult(null)}
+        clonedCollection={forkSuccessResult?.collection || null}
+        cardsCount={forkSuccessResult?.cardsCount || 0}
       />
     </div>
   );

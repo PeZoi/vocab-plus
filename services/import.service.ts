@@ -5,7 +5,6 @@ import type {
   ExtractWordsResponse,
   QuickSaveWordDto,
 } from '@/types/imported-text.types';
-import type { CardWithProgress } from '@/types/card.types';
 
 export const importService = {
   /**

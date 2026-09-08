@@ -21,7 +21,7 @@ import type { Collection, CollectionCategory } from '@/types/collection.types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Globe, Loader2, Lock } from 'lucide-react';
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 
 const collectionSchema = z.object({
@@ -56,7 +56,6 @@ export function CreateCollectionModal({
     handleSubmit,
     reset,
     control,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<CollectionFormValues>({
@@ -70,7 +69,7 @@ export function CreateCollectionModal({
     },
   });
 
-  const isPublic = watch('is_public');
+  const isPublic = useWatch({ control, name: 'is_public' });
 
   useEffect(() => {
     if (collectionToEdit) {

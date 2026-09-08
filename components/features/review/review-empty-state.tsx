@@ -8,9 +8,13 @@ import React from 'react';
 
 interface ReviewEmptyStateProps {
   isCustomSession: boolean;
+  onOpenCustomStudy?: () => void;
 }
 
-export function ReviewEmptyState({ isCustomSession }: ReviewEmptyStateProps) {
+export function ReviewEmptyState({
+  isCustomSession,
+  onOpenCustomStudy,
+}: ReviewEmptyStateProps) {
   const router = useRouter();
 
   return (
@@ -25,12 +29,24 @@ export function ReviewEmptyState({ isCustomSession }: ReviewEmptyStateProps) {
         title={isCustomSession ? 'Bộ từ hiện chưa có thẻ nào!' : 'Không có thẻ nào cần ôn hôm nay!'}
         description={
           isCustomSession
-            ? 'Bộ sưu tập này chưa có thẻ từ vựng hoặc các thẻ chưa được liên kết.'
+            ? 'Bộ sưu tập hoặc bộ lọc này chưa có thẻ từ vựng nào.'
             : 'Bạn đã hoàn thành xuất sắc toàn bộ lịch học FSRS ngày hôm nay. Hãy tiếp tục duy trì chuỗi học tập nhé!'
         }
-        actionText={isCustomSession ? 'Quay lại Bộ sưu tập' : 'Thêm từ vựng mới để học'}
+        actionText={
+          isCustomSession
+            ? 'Quay lại Bộ sưu tập'
+            : onOpenCustomStudy
+            ? 'Tạo phiên học tùy chỉnh (Custom Study)'
+            : 'Thêm từ vựng mới để học'
+        }
         onAction={() => {
-          router.push(isCustomSession ? ROUTES.APP.COLLECTIONS : ROUTES.APP.ADD);
+          if (isCustomSession) {
+            router.push(ROUTES.APP.COLLECTIONS);
+          } else if (onOpenCustomStudy) {
+            onOpenCustomStudy();
+          } else {
+            router.push(ROUTES.APP.ADD);
+          }
         }}
       />
     </div>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import {
   calculateNextReviews,
+  createEmptyCard,
   Rating,
   State,
   type FSRSCard,
@@ -30,19 +31,39 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Lấy thông tin user_cards hiện tại
-    const { data: userCard, error: userCardError } = await supabase
+    // 1. Lấy thông tin user_cards hiện tại (hoặc tự tạo nếu chưa có cho phép ôn tập on-demand)
+    let { data: userCard } = await supabase
       .from('user_cards')
       .select('*')
       .eq('user_id', user.id)
       .eq('card_id', card_id)
-      .single();
+      .maybeSingle();
 
-    if (userCardError || !userCard) {
-      return NextResponse.json(
-        { error: 'Không tìm thấy thẻ của người dùng' },
-        { status: 404 }
-      );
+    if (!userCard) {
+      const initialEmpty = createEmptyCard();
+      const { data: createdUserCard, error: insertError } = await supabase
+        .from('user_cards')
+        .insert({
+          user_id: user.id,
+          card_id: card_id,
+          state: 'new',
+          due_at: initialEmpty.due.toISOString(),
+          stability: initialEmpty.stability,
+          difficulty: initialEmpty.difficulty,
+          review_count: 0,
+          lapse_count: 0,
+          is_leech: false,
+        })
+        .select()
+        .single();
+
+      if (insertError || !createdUserCard) {
+        return NextResponse.json(
+          { error: 'Không thể khởi tạo tiến trình học cho thẻ này' },
+          { status: 500 }
+        );
+      }
+      userCard = createdUserCard;
     }
 
     // 2. Chuyển đổi sang FSRSCard model

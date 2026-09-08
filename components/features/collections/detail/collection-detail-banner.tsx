@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { COLLECTION_CATEGORY_MAP } from '@/constants/categories';
 import type { CollectionCategory, CollectionWithCards } from '@/types/collection.types';
 import {
+  Check,
   Edit3,
   GitFork,
   Globe,
@@ -11,9 +12,10 @@ import {
   Loader2,
   Lock,
   Play,
+  Share2,
   Trash2,
 } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 
 interface CollectionDetailBannerProps {
   collection: CollectionWithCards;
@@ -34,6 +36,16 @@ export function CollectionDetailBanner({
   onEdit,
   onDelete,
 }: CollectionDetailBannerProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   const categoryKey = (collection.category || 'other') as CollectionCategory;
   const catInfo = COLLECTION_CATEGORY_MAP[categoryKey] || COLLECTION_CATEGORY_MAP.other;
   const cards = collection.cards || [];
@@ -127,6 +139,26 @@ export function CollectionDetailBanner({
             </Button>
           )}
 
+          <Button
+            onClick={handleCopyLink}
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs text-text-secondary hover:text-text-primary border-border/80"
+            title="Sao chép link chia sẻ bộ từ vựng"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400 font-medium">Đã chép link!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Chia sẻ</span>
+              </>
+            )}
+          </Button>
+
           {!collection.is_owner ? (
             <Button
               onClick={onFork}
@@ -139,7 +171,7 @@ export function CollectionDetailBanner({
               ) : (
                 <GitFork className="w-3.5 h-3.5" />
               )}
-              <span>1-Click Clone</span>
+              <span>Fork</span>
             </Button>
           ) : (
             <>

@@ -17,8 +17,9 @@ import { CEFRLevel, PartOfSpeech } from '@/types/card.types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, CheckCircle2, Loader2, Plus } from 'lucide-react';
 import React from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
+import { ImageSelector } from './image-selector';
 
 const manualCardSchema = z.object({
   word: z.string().min(1, 'Từ vựng là bắt buộc'),
@@ -49,6 +50,7 @@ const PARTS_OF_SPEECH: { value: PartOfSpeech; label: string }[] = [
 export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
   const [successMessage, setSuccessMessage] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = React.useState<string | null>(null);
   const createCardMutation = useCreateCardMutation();
 
   const {
@@ -73,6 +75,8 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
     },
   });
 
+  const watchedWord = useWatch({ control, name: 'word' });
+
   const onSubmit = async (values: ManualCardFormValues) => {
     setErrorMessage(null);
     try {
@@ -86,11 +90,13 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
         part_of_speech: (values.part_of_speech as PartOfSpeech) || null,
         cefr_level: values.cefr_level === 'none' ? null : (values.cefr_level as CEFRLevel) || null,
         tags: values.tags && values.tags.length > 0 ? values.tags : null,
+        image_url: selectedImageUrl || null,
         mnemonic: values.mnemonic || null,
         source_type: 'manual',
       });
 
       setSuccessMessage(true);
+      setSelectedImageUrl(null);
       reset();
       setTimeout(() => setSuccessMessage(false), 3000);
       onSuccess?.();
@@ -166,7 +172,7 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
         {/* CEFR Level */}
         <div>
           <label className="block text-xs font-medium text-text-secondary mb-1">
-            Cấp độ CEFR
+            Cấp độ
           </label>
           <Controller
             control={control}
@@ -283,6 +289,15 @@ export function CardFormManual({ onSuccess }: { onSuccess?: () => void }) {
           placeholder="vd: liên tưởng hình ảnh hoặc mẹo nhớ vui"
           rows={2}
           {...register('mnemonic')}
+        />
+      </div>
+
+      {/* Image Selector (Pexels Dual-Coding) */}
+      <div className="pt-1">
+        <ImageSelector
+          defaultQuery={watchedWord}
+          selectedImageUrl={selectedImageUrl}
+          onSelectImage={setSelectedImageUrl}
         />
       </div>
 

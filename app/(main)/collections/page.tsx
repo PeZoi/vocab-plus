@@ -6,6 +6,7 @@ import { CollectionDeleteDialog } from '@/components/features/collections/collec
 import { CollectionFiltersBar } from '@/components/features/collections/collection-filters-bar';
 import { CollectionTabsNav } from '@/components/features/collections/collection-tabs-nav';
 import { CreateCollectionModal } from '@/components/features/collections/create-collection-modal';
+import { ForkSuccessDialog } from '@/components/features/collections/fork-success-dialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollectionExplorer } from '@/hooks/features/collections/use-collection-explorer';
@@ -35,6 +36,8 @@ export default function CollectionsPage() {
     setEditingCollection,
     deleteTarget,
     setDeleteTarget,
+    forkSuccessResult,
+    setForkSuccessResult,
   } = useCollectionExplorer();
 
   return (
@@ -167,6 +170,14 @@ export default function CollectionsPage() {
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onSuccess={() => refetch()}
+      />
+
+      {/* Fork Success Dialog */}
+      <ForkSuccessDialog
+        isOpen={!!forkSuccessResult}
+        onClose={() => setForkSuccessResult(null)}
+        clonedCollection={forkSuccessResult?.collection || null}
+        cardsCount={forkSuccessResult?.cardsCount || 0}
       />
     </div>
   );

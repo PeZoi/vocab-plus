@@ -22,6 +22,7 @@ import type { AIWordAnalysisResponse, CEFRLevel, PartOfSpeech, SenseItem } from 
 import { AlertCircle, Loader2, Plus, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
+import { ImageSelector } from './image-selector';
 
 export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
   const [wordInput, setWordInput] = useState('');
@@ -30,6 +31,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
   const [editedCefrLevel, setEditedCefrLevel] = useState<CEFRLevel | 'none'>('none');
   const [selectedSenses, setSelectedSenses] = useState<Record<number, boolean>>({});
   const [editedSenses, setEditedSenses] = useState<SenseItem[]>([]);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -46,6 +48,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
         context_sentence: contextInput.trim() || undefined,
       });
 
+      setSelectedImageUrl(null);
       setAnalysisResult(result);
       const initialSenses = (result.senses || []).map((s) => ({
         ...s,
@@ -117,6 +120,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
           card_type: analysisResult.card_type || 'word',
           cefr_level: editedCefrLevel === 'none' ? null : editedCefrLevel,
           tags: sense.tags && sense.tags.length > 0 ? sense.tags : null,
+          image_url: selectedImageUrl || null,
           source_type: 'ai_generated',
           sense_number: idx + 1,
           mnemonic: analysisResult.mnemonic || null,
@@ -131,6 +135,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
         setAnalysisResult(null);
         setWordInput('');
         setContextInput('');
+        setSelectedImageUrl(null);
         onSuccess?.();
       }, 2000);
     } catch (err: unknown) {
@@ -422,6 +427,15 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                 );
               })}
             </div>
+          </div>
+
+          {/* Image Selector (Pexels Dual-Coding) */}
+          <div className="pt-2 border-t border-border/60">
+            <ImageSelector
+              defaultQuery={analysisResult.word}
+              selectedImageUrl={selectedImageUrl}
+              onSelectImage={setSelectedImageUrl}
+            />
           </div>
 
           {/* Collocations & Word Family */}

@@ -18,8 +18,9 @@ import type { CardWithProgress, CEFRLevel, PartOfSpeech } from '@/types/card.typ
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Save } from 'lucide-react';
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
+import { ImageSelector } from './image-selector';
 
 interface CardEditModalProps {
   card: CardWithProgress | null;
@@ -39,6 +40,7 @@ const editCardSchema = z.object({
   cefr_level: z.string().optional(),
   tags: z.array(z.string()).optional(),
   mnemonic: z.string().optional(),
+  image_url: z.string().nullable().optional(),
 });
 
 type EditCardFormValues = z.infer<typeof editCardSchema>;
@@ -67,6 +69,7 @@ export function CardEditModal({
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors },
   } = useForm<EditCardFormValues>({
     resolver: zodResolver(editCardSchema),
@@ -81,8 +84,11 @@ export function CardEditModal({
       cefr_level: 'none',
       tags: [],
       mnemonic: '',
+      image_url: null,
     },
   });
+
+  const selectedImageUrl = useWatch({ control, name: 'image_url' }) || null;
 
   useEffect(() => {
     if (card) {
@@ -97,6 +103,7 @@ export function CardEditModal({
         cefr_level: (card.cefr_level as CEFRLevel) || 'none',
         tags: card.tags || [],
         mnemonic: card.mnemonic || '',
+        image_url: card.image_url || null,
       });
     }
   }, [card, reset]);
@@ -117,6 +124,7 @@ export function CardEditModal({
           part_of_speech: (values.part_of_speech as PartOfSpeech) || null,
           cefr_level: values.cefr_level === 'none' ? null : (values.cefr_level as CEFRLevel) || null,
           tags: values.tags || [],
+          image_url: values.image_url || null,
           mnemonic: values.mnemonic || null,
         },
       });
@@ -187,7 +195,7 @@ export function CardEditModal({
           {/* CEFR Level */}
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1">
-              Cấp độ CEFR
+              Cấp độ
             </label>
             <Controller
               control={control}
@@ -301,6 +309,15 @@ export function CardEditModal({
           <Textarea
             rows={2}
             {...register('mnemonic')}
+          />
+        </div>
+
+        {/* Image Selector (Pexels Dual-Coding) */}
+        <div className="pt-1">
+          <ImageSelector
+            defaultQuery={card.word}
+            selectedImageUrl={selectedImageUrl}
+            onSelectImage={(url) => setValue('image_url', url, { shouldDirty: true })}
           />
         </div>
 

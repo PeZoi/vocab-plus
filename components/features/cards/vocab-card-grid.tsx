@@ -3,10 +3,11 @@
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { CardWithProgress } from '@/types/card.types';
 import { formatDateTime } from '@/utils/datetime';
 import { formatIPA } from '@/utils/formatters';
-import { AlertTriangle, Calendar, Edit2, FolderPlus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Calendar, Check, Edit2, FolderPlus, Trash2 } from 'lucide-react';
 
 interface VocabCardGridProps {
   cards: CardWithProgress[];
@@ -14,6 +15,8 @@ interface VocabCardGridProps {
   onEdit: (card: CardWithProgress) => void;
   onDelete: (card: CardWithProgress) => void;
   onAddToCollection?: (card: CardWithProgress) => void;
+  selectedCardIds?: Set<string>;
+  onToggleSelectCard?: (id: string) => void;
 }
 
 export function VocabCardGrid({
@@ -22,22 +25,47 @@ export function VocabCardGrid({
   onEdit,
   onDelete,
   onAddToCollection,
+  selectedCardIds,
+  onToggleSelectCard,
 }: VocabCardGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
       {cards.map((card) => {
         const userCard = card.user_card;
         const isDue = userCard?.due_at ? new Date(userCard.due_at) <= new Date() : false;
+        const isSelected = selectedCardIds?.has(card.id);
 
         return (
           <div
             key={card.id}
             onClick={() => onViewDetail(card)}
-            className="group relative p-4 rounded-2xl bg-surface/90 border border-border/80 hover:border-brand/40 transition-all hover:shadow-md cursor-pointer flex flex-col justify-between space-y-3"
+            className={cn(
+              'group relative p-4 rounded-2xl bg-surface/90 border transition-all hover:shadow-md cursor-pointer flex flex-col justify-between space-y-3',
+              isSelected
+                ? 'border-brand ring-1 ring-brand/50 shadow-xs shadow-brand/10'
+                : 'border-border/80 hover:border-brand/40'
+            )}
           >
-            {/* Header: Badges & Actions */}
+            {/* Header: Badges, Checkbox & Actions */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 flex-wrap">
+                {onToggleSelectCard && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSelectCard(card.id);
+                    }}
+                    className={cn(
+                      'w-4 h-4 rounded border flex items-center justify-center transition-all mr-1',
+                      isSelected
+                        ? 'bg-brand border-brand text-white shadow-xs'
+                        : 'border-border/80 bg-base/70 hover:border-brand/60'
+                    )}
+                  >
+                    {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                  </button>
+                )}
                 {card.cefr_level && <CEFRBadge level={card.cefr_level} size="sm" />}
                 {card.part_of_speech && (
                   <Badge variant="secondary" className="text-[10px] py-0 px-1.5">

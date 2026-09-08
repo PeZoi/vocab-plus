@@ -9,6 +9,7 @@ import {
   Cpu,
   FileText,
   FolderKanban,
+  GraduationCap,
   Layers,
   LayoutDashboard,
   PlusCircle,
@@ -32,10 +33,15 @@ export function AppSidebar() {
       icon: LayoutDashboard,
     },
     {
-      label: 'Ôn tập SRS',
+      label: 'Học từ vựng',
       href: ROUTES.APP.REVIEW,
       icon: Layers,
       badge: dueCount > 0 ? dueCount : undefined,
+    },
+    {
+      label: 'Ôn tập & Kiểm tra',
+      href: ROUTES.APP.PRACTICE,
+      icon: GraduationCap,
     },
     {
       label: 'Kho từ vựng',

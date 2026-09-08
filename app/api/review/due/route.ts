@@ -18,6 +18,38 @@ export async function GET(request: Request) {
     const collectionId = searchParams.get('collection_id');
     const tag = searchParams.get('tag');
     const cefrLevel = searchParams.get('cefr_level');
+    const cardIdsParam = searchParams.get('card_ids');
+
+    // 0. Custom Study Session theo danh sách Card IDs được chọn
+    if (cardIdsParam) {
+      const ids = cardIdsParam.split(',').map((id) => id.trim()).filter(Boolean);
+      if (ids.length === 0) {
+        return NextResponse.json([]);
+      }
+
+      const { data, error } = await supabase
+        .from('cards')
+        .select('*, user_cards(*)')
+        .in('id', ids);
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      const formatted = (data || []).map((card) => {
+        const userCards = card.user_cards;
+        const userCard = Array.isArray(userCards)
+          ? userCards.find((uc) => uc.user_id === user.id) || userCards[0]
+          : userCards;
+
+        return {
+          card,
+          user_card: userCard || null,
+        };
+      });
+
+      return NextResponse.json(formatted);
+    }
 
     // 1. Custom Study Session theo Collection
     if (collectionId) {

@@ -87,7 +87,10 @@ export async function GET(request: Request) {
       const isSaved = Array.isArray(col.user_collections) && col.user_collections.some((s) => s.user_id === user.id);
       const isOwner = col.creator_id === user.id;
 
-      const { collection_cards, collection_likes, user_collections, ...rest } = col;
+      const rest = { ...col };
+      delete (rest as Record<string, unknown>).collection_cards;
+      delete (rest as Record<string, unknown>).collection_likes;
+      delete (rest as Record<string, unknown>).user_collections;
 
       return {
         ...rest,

@@ -21,7 +21,7 @@ function LoginForm() {
           Chào mừng đến với <span className="text-brand">VocabApp</span>
         </h1>
         <p className="text-sm text-text-secondary mt-2 max-w-xs">
-          Học từ vựng thông minh theo phương pháp Spaced Repetition (FSRS) và AI
+          Học từ vựng thông minh theo phương pháp Spaced Repetition và AI
         </p>
       </div>
 

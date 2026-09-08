@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/axios';
 import type { AIWordAnalysisResponse } from '@/types/card.types';
 import type { GenerateStoryRequest, GenerateStoryResponse } from '@/types/imported-text.types';
+import type { SentenceGradeRequest, SentenceGradeResponse } from '@/types/practice.types';
 
 export const aiService = {
   /**
@@ -22,6 +23,15 @@ export const aiService = {
   generateStory: (payload: GenerateStoryRequest): Promise<GenerateStoryResponse> => {
     return apiClient.post('/ai/generate-story', payload, {
       timeout: 90000,
+    });
+  },
+
+  /**
+   * Gọi AI chấm điểm và nhận xét câu tự viết
+   */
+  gradeSentence: (payload: SentenceGradeRequest): Promise<SentenceGradeResponse> => {
+    return apiClient.post('/ai/grade-sentence', payload, {
+      timeout: 60000,
     });
   },
 };

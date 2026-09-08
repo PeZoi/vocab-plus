@@ -284,7 +284,7 @@ export function CollectionCardItem({
               ) : (
                 <GitFork className="w-3.5 h-3.5" />
               )}
-              <span>Clone</span>
+              <span>Fork</span>
             </Button>
           ) : (
             <Link href={ROUTES.APP.COLLECTION_DETAIL(collection.id)}>

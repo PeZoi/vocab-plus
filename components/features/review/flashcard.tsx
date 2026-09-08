@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import type { Card, CollocationItem, WordFamilyItem } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
 import { Lightbulb, RotateCw } from 'lucide-react';
+import Image from 'next/image';
 
 interface FlashcardProps {
   card: Card;
@@ -131,6 +132,19 @@ export function Flashcard({ card, isFlipped, onFlip }: FlashcardProps) {
                 </p>
               )}
             </div>
+
+            {card.image_url && (
+              <div className="relative w-full h-36 sm:h-44 rounded-xl overflow-hidden border border-border/70 shadow-xs bg-base/50 shrink-0">
+                <Image
+                  src={card.image_url}
+                  alt={card.word}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 450px"
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+            )}
 
             {card.example_sentence && (
               <div className="p-3.5 rounded-xl bg-base/50 border border-border/70">

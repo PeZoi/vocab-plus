@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-  --color-base: #0B0F17;
   --color-surface: #131A26;
   --color-surface-hover: #1B2333;
   --color-border: #202736;
@@ -20,10 +19,15 @@
   --font-mono: var(--font-jetbrains-mono);
 }
 
-/* Khôi phục utility text-base về font-size (16px) thay vì bị --color-base ghi đè thành màu chữ */
-@utility text-base {
-  font-size: 1rem;
-  line-height: 1.5rem;
+/* bg-base nền tối chính (#0B0F17), hỗ trợ cả modifier opacity bg-base/80, bg-base/50... */
+@utility bg-base {
+  background-color: #0B0F17;
+  background-color: color-mix(in srgb, #0B0F17 calc(--modifier(percentage, --default(100%))), transparent);
+}
+
+@utility border-base {
+  border-color: #0B0F17;
+  border-color: color-mix(in srgb, #0B0F17 calc(--modifier(percentage, --default(100%))), transparent);
 }
 
 :root {

@@ -26,7 +26,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: 'Vocab App — Học Từ Vựng Với FSRS & AI',
-  description: 'Nền tảng học từ vựng tiếng Anh theo phương pháp Spaced Repetition (FSRS) kết hợp AI phân tích ngữ cảnh',
+  description: 'Nền tảng học từ vựng tiếng Anh theo phương pháp Spaced Repetition kết hợp AI phân tích ngữ cảnh',
 };
 
 export default function RootLayout({

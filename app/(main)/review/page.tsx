@@ -1,5 +1,6 @@
 'use client';
 
+import { CustomStudyModal } from '@/components/features/review/custom-study-modal';
 import { Flashcard } from '@/components/features/review/flashcard';
 import { RatingActions } from '@/components/features/review/rating-actions';
 import { ReviewCompletionScreen } from '@/components/features/review/review-completion-screen';
@@ -7,10 +8,10 @@ import { ReviewEmptyState } from '@/components/features/review/review-empty-stat
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { useReviewSession } from '@/hooks/features/review/use-review-session';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles, Target } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import ReviewLoading from './loading';
 
 function ReviewSessionContent() {
@@ -18,8 +19,10 @@ function ReviewSessionContent() {
   const collectionId = searchParams.get('collection_id') || undefined;
   const tag = searchParams.get('tag') || undefined;
   const cefrLevel = searchParams.get('cefr_level') || undefined;
+  const cardIds = searchParams.get('card_ids') || undefined;
 
-  const isCustomSession = !!(collectionId || tag || cefrLevel);
+  const isCustomSession = !!(collectionId || tag || cefrLevel || cardIds);
+  const [isCustomStudyOpen, setIsCustomStudyOpen] = useState(false);
 
   const {
     currentItem,
@@ -37,6 +40,7 @@ function ReviewSessionContent() {
     collection_id: collectionId,
     tag,
     cefr_level: cefrLevel,
+    card_ids: cardIds,
   });
 
   // Bắt phím Space để lật thẻ
@@ -68,7 +72,18 @@ function ReviewSessionContent() {
 
   // Không có thẻ nào cần ôn hôm nay
   if (!currentItem || totalCards === 0) {
-    return <ReviewEmptyState isCustomSession={isCustomSession} />;
+    return (
+      <>
+        <ReviewEmptyState
+          isCustomSession={isCustomSession}
+          onOpenCustomStudy={() => setIsCustomStudyOpen(true)}
+        />
+        <CustomStudyModal
+          isOpen={isCustomStudyOpen}
+          onClose={() => setIsCustomStudyOpen(false)}
+        />
+      </>
+    );
   }
 
   return (
@@ -83,7 +98,15 @@ function ReviewSessionContent() {
                 Phiên Ôn Tập Tùy Chỉnh (Custom Study Session)
               </span>
               <span className="text-[11px] text-text-secondary">
-                {collectionId ? 'Đang ôn tập bộ từ vựng đã chọn' : tag ? `Đang ôn tập tag: ${tag}` : `Đang ôn tập cấp độ: ${cefrLevel}`}
+                {collectionId
+                  ? 'Đang ôn tập bộ từ vựng đã chọn'
+                  : tag
+                  ? `Đang ôn tập tag: #${tag}`
+                  : cefrLevel
+                  ? `Đang ôn tập cấp độ: ${cefrLevel}`
+                  : cardIds
+                  ? `Đang ôn tập nhóm ${cardIds.split(',').length} từ đã chọn`
+                  : 'Đang ôn tập tùy chỉnh'}
               </span>
             </div>
           </div>
@@ -115,16 +138,36 @@ function ReviewSessionContent() {
           </div>
         </div>
 
-        <span className="text-xs font-medium text-text-secondary font-mono">
-          {currentIndex + 1} / {totalCards}
+        {/* Action: Custom Study Modal Launcher */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setIsCustomStudyOpen(true)}
+          className="h-7 px-2 text-[11px] gap-1 text-text-secondary hover:text-brand border-border/70"
+          title="Tạo phiên ôn tập tùy chỉnh theo Tag, CEFR hoặc Bộ sưu tập"
+        >
+          <Target className="w-3 h-3 text-brand" />
+          <span className="hidden sm:inline">Học tùy chỉnh</span>
+        </Button>
+      </div>
+
+      {/* Card Counter */}
+      <div className="text-center">
+        <span className="text-xs font-mono text-text-secondary">
+          Thẻ {currentIndex + 1} / {totalCards}
         </span>
       </div>
 
-      {/* Flashcard Component */}
-      <Flashcard card={currentItem.card} isFlipped={isFlipped} onFlip={flipCard} />
+      {/* 3D Flashcard */}
+      <Flashcard
+        card={currentItem.card}
+        isFlipped={isFlipped}
+        onFlip={flipCard}
+      />
 
-      {/* Rating Actions (Show when flipped) */}
-      <div className="transition-opacity duration-200">
+      {/* Action Controls */}
+      <div className="pt-2">
         {isFlipped ? (
           <RatingActions onRate={handleRate} disabled={isSubmitting} />
         ) : (
@@ -141,6 +184,11 @@ function ReviewSessionContent() {
           </div>
         )}
       </div>
+
+      <CustomStudyModal
+        isOpen={isCustomStudyOpen}
+        onClose={() => setIsCustomStudyOpen(false)}
+      />
     </div>
   );
 }

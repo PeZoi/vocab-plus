@@ -38,7 +38,9 @@ export function VocabListHeader({
                 Kho từ vựng cá nhân
               </h1>
               <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand/15 text-brand border border-brand/30">
-                {totalCount} từ
+                {filteredCount !== undefined && filteredCount !== totalCount
+                  ? `${filteredCount}/${totalCount} từ`
+                  : `${totalCount} từ`}
               </span>
             </div>
             <p className="text-xs text-text-secondary mt-0.5">

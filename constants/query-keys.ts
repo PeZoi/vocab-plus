@@ -45,3 +45,8 @@ export const importKeys = {
   extract: (textHash: string) => [...importKeys.all, 'extract', textHash] as const,
 };
 
+export const imageKeys = {
+  all: ['images'] as const,
+  search: (query: string) => [...imageKeys.all, 'search', query] as const,
+};
+

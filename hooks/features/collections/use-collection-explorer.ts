@@ -23,6 +23,10 @@ export function useCollectionExplorer() {
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Collection | null>(null);
   const [forkingId, setForkingId] = useState<string | null>(null);
+  const [forkSuccessResult, setForkSuccessResult] = useState<{
+    collection: Collection;
+    cardsCount: number;
+  } | null>(null);
 
   // Query
   const { data: collections = [], isLoading, refetch } = useCollectionsQuery({
@@ -39,11 +43,16 @@ export function useCollectionExplorer() {
     try {
       setForkingId(id);
       const res = await forkMutation.mutateAsync(id);
-      alert(res.message || 'Đã clone bộ từ vựng thành công!');
+      if (res.collection) {
+        setForkSuccessResult({
+          collection: res.collection,
+          cardsCount: res.cards_cloned ?? 0,
+        });
+      }
       setActiveTab('my');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi khi clone bộ từ vựng';
-      alert(msg);
+      const msg = err instanceof Error ? err.message : 'Lỗi khi fork bộ từ vựng';
+      console.error(msg);
     } finally {
       setForkingId(null);
     }
@@ -96,5 +105,7 @@ export function useCollectionExplorer() {
     setEditingCollection,
     deleteTarget,
     setDeleteTarget,
+    forkSuccessResult,
+    setForkSuccessResult,
   };
 }
