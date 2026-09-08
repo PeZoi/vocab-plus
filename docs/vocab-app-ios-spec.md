@@ -11,17 +11,20 @@
 Bản iOS kế thừa 100% tài khoản, dữ liệu thẻ, collections và tiến độ học từ bản Web thông qua Supabase.
 1. **Đồng bộ tính năng hoàn hảo với bản Web**:
    - Quản lý từ vựng theo chuẩn quốc tế **CEFR Level (A1, A2, B1, B2, C1, C2)**.
-   - Mô hình tổ chức lai **Tags + Collections**: Phân loại tag cá nhân, ôn tập tùy chỉnh (Custom Study Session) và khám phá Thư viện bộ từ vựng cộng đồng với tính năng **1-Tap Fork/Clone**.
-   - **Smart Contextual Reader (Native)**: Đọc văn bản, chạm/bôi đen từ để tra nhanh và lưu ngay vào kho từ kèm câu ngữ cảnh thật.
+   - Mô hình tổ chức lai **Tags + Collections**: Phân loại tag cá nhân, ôn tập tùy chỉnh (Custom Study Session) và khám phá Thư viện bộ từ vựng cộng đồng với tính năng **Smart Fork & Clone** (Fuzzy matching Levenshtein + Dice, modal giải quyết trùng lặp `DuplicateResolutionSheet`, thanh tiến trình gradient `ForkLoadingModal`).
+   - **Smart Contextual Reader (Native)**: Đọc văn bản, chạm/bôi đen từ để tra nhanh và lưu ngay vào kho từ kèm câu ngữ cảnh thật; tích hợp **On-device Morphological Lemmatizer ($O(1)$)** tự động nhận diện và highlight xanh lá cho cả từ gốc lẫn dạng chia thì (`bought` ↔ `buy`).
+   - **AI Morphological Lemmatization & Revert Control**: AI tự động đưa từ chia thì/số nhiều về từ gốc từ điển (lemma), hỗ trợ nút đảo chiều `[↺ Giữ nguyên]` / `[↺ Dùng từ gốc]` trên UI form.
+   - **Global Duplicate Prevention**: Lớp kiểm tra trùng lặp toàn cục cảnh báo tức thì khi từ sắp thêm tương đồng $\ge 80\%$ với kho từ hiện có.
    - **Chế độ ôn tập Active Recall kép**: Flashcard 3D FSRS và chế độ **Điền khuyết (Cloze Deletion)**.
-   - **Kho từ vựng & Quản lý từ vựng Native**: Tìm kiếm tức thì, thanh lọc ngang (CEFR, Tags, Trạng thái FSRS), vuốt để phát âm / chỉnh sửa / xóa thẻ, hoạt động 100% offline qua SwiftData.
+   - **Kho từ vựng & Quản lý từ vựng Native**: Tìm kiếm tức thì, thanh lọc ngang, vuốt để phát âm / sửa / xóa, tích hợp **Chế độ chọn & Thao tác hàng loạt (Selection Mode & Bulk Actions)** với cơ chế chống tap nhầm, hoạt động 100% offline qua SwiftData.
+   - **Dual-Coding Image Picker**: Tìm kiếm và gắn ảnh minh họa độ nét cao từ Pexels API kết hợp Photo Library.
 2. **Thế mạnh độc quyền native của bản iOS**:
    - **Chấm điểm phát âm chuẩn xác (Speech Framework)**: On-device, không tốn phí, không giới hạn số lần luyện tập.
    - **Offline-First toàn diện**: Toàn bộ dữ liệu thẻ, bộ sưu tập cá nhân, thuật toán FSRS và phiên ôn tập đều chạy trơn tru khi không có kết nối Internet thông qua **SwiftData**.
    - **WidgetKit**: Widget hiển thị từ vựng cần ôn theo Collection hoặc CEFR Level ngay trên Màn hình khóa (Lock Screen) và Màn hình chính (Home Screen).
    - **Tương tác rung (Haptic Feedback)**: Trải nghiệm lật thẻ, chấm điểm đúng/sai phản hồi rung chân thực.
 
-*Lưu ý*: Trang Admin quản trị hệ thống chỉ phục vụ trên Web, không triển khai trên app iOS.
+*Lưu ý*: Trang Admin quản trị hệ thống chỉ phục vụ trên Web, không triển khai trên app iOS. Tuy nhiên, các tham số cấu hình toàn cục từ Admin (như ngưỡng trùng lặp Smart Fork `fork_similarity_threshold`) sẽ được đồng bộ về app iOS để đảm bảo sự nhất quán.
 
 ---
 
@@ -231,6 +234,13 @@ final class LocalMinimalPair {
     var wordB: String
     var audioBURL: String
 }
+
+@Model
+final class LocalSystemSetting {
+    @Attribute(.unique) var key: String      // vd: 'fork_similarity_threshold'
+    var valueJSON: String                    // lưu giá trị cấu hình JSON (vd: "0.8")
+    var updatedAt: Date = Date()
+}
 ```
 
 ---
@@ -250,10 +260,16 @@ final class LocalMinimalPair {
 
 **1.x. Thêm từ vựng mới — 2 chế độ**:
 - **Chế độ 1 — Nhập thủ công (Offline hoàn toàn)**:
-  - Form SwiftUI: Từ (*), Nghĩa (*), Từ loại (`Picker`), **Cấp độ CEFR** (`Picker`: A1 đến C2), **Tags** (thêm nhãn nhanh bằng chip input), IPA, Ví dụ, Ảnh minh họa (`PhotosPicker`), Audio tự sinh bằng `AVSpeechSynthesizer`.
+  - Form SwiftUI: Từ (*), Nghĩa (*), Từ loại (`Picker`), **Cấp độ CEFR** (`Picker`: A1 đến C2), **Tags** (thêm nhãn nhanh bằng chip input), IPA, Ví dụ, Ảnh minh họa (Tích hợp **Chọn ảnh Dual-Coding từ Pexels API** hoặc thư viện máy `PhotosPicker`), Audio tự sinh bằng `AVSpeechSynthesizer`.
+  - **Lớp kiểm tra trùng lặp toàn cục (Global Duplicate Prevention)**: Tự động so khớp với kho từ `LocalCard` on-device (sử dụng thuật toán Levenshtein + Sorensen-Dice + biến thể chia thì/số nhiều). Cảnh báo tức thì nếu từ sắp thêm tương đồng $\ge 80\%$ qua hộp thoại `DuplicateWordSheet`.
   - Lưu tức thì vào SwiftData, đánh dấu `needsSync = true`, tự động đẩy lên Supabase khi có mạng.
 - **Chế độ 2 — AI Word Analyzer**:
-  - Gọi `POST /api/ai/analyze-word` (cần mạng): Tự động phân tích CEFR Level, Card Type, IPA, các tầng nghĩa với ví dụ cơ bản, đề xuất tags, collocations, word family và mnemonic.
+  - Gọi `POST /api/ai/analyze-word` (cần mạng):
+    - **AI Morphological Lemmatization**: AI tự động đưa từ chia thì/số nhiều về từ gốc từ điển (lemma) (ví dụ: `goes` ➔ `go`, `bought` ➔ `buy`).
+    - **Cơ chế đảo chiều linh hoạt (Revert Control)**: Hiển thị banner thông báo kèm nút bấm đảo chiều `[↺ Giữ nguyên "goes"]` / `[↺ Dùng từ gốc "go"]` để người học tự quyết định lưu dạng gốc hay dạng chia thì.
+    - Phân tích CEFR Level, Card Type, IPA, các tầng nghĩa kèm ví dụ cơ bản, đề xuất tags, collocations, word family và mnemonic.
+    - Tìm kiếm và chọn ảnh Pexels trực tiếp trong Form preview.
+    - Kiểm tra trùng lặp thông minh trước khi lưu thẻ.
   - Hiển thị kết quả trong Form preview để người dùng chỉnh sửa trước khi lưu.
 
 **1.y. Kho từ vựng & Quản lý từ vựng Native (Vocabulary Library View — SwiftData)**:
@@ -263,6 +279,12 @@ final class LocalMinimalPair {
   - **Tương tác vuốt (Swipe Actions)**:
     - Vuốt sang phải: Phát âm audio tức thời qua `AVSpeechSynthesizer`.
     - Vuốt sang trái: Hiển thị nút Chỉnh sửa (Edit) và Xóa thẻ (Delete kèm xác nhận).
+  - **Chế độ chọn & Thao tác hàng loạt (Selection Mode & Bulk Actions)**:
+    - Nút "Chọn" trên Navigation Bar chuyển đổi linh hoạt chế độ `isSelectionMode`.
+    - Checkbox chọn từng thẻ, nút **Chọn tất cả (Select All)** / Bỏ chọn toàn bộ danh sách hiển thị.
+    - **Nút Xóa các từ đã chọn (`BulkDeleteConfirmationDialog`)**: Xóa an toàn hàng loạt thẻ khỏi SwiftData và queue đồng bộ xóa lên Supabase.
+    - **Cơ chế chống tap nhầm (Anti-misclick navigation)**: Khi đang ở chế độ chọn, tap vào bất kỳ đâu trên thẻ sẽ toggle trạng thái chọn thay vì mở `CardDetailSheet`.
+    - Thêm nhanh các thẻ đã chọn vào Collection (`AddToCollectionSheet`).
   - **Chạm để xem chi tiết (`CardDetailSheet`)**: Xem toàn bộ các nghĩa, collocations, word family, mẹo nhớ mnemonic và các thông số FSRS (độ ổn định stability, độ khó difficulty, số lần lapse).
   - **Chỉnh sửa thẻ trực tiếp offline**: Form chỉnh sửa lưu thẳng vào `LocalCard` trong SwiftData và tự động đánh dấu cờ `needsSync = true` để đồng bộ lên Supabase khi có mạng.
 
@@ -271,8 +293,12 @@ final class LocalMinimalPair {
 ### 🟩 Phase 2 — Smart Contextual Reader & Import từ mới
 - **Trình đọc thông minh Native (Smart Contextual Reader)**:
   - Màn hình đọc văn bản tiếng Anh tích hợp tính năng Native Text Selection của iOS.
-  - Chạm hoặc bôi đen từ/cụm từ bất kỳ: hiển thị Popover / Action Menu dịch nhanh (IPA, nghĩa, cấp độ CEFR).
-  - Nút **"Lưu thẻ nhanh"**: Tự động trích xuất câu văn chứa từ đó làm câu ví dụ ngữ cảnh (`exampleSentence`), lưu trực tiếp vào SwiftData.
+  - **On-device Morphological Lemmatizer & Hai chiều ($O(1)$)**:
+    - Tích hợp bộ tra cứu 150+ từ bất quy tắc (`bought` ↔ `buy`, `went` ↔ `go`...) và bộ tách hậu tố ngữ pháp on-device kết hợp với framework `NaturalLanguage` của Apple.
+    - Tự động nhận diện và **highlight xanh lá** cho cả từ gốc lẫn các dạng biến thể chia thì trong văn bản bài đọc.
+    - Chạm hoặc bôi đen từ/cụm từ bất kỳ: hiển thị Popover / Action Menu tra nhanh (IPA, nghĩa, cấp độ CEFR).
+    - Popover liên kết trực tiếp vào thẻ gốc (`LocalCard`), hiển thị nhãn chú thích *"Đã lưu từ gốc (buy) vào kho từ"* kèm trạng thái FSRS, không gọi AI Edge Function phân tích lại và không lưu trùng lặp.
+  - Nút **"Lưu thẻ nhanh"**: Tự động trích xuất câu văn chứa từ đó làm câu ví dụ ngữ cảnh (`exampleSentence`), tích hợp kiểm tra trùng lặp (`DuplicateWordSheet`), lưu trực tiếp vào SwiftData.
 - **Batch Word Extraction**:
   - Dán đoạn văn bản → Edge Function tách các từ mới chưa có trong kho từ → Chọn nhiều từ cùng lúc để AI phân tích batch và lưu hàng loạt.
 
@@ -290,7 +316,15 @@ final class LocalMinimalPair {
 - **Khám phá Thư viện bộ từ cộng đồng (Community Library)**:
   - Khám phá các bộ từ nổi bật do cộng đồng hoặc Admin chia sẻ.
   - Xem trước (Preview) chi tiết các thẻ có trong bộ.
-  - **1-Tap Fork/Clone**: Tải toàn bộ các thẻ trong bộ từ vựng về SwiftData local + Supabase cá nhân để bắt đầu học ngay.
+  - **Smart Fork (Phân tích Fuzzy Matching & Tránh trùng lặp bộ từ)**:
+    - Trước khi clone, hệ thống tự động quét và đối chiếu các từ trong bộ với `LocalCard` cá nhân dựa theo thuật toán Text Similarity (Levenshtein + Dice + Inflections) với ngưỡng lấy từ `LocalSystemSetting` (`fork_similarity_threshold`, mặc định 80%).
+    - Nếu phát hiện trùng lặp: Hiển thị modal sheet **`DuplicateResolutionSheet`** phân loại trực quan từ mới vs từ trùng lặp, cho phép chọn: *"Chỉ thêm từ mới"*, *"Thêm đã chọn"* hoặc *"Thêm tất cả"*.
+  - **Popup Loading & Thanh tiến trình (ForkLoadingModal / ProgressView)**:
+    - Hiển thị sheet loading hiện đại với spinner nhịp nhàng, thanh progress bar gradient và 3 bước chỉ báo:
+      1. *Quét dữ liệu* (Phân tích trùng lặp).
+      2. *Sao chép thẻ* (Nhân bản vào `LocalCard`).
+      3. *Đồng bộ SRS* (Khởi tạo lịch `LocalUserCard` FSRS).
+    - Phản hồi rung Haptic (`UINotificationFeedbackGenerator`) khi hoàn tất 100%.
 
 ---
 
@@ -378,9 +412,9 @@ final class LocalMinimalPair {
 
 | Mốc | Nội dung công việc |
 |---|---|
-| **M1** | Đăng nhập Supabase Auth + SwiftData Models (Card, CEFR Level, Tags) + Review FSRS 3D Offline |
-| **M2** | Quản lý Tags cá nhân + Collections (Tạo, Xem chi tiết, Khám phá Thư viện cộng đồng, 1-Tap Fork/Clone) + Custom Study Session |
-| **M3** | Smart Contextual Reader (Chạm từ tra nhanh, trích câu ngữ cảnh lưu thẻ) + Batch Import |
+| **M1** | Đăng nhập Supabase Auth + SwiftData Models (Card, CEFR Level, Tags, System Settings) + Review FSRS 3D Offline + AI Lemmatization & Revert Control + Global Duplicate Gate + Pexels Image Picker + Quản lý từ vựng (Selection Mode & Bulk Actions) |
+| **M2** | Quản lý Tags cá nhân + Collections (Tạo, Xem chi tiết, Khám phá Thư viện cộng đồng) + Custom Study Session + Smart Fork (Fuzzy Matching + `DuplicateResolutionSheet`) + Thanh tiến trình loading `ForkLoadingModal` |
+| **M3** | Smart Contextual Reader (On-device Morphological Lemmatizer $O(1)$, highlight xanh lá biến thể chia thì, chạm tra nhanh liên kết thẻ gốc) + Batch Import |
 | **M4** | Chế độ ôn tập Cloze Deletion (Điền khuyết) với bàn phím native & Haptic feedback |
 | **M5** | Luyện phát âm Native với Speech framework (`SFSpeechRecognizer`) + TTS `AVSpeechSynthesizer` |
 | **M6** | AI Deep Learning: Dual-Coding ảnh, Mnemonic, AI Grader chấm câu |

@@ -318,6 +318,15 @@ create table public.imported_texts (
   detected_words jsonb,
   created_at timestamptz default now()
 );
+
+-- Cài đặt tham số hệ thống toàn cục (Admin System Settings)
+create table public.system_settings (
+  key text primary key,
+  value jsonb not null,
+  description text,
+  updated_by uuid references public.profiles(id),
+  updated_at timestamptz default now()
+);
 ```
 
 ---
@@ -333,15 +342,21 @@ create table public.imported_texts (
 **1.x. Thêm từ vựng mới — 2 chế độ hoàn chỉnh**:
 - **Chế độ 1 — Nhập thủ công**:
   - Nhập Từ (*), Nghĩa (*), Từ loại (Select dropdown), **Cấp độ CEFR** (Select: A1, A2, B1, B2, C1, C2), **Tags** (nhập danh sách nhãn dạng tag badge), IPA, Câu ví dụ, Ảnh minh họa, Audio (tự sinh TTS).
+  - Tích hợp **Chọn ảnh Dual-Coding từ Pexels API** (`ImageSelector`): Tìm kiếm và gắn ảnh độ phân giải cao trực quan.
+  - Tích hợp **Lớp kiểm tra trùng lặp toàn cục (Global Duplicate Prevention)**: Tự động so sánh với kho từ hiện có, cảnh báo nếu từ sắp thêm trùng lặp >= 80% (`DuplicateWordDialog`).
   - Bấm "Lưu từ" → ghi vào bảng `cards` với `source_type = 'manual'`.
 - **Chế độ 2 — AI Word Analyzer (Tự động phân tích toàn diện)**:
   - Gõ từ/cụm từ bất kỳ → AI tự động phân tích:
+    - **AI Morphological Lemmatization**: Tự động chuẩn hóa các từ chia thì/dạng số nhiều về dạng từ gốc từ điển (vd: `goes` ➔ `go`, `bought` ➔ `buy`).
+    - **Cơ chế đảo chiều linh hoạt (Revert Control)**: Hiển thị banner cảnh báo kèm nút bấm đảo chiều `[↺ Giữ nguyên "goes"]` / `[↺ Dùng từ gốc "go"]` để người học tự quyết định lưu dạng gốc hay biến thể.
     - `cefr_level`: Đánh giá cấp độ CEFR chuẩn xác.
     - `card_type`: Phát hiện từ đơn, phrasal verb, hay idiom.
     - `ipa` & `part_of_speech`.
     - `senses[]`: Các tầng nghĩa riêng biệt kèm câu ví dụ đơn giản, dễ hiểu cho người học.
     - `tags`: AI tự động gợi ý 2-3 tags phù hợp với chủ đề của từ vựng.
     - `collocations`, `word_family`, `mnemonic`.
+    - Chọn ảnh minh họa Pexels trực tiếp trong giao diện preview.
+    - Kiểm tra trùng lặp thông minh trước khi lưu.
   - Toàn bộ kết quả hiển thị dạng form preview cho phép người dùng chỉnh sửa từng trường trước khi lưu.
 
 **1.y. Kho từ vựng & Quản lý từ vựng (`/vocab`)**:
@@ -359,7 +374,12 @@ create table public.imported_texts (
     - Chỉnh sửa (Edit Modal): Sửa trực tiếp từ, nghĩa, ví dụ, CEFR level, tags, ảnh.
     - Xóa thẻ (Delete Confirmation Dialog): Xóa thẻ kèm dọn dẹp các bản ghi liên quan trong `user_cards` và `review_logs`.
     - Phát âm mẫu (Audio TTS) chỉ với 1 click.
-  - **Thao tác hàng loạt (Bulk Actions)**: Chọn nhiều thẻ để gán tag, đưa vào Collection (Phase 3), hoặc tạo Custom Study Session ôn tập nhóm từ đã chọn.
+  - **Thao tác hàng loạt (Bulk Actions & Selection Mode)**:
+    - Chế độ chọn thẻ bằng checkbox trực quan.
+    - Nút **Chọn tất cả (Select All)** / Bỏ chọn toàn bộ danh sách đang hiển thị.
+    - Nút **Xóa các từ đã chọn (`BulkDeleteCardsDialog`)**: Xóa an toàn hàng loạt thẻ kèm hộp thoại xác nhận.
+    - **Cơ chế chống click nhầm**: Khi đang ở chế độ chọn, click vào bất kỳ đâu trên thẻ sẽ toggle trạng thái chọn thay vì navigate vào trang chi tiết.
+    - Thêm nhanh các thẻ đã chọn vào Bộ sưu tập (`AddToCollectionModal`).
 
 ---
 
@@ -368,6 +388,11 @@ create table public.imported_texts (
   - Cho phép người dùng dán các bài đọc tiếng Anh (tin tức, báo chí, bài thi mẫu).
   - Giao diện đọc tương tác: Click hoặc bôi đen từ vựng bất kỳ trên bài đọc → hiển thị tooltip tra nhanh nghĩa, IPA, cấp độ CEFR.
   - **Nút "Lưu từ nhanh"**: Lưu ngay từ vựng vào kho cá nhân kèm chính xác câu ngữ cảnh chứa từ đó trong bài đọc (`context_sentence`), giúp não bộ ghi nhớ tự nhiên qua ngữ cảnh gốc.
+  - **Client-side Morphological Lemmatizer & Bi-directional Indexing ($O(1)$)**:
+    - Tích hợp module `utils/lemmatizer.ts` chứa bảng tra cứu hơn 150+ từ bất quy tắc (`bought` ↔ `buy`, `went` ↔ `go`, `children` ↔ `child`...) và bộ quy tắc bóc tách hậu tố ngữ pháp (`-ies`, `-es`, `-ed`, `-ing`, `-er`, `-est`).
+    - Tự động nhận diện và **highlight xanh lá** cho cả từ gốc lẫn các dạng biến thể chia thì trong bài đọc.
+    - Popover liên kết trực tiếp tới thẻ gốc (`knownCard`), hiển thị nhãn chú thích *"Đã lưu từ gốc (buy) vào kho từ"* kèm tiến độ SRS, không gọi AI phân tích lại và không lưu trùng lặp.
+    - Tích hợp modal kiểm tra trùng lặp (`DuplicateWordDialog`) khi lưu từ từ popover.
 - **Batch Word Extraction**:
   - Tự động tokenize và đối chiếu kho từ của user để highlight các từ chưa học.
   - Chọn nhiều từ mới cùng lúc → gọi AI phân tích hàng loạt theo batch (~10 từ/lần gọi) tiết kiệm quota.
@@ -386,7 +411,15 @@ create table public.imported_texts (
 - **Khám phá bộ từ vựng cộng đồng (Community Library)**:
   - Trang khám phá các Study Sets công khai được tạo bởi Admin hoặc cộng đồng học viên.
   - Xem trước (Preview) các thẻ trong bộ từ, xem thống kê lượt clone và đánh giá.
-  - **1-Click Fork/Clone**: Chỉ với 1 click, toàn bộ thẻ trong bộ từ vựng được sao chép vào kho cá nhân của user, khởi tạo trạng thái FSRS để bắt đầu học ngay.
+  - **Smart Fork (Phân tích Fuzzy Matching & Tránh trùng lặp bộ từ)**:
+    - Trước khi clone, hệ thống tự động quét và đối chiếu danh sách từ trong collection với kho từ của user theo thuật toán Text Similarity (Levenshtein + Dice + Inflections).
+    - Nếu phát hiện trùng lặp: Mở modal **`DuplicateResolutionModal`** phân loại trực quan từ mới vs từ trùng lặp, cho phép người dùng chọn lọc: *"Chỉ thêm từ mới"*, *"Thêm đã chọn"* hoặc *"Thêm tất cả"*.
+  - **Popup Loading & Thanh Tiến Trình (ForkLoadingModal)**:
+    - Hiển thị popup loading hiện đại với icon xoay nhịp nhàng, thanh progress bar gradient chạy mượt mà theo 3 bước chỉ báo:
+      1. *Quét dữ liệu* (Phân tích trùng lặp).
+      2. *Sao chép thẻ* (Nhân bản định nghĩa, ví dụ, collocations).
+      3. *Đồng bộ SRS* (Khởi tạo lịch FSRS).
+    - Tiến trình đạt 100% chuyển tiếp êm ái sang `ForkSuccessDialog`.
   - Chia sẻ link trực tiếp (`/collections/[id]`) cho bạn bè hoặc nhóm học tập.
 
 ---
@@ -417,10 +450,14 @@ create table public.imported_texts (
 ---
 
 ### 🟪 Phase 7 — Trang Admin Quản Trị & Cấu hình AI Provider Động
-- **Cấu hình AI Provider linh hoạt**:
+- **Cấu hình AI Provider linh hoạt (`/admin/ai-providers`)**:
   - Quản lý bảng `ai_provider_configs` trực tiếp trên UI: Groq, Gemini Flash, OpenAI, Anthropic...
   - Thay đổi provider mặc định chỉ bằng 1 click mà không cần sửa code hay deploy lại.
   - Nút kiểm tra kết nối API key trực tiếp từ giao diện Admin.
+- **Cấu hình Tham số Hệ Thống Toàn Cục (`/admin/settings`)**:
+  - Quản lý bảng `system_settings` trực tiếp trên giao diện Admin.
+  - **Điều chỉnh Ngưỡng Tương Đồng Smart Fork (`fork_similarity_threshold`)**: Cho phép Admin điều chỉnh tỷ lệ % (từ 50% đến 100%, mặc định 80%) kích hoạt cảnh báo trùng lặp khi người dùng fork bộ sưu tập.
+  - **Live Similarity Tester Sandbox**: Cung cấp môi trường kiểm thử trực tiếp để Admin gõ 2 từ mẫu bất kỳ, hệ thống tính toán ngay điểm % tương đồng và phản hồi cảnh báo giúp kiểm định độ nhạy của thuật toán trước khi lưu cấu hình.
 - **Giám sát hệ thống & Metrics**:
   - Theo dõi người dùng (DAU/WAU/MAU), số lượt ôn, tỷ lệ nhớ bài toàn hệ thống.
   - Giám sát lượng gọi API và mức tiêu thụ token tránh vượt quá free tier.

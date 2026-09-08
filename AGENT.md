@@ -264,6 +264,8 @@ vocab-app-plus/
 |---|---|---|
 | `utils/datetime.ts` | Format ngày giờ, kiểm tra trong/ngoài khung giờ vàng, chuyển đổi timezone | `date-fns`, `date-fns-tz` |
 | `utils/formatters.ts` | Viết hoa chữ đầu, format XP điểm số, rút gọn văn bản (truncate), format IPA | Thuần TypeScript |
+| `utils/lemmatizer.ts` | Tách từ nguyên, phân tích hình thái học hậu tố thì/số nhiều & từ điển bất quy tắc hai chiều | Thuần TypeScript |
+| `utils/text-similarity.ts` | Tính toán độ tương đồng chuỗi và biến thể ngữ pháp (Levenshtein + Dice + Inflections) | Thuần TypeScript |
 | `utils/error.ts` | Bóc tách mã lỗi & message thân thiện từ Axios error hoặc Supabase error | `axios` |
 | `utils/storage.ts` | Wrapper an toàn cho LocalStorage / SessionStorage (có try-catch, SSR check) | Thuần TypeScript |
 | `lib/utils.ts` | Hàm gộp classname `cn(...)` | `clsx`, `tailwind-merge` |
@@ -425,8 +427,15 @@ Tuân thủ nghiêm ngặt mô hình SSR của `@supabase/ssr`:
 - **Component chuẩn**:
   - Sử dụng [`components/ui/skeleton.tsx`](file:///d:/my_project/vocab-app-plus/components/ui/skeleton.tsx) với `animate-pulse` và màu nền `bg-surface-hover/60`.
 - **Triển khai Next.js Streaming**:
+  - Mỗi phân hệ route chính phải có file `loading.tsx` (như `app/(main)/loading.tsx`, `app/(main)/review/loading.tsx`) chứa layout Skeleton tương ứng.
+
 ### 6.10 Tiêu Chuẩn Dữ Liệu Từ Vựng Song Ngữ (Bilingual English-First Standard)
-- **Quy tắc hiển thị English-First**:
+- **Cấu trúc lưu trữ song ngữ bắt buộc**:
+  - `definition_en`: Định nghĩa tiếng Anh chuẩn xác, ngắn gọn, súc tích (English definition).
+  - `definition`: Định nghĩa tiếng Việt rõ ràng, tự nhiên (Vietnamese definition).
+  - `example_sentence`: Câu ví dụ tiếng Anh thực tế trong văn cảnh (English contextual sentence).
+  - `example_translation`: Bản dịch tiếng Việt chính xác và tự nhiên của câu ví dụ (Vietnamese translation).
+- **Quy tắc hiển thị UI (English-First)**:
   - Ưu tiên hiển thị định nghĩa tiếng Anh (`definition_en`) nổi bật nhất (phông chữ to, màu sáng `text-white` hoặc `text-text-primary`) để người học tư duy trực tiếp bằng tiếng Anh.
   - Định nghĩa tiếng Việt (`definition`) hiển thị tinh tế ở dòng phụ bên dưới để đối chiếu và hiểu sâu ngữ nghĩa.
   - Luôn đảm bảo tương thích ngược: các thẻ cũ nếu chưa có `definition_en` vẫn hiển thị `definition` tiếng Việt trọn vẹn, không bị trống hay vỡ layout.
@@ -440,6 +449,19 @@ Tuân thủ nghiêm ngặt mô hình SSR của `@supabase/ssr`:
   - `components/ui/input.tsx` và `components/ui/textarea.tsx` đã được cấu hình mặc định `spellCheck={false}`, `autoCorrect="off"`, `autoCapitalize="off"`.
   - Toàn bộ các component mới PHẢI sử dụng `Input` / `Textarea` từ `@/components/ui/` hoặc đảm bảo gắn đầy đủ các thuộc tính trên nếu dùng thẻ HTML gốc.
   - Thẻ `<body>` tại `app/layout.tsx` đã được gắn `spellCheck={false}` để ngăn chặn spellcheck kế thừa trên toàn bộ cây DOM.
+
+### 6.12 Quy Chuẩn Hình Thái Học & Xử Lý Từ Gốc (Morphological Lemmatization Pattern)
+- **Quy tắc AI Lemmatization**: Khi AI phân tích bất kỳ từ vựng nào có dạng chia thì (V-ed, V-ing, V-s/es) hoặc số nhiều (plurals), AI **bắt buộc phải chuẩn hóa đưa về từ gốc từ điển (Base form / Lemma)** (ví dụ: `goes` ➔ `go`, `bought` ➔ `buy`, `studies` ➔ `study`).
+- **Quyền quyết định người dùng (Revert Control)**: Giao diện form (`CardFormAiPreview`, `WordQuickPopover`) **bắt buộc** cung cấp nút bấm chuyển đổi nhanh `[↺ Giữ nguyên "goes"]` / `[↺ Dùng từ gốc "go"]` để người dùng chủ động lựa chọn.
+- **Tra cứu ngữ cảnh tức thời ($O(1)$) trong Trình đọc (`InteractiveReader`)**:
+  - Nghiêm cấm gọi API tra từ nguyên rải rác. Bắt buộc sử dụng helper `getBaseWordCandidates` từ `utils/lemmatizer.ts` kết hợp mảng `word_family` của thẻ để lập chỉ mục trong bộ nhớ (`knownWordsMap`).
+  - Đảm bảo token hiển thị trong bài đọc dù là dạng chia thì (`bought`) vẫn được highlight màu xanh lá (`text-emerald-300`) và khi click mở popover sẽ tự động liên kết tới thẻ gốc (`buy`), ngăn ngừa gọi AI trùng lặp.
+
+### 6.13 Quy Chuẩn Ngăn Ngừa Trùng Lặp Từ Vựng (Duplicate Prevention Pattern)
+- **Kiểm tra trùng lặp mọi luồng thêm từ (Global Duplicate Gate)**: Toàn bộ các thao tác thêm từ mới (Thêm thủ công, Phân tích AI, Lưu nhanh từ popover bài đọc) **bắt buộc** phải đi qua lớp kiểm tra trùng lặp qua custom hook `useWordDuplicateCheck`.
+- **Thuật toán so sánh đa tầng (`utils/text-similarity.ts`)**: Kết hợp linh hoạt giữa kiểm tra biến thể ngữ pháp cơ bản (`checkInflectionMatch`), khoảng cách Levenshtein (`levenshteinDistance`) và hệ số Sørensen–Dice (`diceCoefficient`) có hỗ trợ cả cụm từ (Phrasal Verbs).
+- **Ngưỡng tương đồng linh hoạt**: Ngưỡng mặc định là **80%** (có thể được tùy chỉnh động bởi Admin qua bảng `system_settings` tại `/admin/settings`).
+- **Smart Fork Resolution**: Khi người dùng clone bộ sưu tập cộng đồng (`/collections`), hệ thống tự động chạy phân tích đối chiếu trước (`analyzeFork`). Nếu có từ trùng lặp, bắt buộc hiển thị `DuplicateResolutionModal` để người dùng chủ động chọn giữ lại từ mới, lấy từ trùng hay thêm toàn bộ.
 
 ---
 
