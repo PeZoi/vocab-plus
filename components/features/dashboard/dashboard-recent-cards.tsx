@@ -2,6 +2,7 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Button } from '@/components/ui/button';
 import { staggerContainer, staggerItem } from '@/constants/animations';
 import { ROUTES } from '@/constants/routes';
@@ -79,6 +80,7 @@ export function DashboardRecentCards({ cards }: DashboardRecentCardsProps) {
                     {item.cefr_level && (
                       <CEFRBadge level={item.cefr_level} size="sm" />
                     )}
+                    <WordLevelBadge userCard={item.user_card} mode="compact" />
                     {item.ipa && (
                       <span className="font-mono text-[11px] text-text-secondary hidden sm:inline">
                         {item.ipa}

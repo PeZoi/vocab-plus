@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+'use client';
+
+import { useState, useMemo, useCallback } from 'react';
 import type { QuestTemplate } from '@/types/quest.types';
 
 export const DEFAULT_QUEST_TEMPLATES: QuestTemplate[] = [
@@ -44,11 +46,17 @@ export function useQuestSettings({ initialTemplates, onSave }: UseQuestSettingsP
     return DEFAULT_QUEST_TEMPLATES;
   });
 
-  useEffect(() => {
-    if (initialTemplates && Array.isArray(initialTemplates) && initialTemplates.length > 0) {
-      setTemplates(initialTemplates);
-    }
-  }, [initialTemplates]);
+  const [prevInitial, setPrevInitial] = useState(initialTemplates);
+
+  if (
+    initialTemplates &&
+    Array.isArray(initialTemplates) &&
+    initialTemplates.length > 0 &&
+    initialTemplates !== prevInitial
+  ) {
+    setPrevInitial(initialTemplates);
+    setTemplates(initialTemplates);
+  }
 
   const isDirty = useMemo(() => {
     const base = initialTemplates && initialTemplates.length > 0 ? initialTemplates : DEFAULT_QUEST_TEMPLATES;

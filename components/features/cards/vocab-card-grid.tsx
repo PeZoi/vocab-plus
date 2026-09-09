@@ -2,6 +2,7 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { CardWithProgress } from '@/types/card.types';
@@ -114,6 +115,7 @@ export function VocabCardGrid({
                   </button>
                 )}
                 {card.cefr_level && <CEFRBadge level={card.cefr_level} size="sm" />}
+                <WordLevelBadge userCard={userCard} mode="compact" />
                 {card.part_of_speech && (
                   <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
                     {card.part_of_speech}

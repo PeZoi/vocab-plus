@@ -15,13 +15,16 @@ Bản iOS kế thừa 100% tài khoản, dữ liệu thẻ, collections và ti�
    - **Smart Contextual Reader (Native)**: Đọc văn bản, chạm/bôi đen từ để tra nhanh và lưu ngay vào kho từ kèm câu ngữ cảnh thật; tích hợp **On-device Morphological Lemmatizer ($O(1)$)** tự động nhận diện và highlight xanh lá cho cả từ gốc lẫn dạng chia thì (`bought` ↔ `buy`).
    - **AI Morphological Lemmatization & Revert Control**: AI tự động đưa từ chia thì/số nhiều về từ gốc từ điển (lemma), hỗ trợ nút đảo chiều `[↺ Giữ nguyên]` / `[↺ Dùng từ gốc]` trên UI form.
    - **Global Duplicate Prevention**: Lớp kiểm tra trùng lặp toàn cục cảnh báo tức thì khi từ sắp thêm tương đồng $\ge 80\%$ với kho từ hiện có.
-   - **Chế độ ôn tập Active Recall kép**: Flashcard 3D FSRS và chế độ **Điền khuyết (Cloze Deletion)**.
+   - **Quy trình Ôn tập 2 Giai Đoạn & Hệ Thống Cấp Độ Cây Sinh Trưởng (Tree Levels 0 ➔ 5) Với Lottie-iOS**:
+     + **Giai đoạn 1 — Lướt xem Flashcard (Passive Preview & Warm-up)**: Gesture vuốt mượt mà để lướt xem thẻ cần ôn và thẻ mới (+1 XP/thẻ), loại bỏ hoàn toàn 4 nút chấm điểm chủ quan.
+     + **Giai đoạn 2 — Kiểm tra trí nhớ phản xạ (Active Recall Quiz Native)**: Trắc nghiệm phản xạ 4 đáp án (Từ ➔ Nghĩa, Nghĩa ➔ Từ, Nghe ➔ Từ, Điền khuyết) với kho distractor pool dự phòng và vòng lặp sửa sai (Re-test loop) kèm Haptic feedback. Kết quả Đúng/Sai quyết định FSRS và thăng/hạ cấp Cây.
+     + **Hệ thống Cây Sinh Trưởng Lottie (0 ➔ 5)**: Hạt mầm ➔ Nảy mầm ➔ Nhánh non ➔ Cây xanh ➔ Nở hoa ➔ Đại thụ, hiển thị hoạt ảnh Lottie vector 60fps qua framework `Lottie-iOS` (Airbnb), có cơ chế bảo vệ Level 5 và phân định Ranked vs Casual.
    - **Kho từ vựng & Quản lý từ vựng Native**: Tìm kiếm tức thì, thanh lọc ngang, vuốt để phát âm / sửa / xóa, tích hợp **Chế độ chọn & Thao tác hàng loạt (Selection Mode & Bulk Actions)** với cơ chế chống tap nhầm, hoạt động 100% offline qua SwiftData.
    - **Dual-Coding Image Picker**: Tìm kiếm và gắn ảnh minh họa độ nét cao từ Pexels API kết hợp Photo Library.
 2. **Thế mạnh độc quyền native của bản iOS**:
    - **Chấm điểm phát âm chuẩn xác (Speech Framework)**: On-device, không tốn phí, không giới hạn số lần luyện tập.
    - **Offline-First toàn diện**: Toàn bộ dữ liệu thẻ, bộ sưu tập cá nhân, thuật toán FSRS và phiên ôn tập đều chạy trơn tru khi không có kết nối Internet thông qua **SwiftData**.
-   - **WidgetKit**: Widget hiển thị từ vựng cần ôn theo Collection hoặc CEFR Level ngay trên Màn hình khóa (Lock Screen) và Màn hình chính (Home Screen).
+   - **WidgetKit**: Widget hiển thị **"Khu vườn từ vựng" (Vocabulary Garden)** trực quan hóa số cây ở từng cấp độ và từ vựng cần ôn theo Collection hoặc CEFR Level ngay trên Màn hình khóa (Lock Screen) và Màn hình chính (Home Screen).
    - **Tương tác rung (Haptic Feedback)**: Trải nghiệm lật thẻ, chấm điểm đúng/sai phản hồi rung chân thực.
 
 *Lưu ý*: Trang Admin quản trị hệ thống chỉ phục vụ trên Web, không triển khai trên app iOS. Tuy nhiên, các tham số cấu hình toàn cục từ Admin (như ngưỡng trùng lặp Smart Fork `fork_similarity_threshold`) sẽ được đồng bộ về app iOS để đảm bảo sự nhất quán.
@@ -247,16 +250,35 @@ final class LocalSystemSetting {
 
 ## 5. Tính năng chi tiết theo Phase (Đồng bộ 100% với Web)
 
-### 🟦 Phase 1 — Nền tảng Core FSRS + Chuẩn hóa CEFR Level & Tags (Offline-First)
+### 🟦 Phase 1 — Nền tảng Core FSRS + Hệ Thống Cấp Độ Cây Sinh Trưởng (Tree Levels 0 ➔ 5) & Chuẩn hóa CEFR Level (Offline-First)
 - Đăng nhập bảo mật qua Supabase Auth (Sign in with Apple + Google OAuth + Email).
 - Đồng bộ toàn bộ kho từ vựng và tiến độ FSRS về SwiftData khi mở app.
-- **Review Flow**:
-  - Giao diện thẻ 3D vuốt lật (Flip gesture) hoặc tap để lật.
-  - Vuốt sang phải = Good, vuốt sang trái = Again, hoặc thanh 4 nút bấm (Again, Hard, Good, Easy) kèm phản hồi rung Haptic.
-  - Thuật toán FSRS tính toán lịch ôn trực tiếp on-device, hoạt động **100% không cần mạng**.
-- **Dashboard cá nhân**:
-  - Streak ngày, số từ cần ôn hôm nay, biểu đồ forecast 7 ngày đọc từ local cache tức thì.
-  - Biểu đồ phân bổ từ vựng theo trình độ quốc tế **CEFR (A1 - C2)**.
+- **Quy trình Ôn tập 2 Giai Đoạn Native (`ReviewView`)**:
+  - **Giai đoạn 1 — Lướt xem Flashcard (Passive Preview & Warm-up)**:
+    - Giao diện thẻ 3D vuốt lật (Flip gesture) hoặc tap để lật xem từ, phát âm, nghĩa, ví dụ, mnemonic, ảnh.
+    - **Loại bỏ hoàn toàn 4 nút chấm điểm chủ quan** (Again, Hard, Good, Easy) và gesture vuốt chấm điểm.
+    - Vuốt ngang hoặc tap mũi tên để chuyển thẻ trước/sau, nút nổi bật "Bắt đầu Kiểm tra ngay" (+1 XP khởi động mỗi thẻ).
+  - **Giai đoạn 2 — Kiểm tra Trí nhớ Phản xạ (Active Recall Quiz Native)**:
+    - Trọng tài khách quan quyết định việc thăng/hạ cấp FSRS và cấp độ cây trực tiếp on-device qua SwiftData.
+    - 4 hình thức trắc nghiệm native mượt mà (Từ ➔ Nghĩa, Nghĩa ➔ Từ, Nghe ➔ Từ, Điền khuyết) với phản hồi rung Haptic (`UINotificationFeedbackGenerator`).
+    - **Kho từ gây nhiễu dự phòng (System Distractor Pool)**: Tự động mượn từ vựng hệ thống làm đáp án sai khi kho từ của user có dưới 4 từ.
+    - **Vòng lặp sửa sai (Re-test loop)**: Câu sai được hỏi lại ở cuối bài để ghi nhớ (làm lại đúng chỉ để xác nhận hiểu bài, không thăng cấp tức thời).
+- **Hệ thống Cấp độ Cây Sinh Trưởng (Tree Levels 0 ➔ 5) Với Lottie-iOS**:
+  - Tích hợp thư viện `Lottie-iOS` (Airbnb) hiển thị hoạt ảnh vector 60fps mượt mà:
+    - **Lv 0: Hạt mầm (Seed)** 🌰: Trạng thái tiềm năng.
+    - **Lv 1: Nảy mầm (Sprout)** 🌱: Đúng 1 lần test Ranked (Stability ~1-2 ngày).
+    - **Lv 2: Nhánh non (Sapling)** 🌿: Đúng 2 lần liên tiếp (Stability ~3-6 ngày).
+    - **Lv 3: Cây xanh (Green Tree)** 🌳: Đúng 3 lần liên tiếp (Stability ~7-20 ngày).
+    - **Lv 4: Nở hoa (Blossom)** 🌸: Đúng 5 lần liên tiếp (Stability ~21-59 ngày).
+    - **Lv 5: Đại thụ (Ancient Tree)** 👑: Đúng 8 lần liên tiếp (Stability >= 60 ngày), kèm cơ chế bảo hiểm tránh rớt hạng do tap nhầm.
+  - Tối ưu hiệu năng: chế độ tĩnh hoặc hover/scroll trên list từ vựng, full animation 60fps tại Flashcard, Sheet chi tiết từ và Màn hình Thăng Cấp (`level-up-burst`).
+- **Phân Định 2 Chế Độ: Ôn Tập Chuẩn (Ranked) vs Luyện Tập Tự Do (Casual Practice)**:
+  - **🎯 Ranked**: Áp dụng cho các từ đến hạn (`dueAt <= Date()`) và từ mới (`Level 0`). Đúng đủ số lần ➔ Lên cấp & tính FSRS; Sai ➔ Giảm cấp.
+  - **🎮 Casual**: Ôn theo Collection / Tag tùy chọn khi đã hết từ cần ôn. Nhận XP bình thường nhưng **Cấp độ Cây và FSRS giữ nguyên vẹn 100%**.
+- **Dashboard cá nhân & Khu vườn từ vựng (Vocabulary Garden)**:
+  - Widget thống kê số lượng Hạt mầm, Nảy mầm, Nhánh non, Cây xanh, Nở hoa, Đại thụ.
+  - Thống kê thẻ đến hạn hôm nay, chuỗi streak, biểu đồ forecast 7 ngày và biểu đồ phân bổ CEFR (A1-C2).
+  - **WidgetKit**: Đưa widget "Khu vườn từ vựng" ra Màn hình chính (Home Screen) và Màn hình khóa (Lock Screen) của iOS.
 
 **1.x. Thêm từ vựng mới — 2 chế độ**:
 - **Chế độ 1 — Nhập thủ công (Offline hoàn toàn)**:
@@ -412,10 +434,10 @@ final class LocalSystemSetting {
 
 | Mốc | Nội dung công việc |
 |---|---|
-| **M1** | Đăng nhập Supabase Auth + SwiftData Models (Card, CEFR Level, Tags, System Settings) + Review FSRS 3D Offline + AI Lemmatization & Revert Control + Global Duplicate Gate + Pexels Image Picker + Quản lý từ vựng (Selection Mode & Bulk Actions) |
+| **M1** | Đăng nhập Supabase Auth + SwiftData Models (Card, CEFR Level, Tags, System Settings) + **Hệ Thống Cấp Độ Cây Sinh Trưởng (Level 0-5 Lottie-iOS)** + AI Lemmatization & Revert Control + Global Duplicate Gate + Pexels Image Picker + Quản lý từ vựng (Selection Mode & Bulk Actions) |
 | **M2** | Quản lý Tags cá nhân + Collections (Tạo, Xem chi tiết, Khám phá Thư viện cộng đồng) + Custom Study Session + Smart Fork (Fuzzy Matching + `DuplicateResolutionSheet`) + Thanh tiến trình loading `ForkLoadingModal` |
 | **M3** | Smart Contextual Reader (On-device Morphological Lemmatizer $O(1)$, highlight xanh lá biến thể chia thì, chạm tra nhanh liên kết thẻ gốc) + Batch Import |
-| **M4** | Chế độ ôn tập Cloze Deletion (Điền khuyết) với bàn phím native & Haptic feedback |
+| **M4** | **Quy trình Ôn tập 2 Giai Đoạn Native**: Flashcard 3D Preview + **Active Recall Quiz Native** (Trắc nghiệm quyết định FSRS & Thăng/Hạ cấp độ Cây) + Phân định Ranked vs Casual |
 | **M5** | Luyện phát âm Native với Speech framework (`SFSpeechRecognizer`) + TTS `AVSpeechSynthesizer` |
 | **M6** | AI Deep Learning: Dual-Coding ảnh, Mnemonic, AI Grader chấm câu |
 | **M7** | Liên kết Telegram + Xem/chỉnh sửa khung Giờ Vàng |

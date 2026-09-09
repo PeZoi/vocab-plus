@@ -2,21 +2,23 @@
 
 import { CustomStudyModal } from '@/components/features/review/custom-study-modal';
 import { Flashcard } from '@/components/features/review/flashcard';
-import { RatingActions } from '@/components/features/review/rating-actions';
+import { ReviewPreviewControls } from '@/components/features/review/review-preview-controls';
+import { ReviewQuizRunner } from '@/components/features/review/review-quiz-runner';
 import { ReviewCompletionScreen } from '@/components/features/review/review-completion-screen';
 import { ReviewSyncingScreen } from '@/components/features/review/review-syncing-screen';
 import { ReviewEmptyState } from '@/components/features/review/review-empty-state';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { useReviewSession } from '@/hooks/features/review/use-review-session';
-import { ArrowLeft, Sparkles, Target } from 'lucide-react';
+import { ArrowLeft, Target, Eye } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReviewLoading from './loading';
 
 function ReviewSessionContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const collectionId = searchParams.get('collection_id') || undefined;
   const tag = searchParams.get('tag') || undefined;
@@ -27,18 +29,22 @@ function ReviewSessionContent() {
   const [isCustomStudyOpen, setIsCustomStudyOpen] = useState(false);
 
   const {
+    phase,
+    dueCards,
     currentItem,
     currentIndex,
     totalCards,
     progressPercent,
     isFlipped,
     flipCard,
-    handleRate,
+    nextCard,
+    prevCard,
+    startQuiz,
+    handleQuizComplete,
+    restartReview,
     isLoading,
-    isSubmitting,
     isSyncingFinal,
-    sessionCompleted,
-    cardsReviewedCount,
+    quizStats,
     totalXpEarned,
   } = useReviewSession({
     collection_id: collectionId,
@@ -47,36 +53,25 @@ function ReviewSessionContent() {
     card_ids: cardIds,
   });
 
-  // Bắt phím Space để lật thẻ
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        flipCard();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [flipCard]);
-
   if (isLoading) {
     return <ReviewLoading />;
   }
 
-  // Trạng thái hệ thống đang tính toán kết quả ở thẻ cuối
+  // Trạng thái hệ thống đang tính toán kết quả đồng bộ dữ liệu
   if (isSyncingFinal) {
     return <ReviewSyncingScreen />;
   }
 
-  // Màn hình hoàn thành phiên học
-  if (sessionCompleted) {
+  // Màn hình hoàn thành phiên học (sau bài Quiz)
+  if (phase === 'completed') {
     return (
       <ReviewCompletionScreen
-        cardsReviewedCount={cardsReviewedCount}
+        cardsReviewedCount={totalCards}
         isCustomSession={isCustomSession}
         collectionId={collectionId}
         totalXpEarned={totalXpEarned}
+        quizStats={quizStats}
+        onRestartReview={restartReview}
       />
     );
   }
@@ -97,6 +92,23 @@ function ReviewSessionContent() {
     );
   }
 
+  // GIAI ĐOẠN 2: KIỂM TRA TRÍ NHỚ TRẮC NGHIỆM (ACTIVE RECALL QUIZ)
+  if (phase === 'quiz') {
+    return (
+      <ReviewQuizRunner
+        reviewCards={dueCards}
+        isCustomSession={isCustomSession}
+        onComplete={handleQuizComplete}
+        onExit={() => {
+          if (confirm('Bạn có chắc muốn tạm dừng bài kiểm tra? Tiến trình hiện tại sẽ chưa được lưu.')) {
+            router.push(ROUTES.APP.DASHBOARD);
+          }
+        }}
+      />
+    );
+  }
+
+  // GIAI ĐOẠN 1: LƯỚT XEM TRƯỚC FLASHCARD (PREVIEW PHASE)
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       {/* Custom Study Session Indicator Banner */}
@@ -139,14 +151,10 @@ function ReviewSessionContent() {
           <span>Thoát phiên</span>
         </Link>
 
-        {/* Progress Bar */}
-        <div className="flex-1 max-w-xs">
-          <div className="w-full h-1.5 rounded-full bg-surface border border-border/80 overflow-hidden">
-            <div
-              className="h-full bg-brand transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+        {/* Phase Indicator Badge */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-border text-[11px] font-medium text-text-secondary">
+          <Eye className="w-3.5 h-3.5 text-brand" />
+          <span>Giai đoạn 1: Xem trước thẻ</span>
         </div>
 
         {/* Action: Custom Study Modal Launcher */}
@@ -161,6 +169,14 @@ function ReviewSessionContent() {
           <Target className="w-3 h-3 text-brand" />
           <span className="hidden sm:inline">Học tùy chỉnh</span>
         </Button>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full h-1.5 rounded-full bg-surface border border-border/80 overflow-hidden">
+        <div
+          className="h-full bg-brand transition-all duration-300"
+          style={{ width: `${progressPercent}%` }}
+        />
       </div>
 
       {/* Card Counter */}
@@ -187,24 +203,16 @@ function ReviewSessionContent() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Action Controls */}
-      <div className="pt-2">
-        {isFlipped ? (
-          <RatingActions onRate={handleRate} disabled={isSubmitting} />
-        ) : (
-          <div className="text-center">
-            <Button
-              variant="primary"
-              size="default"
-              onClick={flipCard}
-              className="w-full max-w-xs gap-2"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Lật thẻ xem đáp án [Space]</span>
-            </Button>
-          </div>
-        )}
-      </div>
+      {/* Preview Navigation & Start Quiz Action Controls */}
+      <ReviewPreviewControls
+        currentIndex={currentIndex}
+        totalCards={totalCards}
+        isFlipped={isFlipped}
+        onFlip={flipCard}
+        onPrev={prevCard}
+        onNext={nextCard}
+        onStartQuiz={startQuiz}
+      />
 
       <CustomStudyModal
         isOpen={isCustomStudyOpen}

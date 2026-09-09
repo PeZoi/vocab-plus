@@ -29,12 +29,15 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { QuestSettingsCard } from '@/components/features/admin/quest-settings-card';
 import { XpSettingsCard } from '@/components/features/admin/xp-settings-card';
+import { VocabLevelSettingsCard } from '@/components/features/admin/vocab-level-settings-card';
 import type { QuestTemplate } from '@/types/quest.types';
 import {
   type ReviewXpRates,
   type PracticeXpRates,
+  type VocabLevelSettings,
   DEFAULT_REVIEW_XP_RATES,
   DEFAULT_PRACTICE_XP_RATES,
+  DEFAULT_VOCAB_LEVEL_SETTINGS,
 } from '@/types/system-settings.types';
 
 export default function AdminSettingsPage() {
@@ -193,6 +196,41 @@ export default function AdminSettingsPage() {
     }
     return DEFAULT_PRACTICE_XP_RATES;
   }, [settings]);
+
+  const dbVocabLevelConfig = useMemo<VocabLevelSettings>(() => {
+    const setting = settings.find((s) => s.key === 'vocab_level_config');
+    if (setting?.value && typeof setting.value === 'object') {
+      const val = setting.value as Partial<VocabLevelSettings>;
+      if (Array.isArray(val.levels) && val.levels.length > 0) {
+        return {
+          penaltyRule: val.penaltyRule || DEFAULT_VOCAB_LEVEL_SETTINGS.penaltyRule,
+          allowLevelUpInCasualMode: !!val.allowLevelUpInCasualMode,
+          levels: val.levels,
+        };
+      }
+    }
+    return DEFAULT_VOCAB_LEVEL_SETTINGS;
+  }, [settings]);
+
+  const handleSaveVocabLevels = async (newConfig: VocabLevelSettings) => {
+    try {
+      setNotification(null);
+      await updateMutation.mutateAsync({
+        key: 'vocab_level_config',
+        value: newConfig,
+      });
+      setNotification({
+        type: 'success',
+        message: 'Đã lưu cấu hình Cấp độ Cây Sinh Trưởng thành công!',
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi cập nhật cấu hình cấp độ';
+      setNotification({
+        type: 'error',
+        message: msg,
+      });
+    }
+  };
 
   const handleSaveXpRates = async (
     reviewRates: ReviewXpRates,
@@ -567,6 +605,13 @@ export default function AdminSettingsPage() {
       <QuestSettingsCard
         initialTemplates={dbQuestTemplates}
         onSave={handleSaveQuests}
+        isSaving={updateMutation.isPending}
+      />
+
+      {/* Card: Vocab Tree-Growth Level Configuration */}
+      <VocabLevelSettingsCard
+        initialConfig={dbVocabLevelConfig}
+        onSave={handleSaveVocabLevels}
         isSaving={updateMutation.isPending}
       />
     </motion.div>

@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Trophy, Medal, Flame, Zap } from 'lucide-react';
+import { Trophy, Medal, Zap } from 'lucide-react';
 import { pageVariants } from '@/constants/animations';
 import { useLeaderboardQuery } from '@/hooks/features/leaderboard/use-leaderboard';
 import { formatXP } from '@/utils/formatters';
-import { Badge } from '@/components/ui/badge';
 import { UserAvatar } from '@/components/common/user-avatar';
 
 type Timeframe = 'daily' | 'weekly' | 'all_time';

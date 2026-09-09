@@ -44,3 +44,43 @@ export interface CompleteReviewSessionResponse {
   actual_xp_awarded: number;
 }
 
+export type ReviewPhase = 'preview' | 'quiz' | 'syncing' | 'completed';
+
+export type QuizQuestionType = 'en_to_vi' | 'vi_to_en' | 'audio_to_en' | 'cloze';
+
+export interface QuizOptionItem {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuizQuestionItem {
+  id: string;
+  cardItem: ReviewCardItem;
+  type: QuizQuestionType;
+  questionText: string;
+  contextSentence?: string;
+  contextTranslation?: string;
+  audioText?: string;
+  options: QuizOptionItem[];
+  isRanked: boolean; // Chỉ từ đến hạn mới tính thăng/hạ level
+}
+
+export interface LevelChangeResult {
+  cardId: string;
+  word: string;
+  oldLevel: number;
+  newLevel: number;
+  direction: 'up' | 'down' | 'same';
+}
+
+export interface QuizSessionStats {
+  totalQuestions: number;
+  correctCount: number;
+  wrongCount: number;
+  xpEarned: number;
+  levelUps: LevelChangeResult[];
+  levelDowns: LevelChangeResult[];
+  isRanked: boolean;
+}
+

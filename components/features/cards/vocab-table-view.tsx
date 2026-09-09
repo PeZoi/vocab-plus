@@ -2,6 +2,7 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { CardWithProgress } from '@/types/card.types';
@@ -122,13 +123,16 @@ export function VocabTableView({
                   </div>
                 </td>
 
-                {/* CEFR Level */}
+                {/* CEFR Level & Tree Level */}
                 <td className="py-3 px-3 whitespace-nowrap">
-                  {card.cefr_level ? (
-                    <CEFRBadge level={card.cefr_level} size="sm" />
-                  ) : (
-                    <span className="text-text-secondary/50">—</span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {card.cefr_level ? (
+                      <CEFRBadge level={card.cefr_level} size="sm" />
+                    ) : (
+                      <span className="text-text-secondary/50">—</span>
+                    )}
+                    <WordLevelBadge userCard={userCard} mode="compact" />
+                  </div>
                 </td>
 
                 {/* Part of Speech */}

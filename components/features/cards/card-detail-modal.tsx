@@ -2,6 +2,7 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
@@ -50,6 +51,7 @@ export function CardDetailModal({
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className="text-xl font-bold text-text-primary">{card.word}</span>
           {card.cefr_level && <CEFRBadge level={card.cefr_level} size="md" />}
+          <WordLevelBadge userCard={userCard} mode="compact" />
           {card.part_of_speech && (
             <Badge variant="secondary" className="text-xs">
               {card.part_of_speech}
@@ -241,6 +243,14 @@ export function CardDetailModal({
             )}
           </div>
         )}
+
+        {/* Cây Sinh Trưởng & Cấp Độ Trí Nhớ */}
+        <div className="space-y-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
+            <span>🌱 Cây Sinh Trưởng & Cấp Độ Trí Nhớ:</span>
+          </span>
+          <WordLevelBadge userCard={userCard} mode="detailed" />
+        </div>
 
         {/* FSRS Learning State Card */}
         {userCard && (

@@ -1,7 +1,7 @@
 'use client';
 
 import { DashboardCefrDistribution } from '@/components/features/dashboard/dashboard-cefr-distribution';
-
+import { DashboardLevelDistribution } from '@/components/features/dashboard/dashboard-level-distribution';
 import { DashboardForecastChart } from '@/components/features/dashboard/dashboard-forecast-chart';
 import { DashboardHeroBanner } from '@/components/features/dashboard/dashboard-hero-banner';
 import { DashboardRecentCards } from '@/components/features/dashboard/dashboard-recent-cards';
@@ -46,17 +46,22 @@ export default function DashboardPage() {
         streakDays={streakDays}
       />
 
-      {/* 7-Day Forecast & CEFR Distribution */}
+      {/* 7-Day Forecast & Tree Garden Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <DashboardForecastChart forecast={forecast} />
+        <DashboardLevelDistribution cards={cards} />
+      </div>
+
+      {/* CEFR Distribution & Recent Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <DashboardCefrDistribution
           cefrDistribution={cefrDistribution}
           totalCards={cards.length}
         />
+        <div className="lg:col-span-2">
+          <DashboardRecentCards cards={cards} />
+        </div>
       </div>
-
-      {/* Recent Cards List */}
-      <DashboardRecentCards cards={cards} />
     </motion.div>
   );
 }

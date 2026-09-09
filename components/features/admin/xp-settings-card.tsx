@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Award, RotateCcw, Save, Sparkles, BookOpen, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,17 +31,18 @@ export function XpSettingsCard({
     initialPracticeRates || DEFAULT_PRACTICE_XP_RATES
   );
 
-  useEffect(() => {
-    if (initialReviewRates) {
-      setReviewRates(initialReviewRates);
-    }
-  }, [initialReviewRates]);
+  const [prevReview, setPrevReview] = useState(initialReviewRates);
+  const [prevPractice, setPrevPractice] = useState(initialPracticeRates);
 
-  useEffect(() => {
-    if (initialPracticeRates) {
-      setPracticeRates(initialPracticeRates);
-    }
-  }, [initialPracticeRates]);
+  if (initialReviewRates && initialReviewRates !== prevReview) {
+    setPrevReview(initialReviewRates);
+    setReviewRates(initialReviewRates);
+  }
+
+  if (initialPracticeRates && initialPracticeRates !== prevPractice) {
+    setPrevPractice(initialPracticeRates);
+    setPracticeRates(initialPracticeRates);
+  }
 
   const isDirty = useMemo(() => {
     const origReview = initialReviewRates || DEFAULT_REVIEW_XP_RATES;

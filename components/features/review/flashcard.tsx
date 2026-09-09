@@ -2,20 +2,22 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { Card, CollocationItem, WordFamilyItem } from '@/types/card.types';
+import type { Card, UserCard, CollocationItem, WordFamilyItem } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
 import { Lightbulb, RotateCw } from 'lucide-react';
 import Image from 'next/image';
 
 interface FlashcardProps {
   card: Card;
+  userCard?: UserCard | null;
   isFlipped: boolean;
   onFlip: () => void;
 }
 
-export function Flashcard({ card, isFlipped, onFlip }: FlashcardProps) {
+export function Flashcard({ card, userCard, isFlipped, onFlip }: FlashcardProps) {
   const collocations = (card.collocations as unknown as CollocationItem[]) || [];
   const wordFamily = (card.word_family as unknown as WordFamilyItem[]) || [];
 
@@ -30,6 +32,7 @@ export function Flashcard({ card, isFlipped, onFlip }: FlashcardProps) {
           {/* Card Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 flex-wrap">
+              <WordLevelBadge userCard={userCard} mode="compact" />
               {card.cefr_level && (
                 <CEFRBadge level={card.cefr_level} size="sm" />
               )}
@@ -91,9 +94,10 @@ export function Flashcard({ card, isFlipped, onFlip }: FlashcardProps) {
 
         {/* ================= MẶT SAU (BACK SIDE) ================= */}
         <div className="flip-card-face flip-card-back p-5 sm:p-7 flex flex-col justify-between bg-surface/95 border border-brand/40 shadow-lg brand-glow overflow-y-auto max-h-[560px]">
-          {/* Card Header */}
+          {/* Card Header Back */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 flex-wrap">
+              <WordLevelBadge userCard={userCard} mode="compact" />
               {card.cefr_level && (
                 <CEFRBadge level={card.cefr_level} size="sm" />
               )}
