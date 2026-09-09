@@ -1,17 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-function getProviderEndpoint(providerName?: string): string {
-  switch (providerName?.toLowerCase()) {
-    case 'orcarouter':
-      return 'https://api.orcarouter.ai/v1/chat/completions';
-    case 'openrouter':
-      return 'https://openrouter.ai/api/v1/chat/completions';
-    case 'groq':
-    default:
-      return 'https://api.groq.com/openai/v1/chat/completions';
-  }
-}
+import {
+  getProviderEndpoint,
+  getDefaultModelForProvider,
+  getProviderDisplayName,
+  getProviderHeaders,
+  parseAIErrorResponse,
+} from '@/lib/ai/providers';
 
 export async function POST(request: Request) {
   try {
@@ -47,24 +42,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const defaultModel =
-      provider_name?.toLowerCase() === 'orcarouter'
-        ? 'meta-llama/llama-3.3-70b-instruct'
-        : 'llama-3.3-70b-versatile';
-
+    const defaultModel = getDefaultModelForProvider(provider_name);
     const modelToUse = model?.trim() || defaultModel;
     const endpoint = getProviderEndpoint(provider_name);
-    const providerLabel = provider_name?.toLowerCase() === 'orcarouter' ? 'OrcaRouter' : 'Groq';
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${api_key.trim()}`,
-    };
-
-    if (provider_name?.toLowerCase() === 'orcarouter') {
-      headers['HTTP-Referer'] = 'https://vocabapp.plus';
-      headers['X-Title'] = 'VocabApp';
-    }
+    const providerLabel = getProviderDisplayName(provider_name);
+    const headers = getProviderHeaders(provider_name, api_key);
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -79,21 +61,14 @@ export async function POST(request: Request) {
           },
         ],
         temperature: 0.5,
-        max_tokens: 150,
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      let errMsg = response.statusText;
-      try {
-        const errJson = JSON.parse(errText);
-        errMsg = errJson.error?.message || errText;
-      } catch {
-        errMsg = errText;
-      }
+      const errMsg = parseAIErrorResponse(response.status, response.statusText, errText, providerLabel);
       return NextResponse.json(
-        { error: `${providerLabel} báo lỗi: ${errMsg}` },
+        { error: errMsg },
         { status: response.status >= 500 ? 502 : 400 }
       );
     }

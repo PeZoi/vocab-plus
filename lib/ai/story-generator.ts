@@ -1,7 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import type { GenerateStoryRequest, GenerateStoryResponse } from '@/types/imported-text.types';
-import { getProviderEndpoint } from './word-analyzer';
+import {
+  getProviderEndpoint,
+  getDefaultModelForProvider,
+  getProviderDisplayName,
+  getProviderHeaders,
+  parseAIErrorResponse,
+  isTransientAIError,
+} from './providers';
 import { extractAndParseJson } from './json-parser';
 
 export interface RequestAIStoryOptions extends GenerateStoryRequest {
@@ -31,12 +38,9 @@ export async function requestAIStoryGeneration({
     .single();
 
   const providerName = aiConfig?.provider_name || 'groq';
-  const providerDisplayName = aiConfig?.display_name || (providerName === 'orcarouter' ? 'OrcaRouter' : 'Groq');
+  const providerDisplayName = getProviderDisplayName(providerName, aiConfig?.display_name);
   const apiKey = aiConfig?.api_key || process.env.GROQ_API_KEY;
-  const defaultModel =
-    providerName === 'orcarouter'
-      ? 'meta-llama/llama-3.3-70b-instruct'
-      : 'llama-3.3-70b-versatile';
+  const defaultModel = getDefaultModelForProvider(providerName);
   const model = aiConfig?.model || defaultModel;
 
   if (!apiKey) {
@@ -72,15 +76,7 @@ Do not include <think> tags or internal reasoning. Return ONLY a single valid JS
 }`;
 
   const endpoint = getProviderEndpoint(providerName);
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
-  };
-
-  if (providerName === 'orcarouter') {
-    headers['HTTP-Referer'] = 'https://vocabapp.plus';
-    headers['X-Title'] = 'VocabApp';
-  }
+  const headers = getProviderHeaders(providerName, apiKey);
 
   const maxRetries = 5;
   let response: Response | null = null;
@@ -113,16 +109,10 @@ Do not include <think> tags or internal reasoning. Return ONLY a single valid JS
     const errBody = await response.text();
     console.error(`${providerDisplayName} Story API Error (Lần thử ${attempt}/${maxRetries}):`, errBody);
 
-    let errMsg = response.statusText;
-    try {
-      const errJson = JSON.parse(errBody);
-      errMsg = errJson.error?.message || errBody;
-    } catch {
-      errMsg = errBody;
-    }
+    const errMsg = parseAIErrorResponse(response.status, response.statusText, errBody, providerDisplayName);
     lastErrorMsg = errMsg;
 
-    if (response.status !== 429) {
+    if (!isTransientAIError(response.status)) {
       throw new Error(`Lỗi khi gọi ${providerDisplayName}: ${errMsg}`);
     }
 
@@ -132,7 +122,7 @@ Do not include <think> tags or internal reasoning. Return ONLY a single valid JS
       const waitMs =
         retryAfterSeconds && !isNaN(retryAfterSeconds)
           ? Math.min(Math.max(retryAfterSeconds, 1), 6) * 1000
-          : attempt * 2000;
+          : attempt * 1500;
 
       await new Promise((resolve) => setTimeout(resolve, waitMs));
     }
@@ -140,7 +130,7 @@ Do not include <think> tags or internal reasoning. Return ONLY a single valid JS
 
   if (!response || !response.ok) {
     throw new Error(
-      `${providerDisplayName} đạt giới hạn lượt gọi (Rate Limit 429) sau ${maxRetries} lần thử lại: ${lastErrorMsg}.`
+      `${providerDisplayName} không phản hồi thành công sau ${maxRetries} lần thử lại: ${lastErrorMsg}`
     );
   }
 

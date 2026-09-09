@@ -1,7 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import type { SentenceGradeRequest, SentenceGradeResponse } from '@/types/practice.types';
-import { getProviderEndpoint } from './word-analyzer';
+import {
+  getProviderEndpoint,
+  getDefaultModelForProvider,
+  getProviderDisplayName,
+  getProviderHeaders,
+  parseAIErrorResponse,
+  isTransientAIError,
+} from './providers';
 import { extractAndParseJson } from './json-parser';
 
 export interface RequestAISentenceGradingOptions extends SentenceGradeRequest {
@@ -27,13 +34,9 @@ export async function requestAISentenceGrading({
     .single();
 
   const providerName = aiConfig?.provider_name || 'groq';
-  const providerDisplayName =
-    aiConfig?.display_name || (providerName === 'orcarouter' ? 'OrcaRouter' : 'Groq');
+  const providerDisplayName = getProviderDisplayName(providerName, aiConfig?.display_name);
   const apiKey = aiConfig?.api_key || process.env.GROQ_API_KEY;
-  const defaultModel =
-    providerName === 'orcarouter'
-      ? 'meta-llama/llama-3.3-70b-instruct'
-      : 'llama-3.3-70b-versatile';
+  const defaultModel = getDefaultModelForProvider(providerName);
   const model = aiConfig?.model || defaultModel;
 
   if (!apiKey) {
@@ -75,15 +78,7 @@ Return ONLY valid JSON matching this schema with NO markdown code blocks or reas
 }`;
 
   const endpoint = getProviderEndpoint(providerName);
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
-  };
-
-  if (providerName === 'orcarouter') {
-    headers['HTTP-Referer'] = 'https://vocabapp.plus';
-    headers['X-Title'] = 'VocabApp';
-  }
+  const headers = getProviderHeaders(providerName, apiKey);
 
   const maxRetries = 4;
   let response: Response | null = null;
@@ -116,26 +111,22 @@ Return ONLY valid JSON matching this schema with NO markdown code blocks or reas
     const errBody = await response.text();
     console.error(`${providerDisplayName} Sentence Grader Error (Lần ${attempt}/${maxRetries}):`, errBody);
 
-    let errMsg = response.statusText;
-    try {
-      const errJson = JSON.parse(errBody);
-      errMsg = errJson.error?.message || errBody;
-    } catch {
-      errMsg = errBody.slice(0, 300);
-    }
+    const errMsg = parseAIErrorResponse(response.status, response.statusText, errBody, providerDisplayName);
     lastErrorMsg = errMsg;
 
-    if (response.status === 429 && attempt < maxRetries) {
-      const delayMs = attempt * 2000;
+    if (isTransientAIError(response.status) && attempt < maxRetries) {
+      const delayMs = attempt * 1500;
       await new Promise((res) => setTimeout(res, delayMs));
       continue;
     }
 
-    throw new Error(`Lỗi AI Grader (${providerDisplayName}): ${errMsg}`);
+    throw new Error(`Lỗi khi gọi ${providerDisplayName}: ${errMsg}`);
   }
 
   if (!response || !response.ok) {
-    throw new Error(`Không thể kết nối tới AI Provider: ${lastErrorMsg}`);
+    throw new Error(
+      `${providerDisplayName} không phản hồi thành công sau ${maxRetries} lần thử lại: ${lastErrorMsg}`
+    );
   }
 
   const resJson = await response.json();

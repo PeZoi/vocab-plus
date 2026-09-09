@@ -3,17 +3,16 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import { extractAndParseJson } from './json-parser';
 
-export function getProviderEndpoint(providerName?: string): string {
-  switch (providerName?.toLowerCase()) {
-    case 'orcarouter':
-      return 'https://api.orcarouter.ai/v1/chat/completions';
-    case 'openrouter':
-      return 'https://openrouter.ai/api/v1/chat/completions';
-    case 'groq':
-    default:
-      return 'https://api.groq.com/openai/v1/chat/completions';
-  }
-}
+import {
+  getProviderEndpoint,
+  getDefaultModelForProvider,
+  getProviderDisplayName,
+  getProviderHeaders,
+  parseAIErrorResponse,
+  isTransientAIError,
+} from './providers';
+
+export { getProviderEndpoint };
 
 export interface RequestAIAnalysisOptions {
   word: string;
@@ -40,12 +39,9 @@ export async function requestAIWordAnalysis({
     .single();
 
   const providerName = aiConfig?.provider_name || 'groq';
-  const providerDisplayName = aiConfig?.display_name || (providerName === 'orcarouter' ? 'OrcaRouter' : 'Groq');
+  const providerDisplayName = getProviderDisplayName(providerName, aiConfig?.display_name);
   const apiKey = aiConfig?.api_key || process.env.GROQ_API_KEY;
-  const defaultModel =
-    providerName === 'orcarouter'
-      ? 'meta-llama/llama-3.3-70b-instruct'
-      : 'llama-3.3-70b-versatile';
+  const defaultModel = getDefaultModelForProvider(providerName);
   const model = aiConfig?.model || defaultModel;
 
   if (!apiKey) {
@@ -106,15 +102,7 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
 }`;
 
   const endpoint = getProviderEndpoint(providerName);
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
-  };
-
-  if (providerName === 'orcarouter') {
-    headers['HTTP-Referer'] = 'https://vocabapp.plus';
-    headers['X-Title'] = 'VocabApp';
-  }
+  const headers = getProviderHeaders(providerName, apiKey);
 
   const maxRetries = 5;
   let response: Response | null = null;
@@ -147,16 +135,10 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
     const errBody = await response.text();
     console.error(`${providerDisplayName} API Error (Lần thử ${attempt}/${maxRetries}):`, errBody);
 
-    let errMsg = response.statusText;
-    try {
-      const errJson = JSON.parse(errBody);
-      errMsg = errJson.error?.message || errBody;
-    } catch {
-      errMsg = errBody;
-    }
+    const errMsg = parseAIErrorResponse(response.status, response.statusText, errBody, providerDisplayName);
     lastErrorMsg = errMsg;
 
-    if (response.status !== 429) {
+    if (!isTransientAIError(response.status)) {
       throw new Error(`Lỗi khi gọi ${providerDisplayName}: ${errMsg}`);
     }
 
@@ -165,7 +147,7 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
       const retryAfterSeconds = retryAfterHeader ? parseFloat(retryAfterHeader) : null;
       const waitMs = retryAfterSeconds && !isNaN(retryAfterSeconds)
         ? Math.min(Math.max(retryAfterSeconds, 1), 6) * 1000
-        : attempt * 2000;
+        : attempt * 1500;
 
       await new Promise((resolve) => setTimeout(resolve, waitMs));
     }
@@ -173,7 +155,7 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
 
   if (!response || !response.ok) {
     throw new Error(
-      `${providerDisplayName} đạt giới hạn lượt gọi (Rate Limit 429) sau ${maxRetries} lần thử lại: ${lastErrorMsg}.`
+      `${providerDisplayName} không phản hồi thành công sau ${maxRetries} lần thử lại: ${lastErrorMsg}`
     );
   }
 

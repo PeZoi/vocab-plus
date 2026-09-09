@@ -17,6 +17,7 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
+import { getProviderConfig } from '@/lib/ai/providers';
 import React, { useState } from 'react';
 
 interface ProviderConfigCardProps {
@@ -25,10 +26,10 @@ interface ProviderConfigCardProps {
 }
 
 export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCardProps) {
+  const meta = getProviderConfig(provider.provider_name);
   const isOrca = provider.provider_name.toLowerCase() === 'orcarouter';
-  const defaultFallbackModel = isOrca
-    ? 'meta-llama/llama-3.3-70b-instruct'
-    : 'llama-3.3-70b-versatile';
+  const isKira = provider.provider_name.toLowerCase() === 'kira' || provider.provider_name.toLowerCase() === 'kiraai';
+  const defaultFallbackModel = meta.defaultModel;
 
   const [apiKey, setApiKey] = useState(provider.api_key || '');
   const [model, setModel] = useState(provider.model || defaultFallbackModel);
@@ -37,7 +38,7 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
   const updateMutation = useUpdateAIProviderMutation();
   const testMutation = useTestAIProviderMutation();
 
-  const providerDisplayName = provider.display_name || (isOrca ? 'OrcaRouter' : 'Groq');
+  const providerDisplayName = provider.display_name || meta.display_name;
 
   // Lưu thông tin cấu hình (API Key & Model) mà không đổi trạng thái kích hoạt
   const handleSave = async () => {
@@ -130,12 +131,14 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
         <div className="flex items-center gap-3">
           <div
             className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
-              isOrca
+              isKira
+                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                : isOrca
                 ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
                 : 'bg-brand/15 text-brand border border-brand/30'
             }`}
           >
-            {isOrca ? '🐋' : 'GR'}
+            {meta.icon}
           </div>
 
           <div>
@@ -157,8 +160,7 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
 
             <span className="text-xs text-text-secondary">
               ID Provider: <span className="font-mono text-text-primary/90">{provider.provider_name}</span>
-              {isOrca && ' • Gateway OpenAI-compatible tự động định tuyến'}
-              {!isOrca && ' • Tăng tốc Llama/Qwen siêu tốc độ'}
+              {' • '}{meta.badgeLabel}
             </span>
           </div>
         </div>
@@ -199,19 +201,13 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
           </label>
           <Input
             type="text"
-            placeholder={
-              isOrca
-                ? 'vd: meta-llama/llama-3.3-70b-instruct, openai/gpt-4o-mini...'
-                : 'vd: llama-3.3-70b-versatile, qwen/qwen3.8-27b...'
-            }
+            placeholder={meta.placeholderModel}
             value={model}
             onChange={(e) => setModel(e.target.value)}
             className="font-mono text-xs h-9 bg-base/50"
           />
           <p className="text-[11px] text-text-secondary leading-normal">
-            {isOrca
-              ? 'Model ID hỗ trợ bởi OrcaRouter'
-              : 'Model ID hỗ trợ bởi Groq Cloud'}
+            Model ID hỗ trợ bởi {providerDisplayName}
           </p>
         </div>
 
@@ -223,7 +219,7 @@ export function ProviderConfigCard({ provider, onShowMessage }: ProviderConfigCa
           <div className="relative">
             <Input
               type={showKey ? 'text' : 'password'}
-              placeholder={isOrca ? 'vd: orca_... hoặc sk_...' : 'vd: gsk_...'}
+              placeholder={meta.placeholderKey}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               className="pr-9 font-mono text-xs h-9 bg-base/50"
