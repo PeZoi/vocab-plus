@@ -173,26 +173,28 @@ export function PracticeSummary({
           <span>Luyện tập bài khác</span>
         </Button>
 
-        <Button
-          asChild
-          variant="outline"
-          size="lg"
-          className="flex-1 h-11 text-xs sm:text-sm border-border/80 hover:bg-surface"
-        >
-          <Link href={ROUTES.APP.REVIEW} className="gap-2 flex items-center">
+        <Link href={ROUTES.APP.REVIEW} className="flex-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="w-full h-11 text-xs sm:text-sm border-border/80 hover:bg-surface gap-2"
+          >
             <GraduationCap className="w-4 h-4 text-brand" />
             <span>Học thẻ Flashcard</span>
-          </Link>
-        </Button>
+          </Button>
+        </Link>
 
-        <Button
-          asChild
-          variant="ghost"
-          size="lg"
-          className="h-11 text-xs text-text-secondary hover:text-text-primary"
-        >
-          <Link href={ROUTES.APP.DASHBOARD}>Về Tổng quan</Link>
-        </Button>
+        <Link href={ROUTES.APP.DASHBOARD}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            className="h-11 text-xs text-text-secondary hover:text-text-primary"
+          >
+            Về Tổng quan
+          </Button>
+        </Link>
       </div>
     </div>
   );

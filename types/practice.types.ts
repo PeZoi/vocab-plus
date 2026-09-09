@@ -71,3 +71,17 @@ export interface PracticeSessionSummary {
   xpEarned: number;
   completedAt: string;
 }
+
+export interface SubmitPracticeSessionDto {
+  mode?: PracticeMode;
+  total_questions: number;
+  correct_count: number;
+  xp_earned: number;
+  collection_title?: string;
+}
+
+export interface SubmitPracticeSessionResponse {
+  success: boolean;
+  actual_xp_awarded: number;
+}
+

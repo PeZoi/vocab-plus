@@ -226,28 +226,43 @@ export function VocabCardGrid({
               </div>
 
               {/* Due Date or State */}
-              {userCard && (
-                <div className="flex items-center gap-1 text-[10px] shrink-0 font-medium">
-                  {isDue ? (
-                    <span className="text-brand font-semibold px-1.5 py-0.2 rounded bg-brand/10 border border-brand/20">
+              <div className="flex items-center gap-1 text-[10px] shrink-0 font-medium">
+                {userCard ? (
+                  isDue ? (
+                    <span className="text-brand font-semibold px-1.5 py-0.5 rounded bg-brand/15 border border-brand/30 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                       Cần ôn tập
                     </span>
-                  ) : userCard.due_at ? (
+                  ) : (Number(userCard.stability) || 0) >= 20 ? (
                     <span
-                      className="text-text-secondary flex items-center gap-0.5"
-                      title={`Hạn ôn: ${formatDateTime(userCard.due_at)}`}
+                      className="text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/25 flex items-center gap-1"
+                      title={`Đã thuộc vững chắc (Độ bền trí nhớ: ${Math.round(Number(userCard.stability) || 0)} ngày)`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Đã thuộc
+                    </span>
+                  ) : userCard.state !== 'new' && userCard.due_at ? (
+                    <span
+                      className="text-sky-400 font-medium px-1.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/25 flex items-center gap-1"
+                      title={`Đang học. Hạn ôn kế tiếp: ${formatDateTime(userCard.due_at)}`}
                     >
                       <Calendar className="w-2.5 h-2.5" />
-                      {new Date(userCard.due_at).toLocaleDateString('vi-VN', {
+                      Ôn {new Date(userCard.due_at).toLocaleDateString('vi-VN', {
                         month: 'numeric',
                         day: 'numeric',
                       })}
                     </span>
                   ) : (
-                    <span className="text-text-secondary">Mới</span>
-                  )}
-                </div>
-              )}
+                    <span className="text-text-secondary/70 px-1.5 py-0.5 rounded bg-surface border border-border/60">
+                      Chưa học
+                    </span>
+                  )
+                ) : (
+                  <span className="text-text-secondary/70 px-1.5 py-0.5 rounded bg-surface border border-border/60">
+                    Chưa học
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         );

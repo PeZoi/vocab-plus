@@ -55,4 +55,9 @@ export const adminKeys = {
   settings: () => [...adminKeys.all, 'settings'] as const,
 };
 
+export const questKeys = {
+  all: ['quests'] as const,
+  daily: () => [...questKeys.all, 'daily'] as const,
+};
+
 

@@ -4,6 +4,7 @@ import { CustomStudyModal } from '@/components/features/review/custom-study-moda
 import { Flashcard } from '@/components/features/review/flashcard';
 import { RatingActions } from '@/components/features/review/rating-actions';
 import { ReviewCompletionScreen } from '@/components/features/review/review-completion-screen';
+import { ReviewSyncingScreen } from '@/components/features/review/review-syncing-screen';
 import { ReviewEmptyState } from '@/components/features/review/review-empty-state';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
@@ -12,6 +13,7 @@ import { ArrowLeft, Sparkles, Target } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import ReviewLoading from './loading';
 
 function ReviewSessionContent() {
@@ -34,8 +36,10 @@ function ReviewSessionContent() {
     handleRate,
     isLoading,
     isSubmitting,
+    isSyncingFinal,
     sessionCompleted,
     cardsReviewedCount,
+    totalXpEarned,
   } = useReviewSession({
     collection_id: collectionId,
     tag,
@@ -60,12 +64,19 @@ function ReviewSessionContent() {
     return <ReviewLoading />;
   }
 
+  // Trạng thái hệ thống đang tính toán kết quả ở thẻ cuối
+  if (isSyncingFinal) {
+    return <ReviewSyncingScreen />;
+  }
+
   // Màn hình hoàn thành phiên học
   if (sessionCompleted) {
     return (
       <ReviewCompletionScreen
         cardsReviewedCount={cardsReviewedCount}
         isCustomSession={isCustomSession}
+        collectionId={collectionId}
+        totalXpEarned={totalXpEarned}
       />
     );
   }
@@ -159,12 +170,22 @@ function ReviewSessionContent() {
         </span>
       </div>
 
-      {/* 3D Flashcard */}
-      <Flashcard
-        card={currentItem.card}
-        isFlipped={isFlipped}
-        onFlip={flipCard}
-      />
+      {/* 3D Flashcard with instant slide transition */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentItem.card.id}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+        >
+          <Flashcard
+            card={currentItem.card}
+            isFlipped={isFlipped}
+            onFlip={flipCard}
+          />
+        </motion.div>
+      </AnimatePresence>
 
       {/* Action Controls */}
       <div className="pt-2">

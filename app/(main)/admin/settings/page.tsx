@@ -22,10 +22,20 @@ import {
   Sliders,
   Sparkles,
   Zap,
+  Gamepad2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { QuestSettingsCard } from '@/components/features/admin/quest-settings-card';
+import { XpSettingsCard } from '@/components/features/admin/xp-settings-card';
+import type { QuestTemplate } from '@/types/quest.types';
+import {
+  type ReviewXpRates,
+  type PracticeXpRates,
+  DEFAULT_REVIEW_XP_RATES,
+  DEFAULT_PRACTICE_XP_RATES,
+} from '@/types/system-settings.types';
 
 export default function AdminSettingsPage() {
   const { isAdmin, isLoading: profileLoading } = useUserProfile();
@@ -47,10 +57,27 @@ export default function AdminSettingsPage() {
     return 80;
   }, [settings]);
 
-  // Ngưỡng tùy chỉnh người dùng đang tương tác
+  // Gamification Settings
+  const dbXpCap = useMemo(() => {
+    const setting = settings.find((s) => s.key === 'daily_xp_cap');
+    return setting?.value !== undefined ? Number(setting.value) : 500;
+  }, [settings]);
+
+  const dbLeagueThreshold = useMemo(() => {
+    const setting = settings.find((s) => s.key === 'league_min_threshold');
+    return setting?.value !== undefined ? Number(setting.value) : 200;
+  }, [settings]);
+
   const [customThreshold, setCustomThreshold] = useState<number | null>(null);
+  const [customXpCap, setCustomXpCap] = useState<number | null>(null);
+  const [customLeagueThreshold, setCustomLeagueThreshold] = useState<number | null>(null);
+
   const forkThreshold = customThreshold !== null ? customThreshold : dbThreshold;
+  const xpCap = customXpCap !== null ? customXpCap : dbXpCap;
+  const leagueThreshold = customLeagueThreshold !== null ? customLeagueThreshold : dbLeagueThreshold;
+  
   const isDirty = customThreshold !== null && customThreshold !== dbThreshold;
+  const isGamificationDirty = (customXpCap !== null && customXpCap !== dbXpCap) || (customLeagueThreshold !== null && customLeagueThreshold !== dbLeagueThreshold);
 
   // Notification feedback
   const [notification, setNotification] = useState<{
@@ -75,6 +102,11 @@ export default function AdminSettingsPage() {
     setCustomThreshold(80);
   };
 
+  const handleResetGamification = () => {
+    setCustomXpCap(500);
+    setCustomLeagueThreshold(200);
+  };
+
   const handleSave = async () => {
     try {
       setNotification(null);
@@ -89,6 +121,101 @@ export default function AdminSettingsPage() {
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể lưu cấu hình';
+      setNotification({
+        type: 'error',
+        message: msg,
+      });
+    }
+  };
+
+  const handleSaveGamification = async () => {
+    try {
+      setNotification(null);
+      await Promise.all([
+        updateMutation.mutateAsync({ key: 'daily_xp_cap', value: xpCap }),
+        updateMutation.mutateAsync({ key: 'league_min_threshold', value: leagueThreshold })
+      ]);
+      setCustomXpCap(null);
+      setCustomLeagueThreshold(null);
+      setNotification({
+        type: 'success',
+        message: 'Đã lưu cài đặt Gamification thành công!',
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu cấu hình';
+      setNotification({
+        type: 'error',
+        message: msg,
+      });
+    }
+  };
+
+  const dbQuestTemplates = useMemo<QuestTemplate[]>(() => {
+    const setting = settings.find((s) => s.key === 'daily_quest_templates');
+    if (setting?.value && Array.isArray(setting.value)) {
+      return setting.value as QuestTemplate[];
+    }
+    return [];
+  }, [settings]);
+
+  const handleSaveQuests = async (templates: QuestTemplate[]) => {
+    try {
+      setNotification(null);
+      await updateMutation.mutateAsync({
+        key: 'daily_quest_templates',
+        value: templates,
+      });
+      setNotification({
+        type: 'success',
+        message: 'Đã lưu cấu hình Nhiệm vụ hàng ngày thành công!',
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu cấu hình nhiệm vụ';
+      setNotification({
+        type: 'error',
+        message: msg,
+      });
+    }
+  };
+
+  const dbReviewXpRates = useMemo<ReviewXpRates>(() => {
+    const setting = settings.find((s) => s.key === 'review_xp_rates');
+    if (setting?.value && typeof setting.value === 'object') {
+      return { ...DEFAULT_REVIEW_XP_RATES, ...(setting.value as Partial<ReviewXpRates>) };
+    }
+    return DEFAULT_REVIEW_XP_RATES;
+  }, [settings]);
+
+  const dbPracticeXpRates = useMemo<PracticeXpRates>(() => {
+    const setting = settings.find((s) => s.key === 'practice_xp_rates');
+    if (setting?.value && typeof setting.value === 'object') {
+      return { ...DEFAULT_PRACTICE_XP_RATES, ...(setting.value as Partial<PracticeXpRates>) };
+    }
+    return DEFAULT_PRACTICE_XP_RATES;
+  }, [settings]);
+
+  const handleSaveXpRates = async (
+    reviewRates: ReviewXpRates,
+    practiceRates: PracticeXpRates
+  ) => {
+    try {
+      setNotification(null);
+      await Promise.all([
+        updateMutation.mutateAsync({
+          key: 'review_xp_rates',
+          value: reviewRates,
+        }),
+        updateMutation.mutateAsync({
+          key: 'practice_xp_rates',
+          value: practiceRates,
+        }),
+      ]);
+      setNotification({
+        type: 'success',
+        message: 'Đã lưu cấu hình Điểm Thưởng XP (Ôn tập & Kiểm tra) thành công!',
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu cấu hình điểm';
       setNotification({
         type: 'error',
         message: msg,
@@ -347,6 +474,101 @@ export default function AdminSettingsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Card: Gamification Settings */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-surface/90 border border-border/80 space-y-6 shadow-sm">
+        <div className="flex items-start justify-between gap-4 pb-4 border-b border-border/70">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500">
+              <Gamepad2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-text-primary">
+                Cài đặt Gamification (XP & Bảng xếp hạng)
+              </h2>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Cấu hình giới hạn XP mỗi ngày và điểm xét duyệt lên hạng League.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <label className="text-xs font-medium text-text-primary flex items-center gap-1.5">
+              <span>Giới hạn XP mỗi ngày (Daily XP Cap)</span>
+            </label>
+            <Input
+              type="number"
+              min={100}
+              max={10000}
+              value={xpCap}
+              onChange={(e) => setCustomXpCap(Number(e.target.value))}
+              className="text-sm bg-base border-border"
+            />
+            <p className="text-[11px] text-text-secondary leading-relaxed">
+              Ngăn chặn việc cày XP vô hạn trong 1 ngày làm hỏng cân bằng bảng xếp hạng (Mặc định: 500).
+            </p>
+          </div>
+          
+          <div className="space-y-3">
+            <label className="text-xs font-medium text-text-primary flex items-center gap-1.5">
+              <span>Ngưỡng lên hạng (League Min Threshold)</span>
+            </label>
+            <Input
+              type="number"
+              min={50}
+              max={5000}
+              value={leagueThreshold}
+              onChange={(e) => setCustomLeagueThreshold(Number(e.target.value))}
+              className="text-sm bg-base border-border"
+            />
+            <p className="text-[11px] text-text-secondary leading-relaxed">
+              Mức XP TỐI THIỂU trong tuần người dùng cần đạt để được vào danh sách xét duyệt thăng hạng (Top 20%) (Mặc định: 200).
+            </p>
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-border/70 flex items-center justify-between gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleResetGamification}
+            disabled={xpCap === 500 && leagueThreshold === 200}
+            className="text-xs text-text-secondary hover:text-text-primary"
+          >
+            Đặt lại (Mặc định)
+          </Button>
+
+          <Button
+            type="button"
+            variant="primary"
+            size="default"
+            onClick={handleSaveGamification}
+            disabled={updateMutation.isPending || !isGamificationDirty}
+            className="gap-2 text-xs font-semibold bg-indigo-500 hover:bg-indigo-600 text-white shadow-xs shadow-indigo-500/30"
+          >
+            <Save className="w-4 h-4" />
+            <span>{updateMutation.isPending ? 'Đang lưu...' : 'Lưu Gamification'}</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Card: XP Settings (Review & Practice) */}
+      <XpSettingsCard
+        initialReviewRates={dbReviewXpRates}
+        initialPracticeRates={dbPracticeXpRates}
+        onSave={handleSaveXpRates}
+        isSaving={updateMutation.isPending}
+      />
+
+      {/* Card: Daily Quests Configuration */}
+      <QuestSettingsCard
+        initialTemplates={dbQuestTemplates}
+        onSave={handleSaveQuests}
+        isSaving={updateMutation.isPending}
+      />
     </motion.div>
   );
 }

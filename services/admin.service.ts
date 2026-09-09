@@ -26,7 +26,7 @@ export interface TestAIProviderResponse {
 
 export interface SystemSetting {
   key: string;
-  value: Record<string, unknown>;
+  value: any;
   description: string | null;
   updated_by: string | null;
   updated_at: string;
@@ -64,7 +64,7 @@ export const adminService = {
   /**
    * Cập nhật một cấu hình hệ thống
    */
-  updateSystemSetting: (key: string, value: Record<string, unknown>): Promise<SystemSetting> => {
+  updateSystemSetting: (key: string, value: any): Promise<SystemSetting> => {
     return apiClient.patch('/admin/settings', { key, value });
   },
 };

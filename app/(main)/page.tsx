@@ -1,6 +1,7 @@
 'use client';
 
 import { DashboardCefrDistribution } from '@/components/features/dashboard/dashboard-cefr-distribution';
+
 import { DashboardForecastChart } from '@/components/features/dashboard/dashboard-forecast-chart';
 import { DashboardHeroBanner } from '@/components/features/dashboard/dashboard-hero-banner';
 import { DashboardRecentCards } from '@/components/features/dashboard/dashboard-recent-cards';

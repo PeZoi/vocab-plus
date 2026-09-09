@@ -18,12 +18,20 @@ export async function GET() {
     const now = new Date();
     const nowIso = now.toISOString();
 
-    // 1. Profile (XP)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('xp')
-      .eq('id', user.id)
-      .single();
+    // 1. Profile (XP) & System Settings
+    const [
+      { data: profile },
+      { data: settings },
+      { data: todayXpRow }
+    ] = await Promise.all([
+      supabase.from('profiles').select('xp').eq('id', user.id).single(),
+      supabase.from('system_settings').select('key, value').in('key', ['daily_xp_cap', 'league_min_threshold']),
+      supabase.from('user_daily_xp').select('xp_earned').eq('user_id', user.id).eq('date', format(now, 'yyyy-MM-dd')).maybeSingle()
+    ]);
+
+    const daily_xp_cap = settings?.find((s) => s.key === 'daily_xp_cap')?.value as number || 500;
+    const league_min_threshold = settings?.find((s) => s.key === 'league_min_threshold')?.value as number || 200;
+    const today_xp = todayXpRow?.xp_earned || 0;
 
     // 2. User cards
     const { data: userCards } = await supabase
@@ -77,6 +85,8 @@ export async function GET() {
       .order('reviewed_at', { ascending: false });
 
     let streak_days = 0;
+    let has_reviewed_today = today_xp > 0;
+
     if (logs && logs.length > 0) {
       const distinctDays = new Set(
         logs
@@ -87,6 +97,10 @@ export async function GET() {
       let checkDate = startOfDay(now);
       const todayStr = format(checkDate, 'yyyy-MM-dd');
       const yesterdayStr = format(addDays(checkDate, -1), 'yyyy-MM-dd');
+
+      if (distinctDays.has(todayStr)) {
+        has_reviewed_today = true;
+      }
 
       // Nếu hôm nay có học hoặc hôm qua có học thì streak còn tiếp diễn
       if (distinctDays.has(todayStr) || distinctDays.has(yesterdayStr)) {
@@ -107,6 +121,10 @@ export async function GET() {
         mastered_count,
         streak_days,
         total_xp: profile?.xp || 0,
+        today_xp,
+        daily_xp_cap,
+        league_min_threshold,
+        has_reviewed_today,
       },
       forecast,
     });

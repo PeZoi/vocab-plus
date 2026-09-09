@@ -22,6 +22,10 @@ export interface ReviewStats {
   mastered_count: number;
   streak_days: number;
   total_xp: number;
+  today_xp?: number;
+  daily_xp_cap?: number;
+  league_min_threshold?: number;
+  has_reviewed_today?: boolean;
 }
 
 export interface ReviewForecastDay {
@@ -29,3 +33,14 @@ export interface ReviewForecastDay {
   day_label: string; // "Hôm nay", "T2", "T3"...
   count: number;
 }
+
+export interface CompleteReviewSessionDto {
+  cards_reviewed: number;
+  total_xp: number;
+}
+
+export interface CompleteReviewSessionResponse {
+  success: boolean;
+  actual_xp_awarded: number;
+}
+

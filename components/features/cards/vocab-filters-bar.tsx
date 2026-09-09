@@ -32,6 +32,7 @@ const FSRS_STATE_OPTIONS: { value: FSRSState; label: string }[] = [
   { value: 'all', label: 'Tất cả trạng thái' },
   { value: 'review', label: 'Cần ôn tập (Due/Review)' },
   { value: 'learning', label: 'Đang học (Learning)' },
+  { value: 'mastered', label: 'Đã thuộc (Mastered)' },
   { value: 'new', label: 'Thẻ mới (New)' },
   { value: 'leech', label: 'Từ khó (Leech)' },
 ];

@@ -7,9 +7,12 @@ import { PracticeSummary } from '@/components/features/practice/practice-summary
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
+import { userKeys, reviewKeys, questKeys } from '@/constants/query-keys';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
+import { practiceService } from '@/services/practice.service';
 import type { CardWithProgress } from '@/types/card.types';
 import type { PracticeQuestionItem, PracticeSourceType } from '@/types/practice.types';
+import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen } from 'lucide-react';
 import { useState } from 'react';
 
@@ -31,6 +34,7 @@ interface SessionResultStats {
 }
 
 export default function PracticePage() {
+  const queryClient = useQueryClient();
   const { data: cards = [], isLoading, isError } = useCardsQuery();
   const [status, setStatus] = useState<PracticeStatus>('setup');
   const [sessionConfig, setSessionConfig] = useState<ActiveSessionConfig | null>(null);
@@ -41,8 +45,33 @@ export default function PracticePage() {
     setStatus('practicing');
   };
 
-  const handleComplete = (stats: SessionResultStats) => {
-    setSessionResult(stats);
+  const handleComplete = async (stats: SessionResultStats) => {
+    try {
+      // Gọi API tổng kết và cập nhật XP một lần duy nhất vào database
+      const res = await practiceService.completeSession({
+        xp_earned: stats.xpEarned,
+        total_questions: stats.total,
+        correct_count: stats.correct,
+        mode: 'mixed',
+        collection_title: sessionConfig?.collectionTitle,
+      });
+
+      // Cập nhật header XP, daily quests và profile
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: userKeys.profile() }),
+        queryClient.invalidateQueries({ queryKey: reviewKeys.stats() }),
+        queryClient.invalidateQueries({ queryKey: questKeys.daily() }),
+      ]);
+
+      setSessionResult({
+        ...stats,
+        xpEarned: res.actual_xp_awarded ?? stats.xpEarned,
+      });
+    } catch (err) {
+      console.error('Lỗi cập nhật XP kiểm tra:', err);
+      setSessionResult(stats);
+    }
+
     setStatus('summary');
   };
 

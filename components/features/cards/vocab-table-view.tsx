@@ -187,15 +187,27 @@ export function VocabTableView({
                       Leech
                     </span>
                   ) : isDue ? (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand/15 text-brand border border-brand/30">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand/15 text-brand border border-brand/30 inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                       Cần ôn tập
                     </span>
-                  ) : userCard?.state ? (
-                    <span className="text-[11px] text-text-secondary capitalize">
-                      {userCard.state}
+                  ) : (Number(userCard?.stability) || 0) >= 20 ? (
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 inline-flex items-center gap-1"
+                      title={`Đã thuộc (Độ bền: ${Math.round(Number(userCard?.stability) || 0)} ngày)`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      Đã thuộc
+                    </span>
+                  ) : userCard?.state && userCard.state !== 'new' ? (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/25 inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                      Đang học
                     </span>
                   ) : (
-                    <span className="text-text-secondary/50">Mới</span>
+                    <span className="text-[10px] text-text-secondary/70 px-2 py-0.5 rounded-full bg-surface border border-border/60">
+                      Chưa học
+                    </span>
                   )}
                 </td>
 

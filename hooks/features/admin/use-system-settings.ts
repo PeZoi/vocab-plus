@@ -20,7 +20,7 @@ export function useUpdateSystemSettingMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ key, value }: { key: string; value: Record<string, unknown> }) =>
+    mutationFn: ({ key, value }: { key: string; value: unknown }) =>
       adminService.updateSystemSetting(key, value),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.settings() });

@@ -48,7 +48,7 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, whileTap, whileHover, ...props }, ref) => {
+  ({ className, variant, size, whileTap, whileHover, asChild = false, ...props }, ref) => {
     return (
       <motion.button
         className={cn(buttonVariants({ variant, size, className }))}

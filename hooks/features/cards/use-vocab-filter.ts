@@ -6,14 +6,17 @@ import type {
 } from '@/types/card.types';
 import { useDeferredValue, useMemo, useState } from 'react';
 
-export function useVocabFilter(rawCards: CardWithProgress[] = []) {
+export function useVocabFilter(
+  rawCards: CardWithProgress[] = [],
+  initialFsrsState: FSRSState = 'all'
+) {
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearch = useDeferredValue(searchQuery);
 
   const [cefrLevel, setCefrLevel] = useState<CEFRLevel | 'all'>('all');
   const [selectedTag, setSelectedTag] = useState<string | 'all'>('all');
-  const [fsrsState, setFsrsState] = useState<FSRSState>('all');
+  const [fsrsState, setFsrsState] = useState<FSRSState>(initialFsrsState);
   const [sortBy, setSortBy] = useState<VocabSortOption>('created_desc');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
@@ -72,6 +75,15 @@ export function useVocabFilter(rawCards: CardWithProgress[] = []) {
         }
         if (fsrsState === 'review') {
           return userCard.due_at ? new Date(userCard.due_at) <= new Date() : false;
+        }
+        if (fsrsState === 'mastered') {
+          return (Number(userCard.stability) || 0) >= 20;
+        }
+        if (fsrsState === 'learning') {
+          return userCard.state !== 'new' && (Number(userCard.stability) || 0) < 20;
+        }
+        if (fsrsState === 'new') {
+          return userCard.state === 'new';
         }
         return userCard.state === fsrsState;
       });

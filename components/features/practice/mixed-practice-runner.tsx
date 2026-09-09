@@ -22,7 +22,12 @@ import {
   XCircle,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSystemSettingsQuery } from '@/hooks/features/admin/use-system-settings';
+import {
+  DEFAULT_PRACTICE_XP_RATES,
+  type PracticeXpRates,
+} from '@/types/system-settings.types';
 
 interface MixedPracticeRunnerProps {
   questions: PracticeQuestionItem[];
@@ -50,6 +55,15 @@ export function MixedPracticeRunner({
   onComplete,
   onExit,
 }: MixedPracticeRunnerProps) {
+  const { data: systemSettings = [] } = useSystemSettingsQuery();
+  const practiceRates = useMemo<PracticeXpRates>(() => {
+    const setting = systemSettings.find((s) => s.key === 'practice_xp_rates');
+    if (setting?.value && typeof setting.value === 'object') {
+      return { ...DEFAULT_PRACTICE_XP_RATES, ...(setting.value as Partial<PracticeXpRates>) };
+    }
+    return DEFAULT_PRACTICE_XP_RATES;
+  }, [systemSettings]);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCards, setWrongCards] = useState<CardWithProgress[]>([]);
@@ -73,11 +87,15 @@ export function MixedPracticeRunner({
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((prev) => prev + 1);
     } else {
+      // Nếu đúng 100% tất cả các câu, cộng thêm điểm thưởng hoàn hảo (perfect_bonus)
+      const isPerfect = correctCount === questions.length;
+      const finalTotalXp = totalXp + (isPerfect ? practiceRates.perfect_bonus : 0);
+
       onComplete({
         total: questions.length,
         correct: correctCount,
         wrongCards,
-        xpEarned: totalXp,
+        xpEarned: finalTotalXp,
       });
     }
   };
@@ -162,6 +180,7 @@ export function MixedPracticeRunner({
               card={currentCard}
               allCards={allCards}
               isLast={isLastQuestion}
+              rates={practiceRates}
               onAnswered={(isCorrect, xp) => handleAnswered(isCorrect, xp, currentCard)}
               onNext={handleNext}
             />
@@ -171,6 +190,7 @@ export function MixedPracticeRunner({
             <ClozeQuestionCard
               card={currentCard}
               isLast={isLastQuestion}
+              rates={practiceRates}
               onAnswered={(isCorrect, xp) => handleAnswered(isCorrect, xp, currentCard)}
               onNext={handleNext}
             />
@@ -180,6 +200,7 @@ export function MixedPracticeRunner({
             <SentenceWritingQuestionCard
               card={currentCard}
               isLast={isLastQuestion}
+              rates={practiceRates}
               onAnswered={(isCorrect, xp) => handleAnswered(isCorrect, xp, currentCard)}
               onNext={handleNext}
             />
@@ -197,12 +218,14 @@ function MultipleChoiceQuestionCard({
   card,
   allCards,
   isLast,
+  rates,
   onAnswered,
   onNext,
 }: {
   card: CardWithProgress;
   allCards: CardWithProgress[];
   isLast: boolean;
+  rates: PracticeXpRates;
   onAnswered: (isCorrect: boolean, xp: number) => void;
   onNext: () => void;
 }) {
@@ -243,7 +266,7 @@ function MultipleChoiceQuestionCard({
     if (isAnswered) return;
     setSelectedOptionId(option.id);
     setIsAnswered(true);
-    onAnswered(option.isCorrect, option.isCorrect ? 10 : 0);
+    onAnswered(option.isCorrect, option.isCorrect ? rates.multiple_choice : 0);
   };
 
   const isCorrect = selectedOptionId === card.id;
@@ -354,7 +377,7 @@ function MultipleChoiceQuestionCard({
             {isCorrect ? (
               <span className="text-success font-bold flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Chính xác! +10 XP
+                Chính xác! +{rates.multiple_choice} XP
               </span>
             ) : (
               <span className="text-danger font-semibold">
@@ -388,11 +411,13 @@ function MultipleChoiceQuestionCard({
 function ClozeQuestionCard({
   card,
   isLast,
+  rates,
   onAnswered,
   onNext,
 }: {
   card: CardWithProgress;
   isLast: boolean;
+  rates: PracticeXpRates;
   onAnswered: (isCorrect: boolean, xp: number) => void;
   onNext: () => void;
 }) {
@@ -419,7 +444,7 @@ function ClozeQuestionCard({
     e?.preventDefault();
     if (isAnswered || !inputVal.trim()) return;
     setIsAnswered(true);
-    onAnswered(isCorrect, isCorrect ? 15 : 0);
+    onAnswered(isCorrect, isCorrect ? rates.cloze : 0);
   };
 
   const handleGiveUp = () => {
@@ -555,7 +580,7 @@ function ClozeQuestionCard({
             {isCorrect ? (
               <span className="text-success font-bold flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Chính xác! +15 XP
+                Chính xác! +{rates.cloze} XP
               </span>
             ) : (
               <span className="text-danger font-semibold">
@@ -586,11 +611,13 @@ function ClozeQuestionCard({
 function SentenceWritingQuestionCard({
   card,
   isLast,
+  rates,
   onAnswered,
   onNext,
 }: {
   card: CardWithProgress;
   isLast: boolean;
+  rates: PracticeXpRates;
   onAnswered: (isCorrect: boolean, xp: number) => void;
   onNext: () => void;
 }) {
@@ -615,7 +642,8 @@ function SentenceWritingQuestionCard({
 
       setGradeResult(res);
       setIsAnswered(true);
-      onAnswered(res.score >= 70, Math.round(res.score / 5));
+      const awardedXp = Math.round((res.score / 100) * rates.sentence_writing);
+      onAnswered(res.score >= 70, awardedXp);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Có lỗi khi gọi AI chấm điểm.';
       setGradeError(msg);
@@ -737,7 +765,7 @@ function SentenceWritingQuestionCard({
               </span>
             </div>
             <span className="text-xs font-bold text-brand">
-              +{Math.round(gradeResult.score / 5)} XP
+              +{Math.round((gradeResult.score / 100) * rates.sentence_writing)} XP
             </span>
           </div>
 

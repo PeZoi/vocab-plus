@@ -7,7 +7,8 @@ import {
   State,
   type FSRSCard,
 } from '@/lib/fsrs';
-import type { SubmitReviewDto, ReviewRating } from '@/types/review.types';
+import type { SubmitReviewDto } from '@/types/review.types';
+import { incrementQuestProgress } from '@/lib/gamification';
 
 export async function POST(request: Request) {
   try {
@@ -142,33 +143,17 @@ export async function POST(request: Request) {
       response_ms: response_ms || null,
     });
 
-    // 6. Cộng XP cho profile người dùng (Again: +1, Hard: +3, Good: +5, Easy: +8)
-    const xpBonusMap: Record<ReviewRating, number> = {
-      1: 1,
-      2: 3,
-      3: 5,
-      4: 8,
-    };
-    const xpToAdd = xpBonusMap[rating as ReviewRating];
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('xp')
-      .eq('id', user.id)
-      .single();
-
-    if (profile) {
-      await supabase
-        .from('profiles')
-        .update({ xp: (profile.xp || 0) + xpToAdd })
-        .eq('id', user.id);
+    // 6. Cập nhật tiến độ nhiệm vụ hàng ngày (XP sẽ được tổng kết và cập nhật một lần khi kết thúc phiên)
+    await incrementQuestProgress(user.id, 'review_cards', 1);
+    if ((userCard.review_count || 0) === 0) {
+      await incrementQuestProgress(user.id, 'learn_new', 1);
     }
 
     return NextResponse.json({
       success: true,
       due_at: nextCard.due.toISOString(),
       state: stateRevMap[nextCard.state],
-      xp_added: xpToAdd,
+      xp_added: 0,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';

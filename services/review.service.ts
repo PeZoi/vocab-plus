@@ -4,6 +4,8 @@ import type {
   ReviewForecastDay,
   ReviewStats,
   SubmitReviewDto,
+  CompleteReviewSessionDto,
+  CompleteReviewSessionResponse,
 } from '@/types/review.types';
 
 export interface ReviewStatsResponse {
@@ -29,6 +31,13 @@ export const reviewService = {
    */
   submitReview: (dto: SubmitReviewDto): Promise<{ success: boolean; due_at: string; state: string; xp_added: number }> => {
     return apiClient.post('/review/submit', dto);
+  },
+
+  /**
+   * Kết thúc phiên ôn tập và tổng kết cập nhật XP
+   */
+  completeSession: (dto: CompleteReviewSessionDto): Promise<CompleteReviewSessionResponse> => {
+    return apiClient.post('/review/complete', dto);
   },
 
   /**

@@ -15,13 +15,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
 import { useVocabFilter } from '@/hooks/features/cards/use-vocab-filter';
-import type { CardWithProgress } from '@/types/card.types';
+import type { CardWithProgress, FSRSState } from '@/types/card.types';
 import { BookOpen, FolderPlus, Play, SearchX, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 
-export default function VocabPage() {
+function VocabContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const stateParam = searchParams.get('state') as FSRSState | null;
+  const validInitialState: FSRSState =
+    stateParam && ['all', 'review', 'learning', 'mastered', 'new', 'leech'].includes(stateParam)
+      ? stateParam
+      : 'all';
 
   // Modal states
   const [editCard, setEditCard] = useState<CardWithProgress | null>(null);
@@ -55,7 +61,14 @@ export default function VocabPage() {
     filteredCards,
     isFiltered,
     resetFilters,
-  } = useVocabFilter(rawCards);
+  } = useVocabFilter(rawCards, validInitialState);
+
+  // Sync state param if URL changes
+  useEffect(() => {
+    if (stateParam && ['all', 'review', 'learning', 'mastered', 'new', 'leech'].includes(stateParam)) {
+      setFsrsState(stateParam);
+    }
+  }, [stateParam, setFsrsState]);
 
   const handleToggleSelectCard = (id: string) => {
     setSelectedCardIds((prev) => {
@@ -289,3 +302,23 @@ export default function VocabPage() {
     </div>
   );
 }
+
+export default function VocabPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-4 max-w-7xl mx-auto py-8">
+          <Skeleton className="h-12 w-64 rounded-xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 pt-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-44 w-full rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <VocabContent />
+    </Suspense>
+  );
+}
+

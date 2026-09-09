@@ -252,6 +252,53 @@ export type Database = {
           },
         ]
       }
+      daily_quests: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          is_completed: boolean
+          progress: number
+          quest_type: Database["public"]["Enums"]["quest_type"]
+          reward_xp: number
+          target: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          is_completed?: boolean
+          progress?: number
+          quest_type: Database["public"]["Enums"]["quest_type"]
+          reward_xp?: number
+          target: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          is_completed?: boolean
+          progress?: number
+          quest_type?: Database["public"]["Enums"]["quest_type"]
+          reward_xp?: number
+          target?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_quests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imported_texts: {
         Row: {
           created_at: string | null
@@ -368,6 +415,30 @@ export type Database = {
           },
         ]
       }
+      system_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       user_cards: {
         Row: {
           card_id: string | null
@@ -461,15 +532,128 @@ export type Database = {
           },
         ]
       }
+      user_daily_xp: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_daily_xp_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_leagues: {
+        Row: {
+          created_at: string
+          last_season_rank: number | null
+          league: Database["public"]["Enums"]["league_tier"]
+          updated_at: string
+          user_id: string
+          weekly_xp: number
+        }
+        Insert: {
+          created_at?: string
+          last_season_rank?: number | null
+          league?: Database["public"]["Enums"]["league_tier"]
+          updated_at?: string
+          user_id: string
+          weekly_xp?: number
+        }
+        Update: {
+          created_at?: string
+          last_season_rank?: number | null
+          league?: Database["public"]["Enums"]["league_tier"]
+          updated_at?: string
+          user_id?: string
+          weekly_xp?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_leagues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_streaks: {
+        Row: {
+          created_at: string
+          current_streak: number
+          freezes_available: number
+          last_active_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          freezes_available?: number
+          last_active_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          freezes_available?: number
+          last_active_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_streaks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      is_card_in_public_collection: {
+        Args: { card_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      league_tier: "bronze" | "silver" | "gold" | "diamond" | "master"
+      quest_type: "review_cards" | "learn_new" | "accuracy" | "earn_xp"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -596,6 +780,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      league_tier: ["bronze", "silver", "gold", "diamond", "master"],
+      quest_type: ["review_cards", "learn_new", "accuracy", "earn_xp"],
+    },
   },
 } as const
