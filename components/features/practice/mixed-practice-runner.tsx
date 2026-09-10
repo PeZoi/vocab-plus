@@ -37,6 +37,7 @@ import {
   mapQuizResultToFSRS,
   type WordLevelInfo,
 } from '@/utils/fsrs-level';
+import { getDistractors } from '@/utils/quiz-distractors';
 
 export interface LevelUpItem {
   card: CardWithProgress;
@@ -336,10 +337,23 @@ function MultipleChoiceQuestionCard({
       ? 'word_to_meaning'
       : 'meaning_to_word';
 
-    const distractors = allCards
+    // Tạo pool ứng viên từ allCards (loại trừ chính thẻ hiện tại)
+    const candidatePool = allCards
       .filter((c) => c.id !== card.id)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
+      .map((c) => ({
+        word: c.word,
+        definition: c.definition,
+        part_of_speech: c.part_of_speech,
+      }));
+
+    // Lấy 3 đáp án nhiễu độc nhất (tự động mượn từ SYSTEM_DISTRACTOR_POOL nếu thiếu)
+    const distractorTexts = getDistractors(
+      card.word,
+      card.definition,
+      candidatePool,
+      isWordToMeaning ? 'definition' : 'word',
+      card.part_of_speech
+    );
 
     const correctOption: ChoiceOption = {
       id: card.id,
@@ -347,15 +361,19 @@ function MultipleChoiceQuestionCard({
       isCorrect: true,
     };
 
-    const wrongOptions: ChoiceOption[] = distractors.map((c) => ({
-      id: c.id,
-      text: isWordToMeaning ? c.definition : c.word,
+    const wrongOptions: ChoiceOption[] = distractorTexts.map((text, idx) => ({
+      id: `distractor-${card.id}-${idx}`,
+      text,
       isCorrect: false,
     }));
 
+    // Đảm bảo luôn đủ đúng 4 đáp án (1 đúng + 3 nhiễu) được xáo trộn ngẫu nhiên
+    const rawOptions = [correctOption, ...wrongOptions];
+    const shuffledOptions = [...rawOptions].sort(() => 0.5 - Math.random());
+
     return {
       promptType,
-      options: [correctOption, ...wrongOptions].sort(() => 0.5 - Math.random()),
+      options: shuffledOptions,
     };
   });
 

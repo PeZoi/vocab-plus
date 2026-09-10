@@ -32,15 +32,15 @@ function QuestTemplateItem({ quest, index, onUpdate, onRemove }: QuestTemplateIt
     >
       {/* Top row: Index, Title & Active toggle / Delete */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-1">
-          <span className="w-5 h-5 rounded-full bg-surface border border-border flex items-center justify-center text-[10px] font-bold text-text-secondary">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="w-5 h-5 rounded-full bg-surface border border-border flex items-center justify-center text-[10px] font-bold text-text-secondary shrink-0">
             {index + 1}
           </span>
           <Input
             value={quest.title}
             onChange={(e) => onUpdate(quest.id, { title: e.target.value })}
             placeholder="Tiêu đề nhiệm vụ (VD: Hoàn thành 30 thẻ ôn tập)"
-            className="h-8 text-xs font-semibold bg-surface border-border flex-1"
+            className="h-8 text-xs font-semibold bg-surface border-border flex-1 min-w-0"
           />
         </div>
 
