@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CEFR_FILTER_OPTIONS } from '@/constants/cefr';
-import type { CEFRLevel, FSRSState, VocabSortOption } from '@/types/card.types';
+import type { CEFRLevel, VocabSortOption, WordLevelFilter } from '@/types/card.types';
 import { Filter, Play, RotateCcw } from 'lucide-react';
 
 interface VocabFiltersBarProps {
@@ -18,8 +18,8 @@ interface VocabFiltersBarProps {
   onCefrChange: (val: CEFRLevel | 'all') => void;
   selectedTag: string | 'all';
   onTagChange: (val: string | 'all') => void;
-  fsrsState: FSRSState;
-  onFsrsStateChange: (val: FSRSState) => void;
+  wordLevel: WordLevelFilter;
+  onWordLevelChange: (val: WordLevelFilter) => void;
   sortBy: VocabSortOption;
   onSortChange: (val: VocabSortOption) => void;
   onResetFilters: () => void;
@@ -28,13 +28,14 @@ interface VocabFiltersBarProps {
   filteredCount?: number;
 }
 
-const FSRS_STATE_OPTIONS: { value: FSRSState; label: string }[] = [
-  { value: 'all', label: 'Tất cả trạng thái' },
-  { value: 'review', label: 'Cần ôn tập (Due/Review)' },
-  { value: 'learning', label: 'Đang học (Learning)' },
-  { value: 'mastered', label: 'Đã thuộc (Mastered)' },
-  { value: 'new', label: 'Thẻ mới (New)' },
-  { value: 'leech', label: 'Từ khó (Leech)' },
+export const WORD_LEVEL_OPTIONS: { value: WordLevelFilter; label: string; icon: string }[] = [
+  { value: 'all', label: 'Tất cả cấp độ', icon: '✨' },
+  { value: 0, label: 'Lv.0 Hạt mầm', icon: '🌰' },
+  { value: 1, label: 'Lv.1 Nảy mầm', icon: '🌱' },
+  { value: 2, label: 'Lv.2 Nhánh non', icon: '🌿' },
+  { value: 3, label: 'Lv.3 Cây xanh', icon: '🌳' },
+  { value: 4, label: 'Lv.4 Nở hoa', icon: '🌸' },
+  { value: 5, label: 'Lv.5 Đại thụ', icon: '👑' },
 ];
 
 const SORT_OPTIONS: { value: VocabSortOption; label: string }[] = [
@@ -53,8 +54,8 @@ export function VocabFiltersBar({
   onCefrChange,
   selectedTag,
   onTagChange,
-  fsrsState,
-  onFsrsStateChange,
+  wordLevel,
+  onWordLevelChange,
   sortBy,
   onSortChange,
   onResetFilters,
@@ -108,19 +109,24 @@ export function VocabFiltersBar({
         </Select>
       </div>
 
-      {/* FSRS State Filter */}
+      {/* Word Level Filter */}
       <div className="w-[140px] sm:w-[160px]">
         <Select
-          value={fsrsState}
-          onValueChange={(val) => onFsrsStateChange(val as FSRSState)}
+          value={String(wordLevel)}
+          onValueChange={(val) =>
+            onWordLevelChange(val === 'all' ? 'all' : (Number(val) as WordLevelFilter))
+          }
         >
           <SelectTrigger className="w-full h-8 text-xs bg-base/60">
-            <SelectValue placeholder="Trạng thái" />
+            <SelectValue placeholder="Cấp độ" />
           </SelectTrigger>
           <SelectContent>
-            {FSRS_STATE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
+            {WORD_LEVEL_OPTIONS.map((opt) => (
+              <SelectItem key={String(opt.value)} value={String(opt.value)}>
+                <span className="flex items-center gap-1.5">
+                  <span>{opt.icon}</span>
+                  <span>{opt.label}</span>
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -161,8 +167,8 @@ export function VocabFiltersBar({
         </Button>
       )}
 
-      {/* Custom Study Quick Action Button when filtered by Tag or CEFR */}
-      {(selectedTag !== 'all' || cefrLevel !== 'all') && onStartCustomStudy && (filteredCount ?? 0) > 0 && (
+      {/* Custom Study Quick Action Button when filtered by Tag, CEFR or Level */}
+      {(selectedTag !== 'all' || cefrLevel !== 'all' || wordLevel !== 'all') && onStartCustomStudy && (filteredCount ?? 0) > 0 && (
         <Button
           type="button"
           size="sm"

@@ -2,6 +2,7 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { WordLevelBadge } from '@/components/common/word-level-badge';
 import type { CardWithProgress } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
 import { BookOpen, Lightbulb, Quote, Sparkles } from 'lucide-react';
@@ -31,6 +32,7 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
                 {card.cefr_level && (
                   <CEFRBadge level={card.cefr_level} size="md" />
                 )}
+                <WordLevelBadge userCard={card.user_card} mode="compact" />
                 {card.part_of_speech && (
                   <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-surface-hover text-slate-300 border border-border/70 capitalize">
                     {card.part_of_speech}

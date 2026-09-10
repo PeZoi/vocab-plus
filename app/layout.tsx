@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
-import { Sora, Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
+import { Sora, Be_Vietnam_Pro, JetBrains_Mono, Geist } from 'next/font/google';
 import './globals.css';
 import { AppProviders } from '@/components/providers/app-providers';
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const sora = Sora({
   variable: '--font-sora',
@@ -37,7 +40,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${sora.variable} ${beVietnamPro.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+      className={cn("h-full", "antialiased", "dark", sora.variable, beVietnamPro.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
     >
       <body className="min-h-full flex flex-col bg-base text-text-primary" spellCheck={false}>
         <AppProviders>{children}</AppProviders>

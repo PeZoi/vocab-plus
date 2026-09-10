@@ -1,14 +1,15 @@
 import type {
   CardWithProgress,
   CEFRLevel,
-  FSRSState,
   VocabSortOption,
+  WordLevelFilter,
 } from '@/types/card.types';
+import { calculateWordLevel } from '@/utils/fsrs-level';
 import { useDeferredValue, useMemo, useState } from 'react';
 
 export function useVocabFilter(
   rawCards: CardWithProgress[] = [],
-  initialFsrsState: FSRSState = 'all'
+  initialWordLevel: WordLevelFilter = 'all'
 ) {
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,7 +17,7 @@ export function useVocabFilter(
 
   const [cefrLevel, setCefrLevel] = useState<CEFRLevel | 'all'>('all');
   const [selectedTag, setSelectedTag] = useState<string | 'all'>('all');
-  const [fsrsState, setFsrsState] = useState<FSRSState>(initialFsrsState);
+  const [wordLevel, setWordLevel] = useState<WordLevelFilter>(initialWordLevel);
   const [sortBy, setSortBy] = useState<VocabSortOption>('created_desc');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
@@ -64,28 +65,11 @@ export function useVocabFilter(
       );
     }
 
-    // FSRS State filter
-    if (fsrsState !== 'all') {
+    // Word Level filter (0 -> 5)
+    if (wordLevel !== 'all') {
       result = result.filter((card) => {
-        const userCard = card.user_card;
-        if (!userCard) return fsrsState === 'new';
-
-        if (fsrsState === 'leech') {
-          return !!userCard.is_leech;
-        }
-        if (fsrsState === 'review') {
-          return userCard.due_at ? new Date(userCard.due_at) <= new Date() : false;
-        }
-        if (fsrsState === 'mastered') {
-          return (Number(userCard.stability) || 0) >= 20;
-        }
-        if (fsrsState === 'learning') {
-          return userCard.state !== 'new' && (Number(userCard.stability) || 0) < 20;
-        }
-        if (fsrsState === 'new') {
-          return userCard.state === 'new';
-        }
-        return userCard.state === fsrsState;
+        const info = calculateWordLevel(card.user_card);
+        return info.level === wordLevel;
       });
     }
 
@@ -126,20 +110,20 @@ export function useVocabFilter(
     });
 
     return result;
-  }, [rawCards, deferredSearch, cefrLevel, selectedTag, fsrsState, sortBy]);
+  }, [rawCards, deferredSearch, cefrLevel, selectedTag, wordLevel, sortBy]);
 
   const isFiltered =
     searchQuery.trim() !== '' ||
     cefrLevel !== 'all' ||
     selectedTag !== 'all' ||
-    fsrsState !== 'all' ||
+    wordLevel !== 'all' ||
     sortBy !== 'created_desc';
 
   const resetFilters = () => {
     setSearchQuery('');
     setCefrLevel('all');
     setSelectedTag('all');
-    setFsrsState('all');
+    setWordLevel('all');
     setSortBy('created_desc');
   };
 
@@ -150,8 +134,8 @@ export function useVocabFilter(
     setCefrLevel,
     selectedTag,
     setSelectedTag,
-    fsrsState,
-    setFsrsState,
+    wordLevel,
+    setWordLevel,
     sortBy,
     setSortBy,
     viewMode,

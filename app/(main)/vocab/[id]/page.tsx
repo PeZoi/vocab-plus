@@ -4,6 +4,7 @@ import { VocabDetailExpansion } from '@/components/features/cards/detail/vocab-d
 import { VocabDetailFsrsCard } from '@/components/features/cards/detail/vocab-detail-fsrs-card';
 import { VocabDetailHeader } from '@/components/features/cards/detail/vocab-detail-header';
 import { VocabDetailHero } from '@/components/features/cards/detail/vocab-detail-hero';
+import { VocabDetailLevelCard } from '@/components/features/cards/detail/vocab-detail-level-card';
 import { VocabDetailMetadata } from '@/components/features/cards/detail/vocab-detail-metadata';
 import { VocabDetailSkeleton } from '@/components/features/cards/detail/vocab-detail-skeleton';
 import { CardDeleteDialog } from '@/components/features/cards/card-delete-dialog';
@@ -90,8 +91,9 @@ export default function VocabDetailPage({ params }: PageProps) {
           <VocabDetailExpansion collocations={collocations} wordFamily={wordFamily} />
         </div>
 
-        {/* Right Column: FSRS Memory & Metadata */}
+        {/* Right Column: Word Growth Level, FSRS Memory & Metadata */}
         <div className="lg:col-span-4 space-y-5">
+          <VocabDetailLevelCard userCard={userCard} />
           <VocabDetailFsrsCard userCard={userCard} />
           <VocabDetailMetadata card={card} />
         </div>

@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
 import { useVocabFilter } from '@/hooks/features/cards/use-vocab-filter';
-import type { CardWithProgress, FSRSState } from '@/types/card.types';
+import type { CardWithProgress, WordLevelFilter } from '@/types/card.types';
 import { BookOpen, FolderPlus, Play, SearchX, Trash2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -23,10 +23,10 @@ import { Suspense, useEffect, useState } from 'react';
 function VocabContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const stateParam = searchParams.get('state') as FSRSState | null;
-  const validInitialState: FSRSState =
-    stateParam && ['all', 'review', 'learning', 'mastered', 'new', 'leech'].includes(stateParam)
-      ? stateParam
+  const levelParam = searchParams.get('level');
+  const validInitialLevel: WordLevelFilter =
+    levelParam && ['0', '1', '2', '3', '4', '5'].includes(levelParam)
+      ? (Number(levelParam) as WordLevelFilter)
       : 'all';
 
   // Modal states
@@ -51,8 +51,8 @@ function VocabContent() {
     setCefrLevel,
     selectedTag,
     setSelectedTag,
-    fsrsState,
-    setFsrsState,
+    wordLevel,
+    setWordLevel,
     sortBy,
     setSortBy,
     viewMode,
@@ -61,14 +61,14 @@ function VocabContent() {
     filteredCards,
     isFiltered,
     resetFilters,
-  } = useVocabFilter(rawCards, validInitialState);
+  } = useVocabFilter(rawCards, validInitialLevel);
 
-  // Sync state param if URL changes
+  // Sync level param if URL changes
   useEffect(() => {
-    if (stateParam && ['all', 'review', 'learning', 'mastered', 'new', 'leech'].includes(stateParam)) {
-      setFsrsState(stateParam);
+    if (levelParam && ['0', '1', '2', '3', '4', '5'].includes(levelParam)) {
+      setWordLevel(Number(levelParam) as WordLevelFilter);
     }
-  }, [stateParam, setFsrsState]);
+  }, [levelParam, setWordLevel]);
 
   const handleToggleSelectCard = (id: string) => {
     setSelectedCardIds((prev) => {
@@ -108,8 +108,8 @@ function VocabContent() {
           onCefrChange={setCefrLevel}
           selectedTag={selectedTag}
           onTagChange={setSelectedTag}
-          fsrsState={fsrsState}
-          onFsrsStateChange={setFsrsState}
+          wordLevel={wordLevel}
+          onWordLevelChange={setWordLevel}
           sortBy={sortBy}
           onSortChange={setSortBy}
           onResetFilters={resetFilters}
@@ -119,6 +119,7 @@ function VocabContent() {
             const query = new URLSearchParams();
             if (selectedTag !== 'all') query.set('tag', selectedTag.replace('#', ''));
             if (cefrLevel !== 'all') query.set('cefr_level', cefrLevel);
+            if (wordLevel !== 'all') query.set('level', String(wordLevel));
             router.push(`${ROUTES.APP.REVIEW}?${query.toString()}`);
           }}
         />

@@ -1,3 +1,4 @@
+<!-- BEGIN:nextjs-agent-rules -->
 # 🛠️ AGENT & CODEBASE CONVENTIONS — VOCAB APP
 
 > Tài liệu quy chuẩn kỹ thuật, kiến trúc thư mục, quy tắc tách logic và sử dụng thư viện đồng bộ cho toàn bộ dự án **Vocab App**.
@@ -491,3 +492,6 @@ Trước khi commit code hoặc kết thúc một công việc, Agent/Developer 
 - [ ] **Tắt Spellcheck**: Toàn bộ `input`, `textarea` và form fields đều có `spellCheck={false}`, `autoCorrect="off"`, `autoCapitalize="off"`.
 - [ ] **UI nhất quán**: Màu sắc dùng đúng token Design System "Deep Focus", bo góc và font chữ tuân thủ thiết kế.
 - [ ] **Layout phân định đúng**: Server Component cho nội dung tĩnh/fetch ban đầu, `'use client'` chỉ đặt ở lá cây tương tác.
+
+
+<!-- END:nextjs-agent-rules -->

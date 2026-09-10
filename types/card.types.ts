@@ -18,6 +18,7 @@ export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 export type CardType = 'word' | 'phrasal_verb' | 'idiom';
 export type SourceType = 'manual' | 'imported' | 'ai_generated' | 'admin_curated';
 export type FSRSState = 'all' | 'new' | 'learning' | 'review' | 'mastered' | 'relearning' | 'leech';
+export type WordLevelFilter = 'all' | 0 | 1 | 2 | 3 | 4 | 5;
 export type VocabSortOption =
   | 'created_desc'
   | 'created_asc'

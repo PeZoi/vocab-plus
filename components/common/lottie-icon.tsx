@@ -1,14 +1,34 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useRef, useSyncExternalStore } from 'react';
 import dynamic from 'next/dynamic';
 import type { LottieHandle } from 'lottie-react';
 import { cn } from '@/lib/utils';
 import { CircleDot, Sprout, Leaf, Trees, Flower2, Crown, Sparkles } from 'lucide-react';
 
-// Dynamic import named export Lottie with ssr: false to prevent hydration errors on SSR
+// Static import animation JSONs to eliminate network fetch errors, CORS, and latency
+import seedAnimation from '@/public/animations/levels/seed.json';
+import sproutAnimation from '@/public/animations/levels/sprout.json';
+import saplingAnimation from '@/public/animations/levels/sapling.json';
+import treeAnimation from '@/public/animations/levels/tree.json';
+import blossomAnimation from '@/public/animations/levels/blossom.json';
+import ancientTreeAnimation from '@/public/animations/levels/ancient-tree.json';
+import levelUpBurstAnimation from '@/public/animations/levels/level-up-burst.json';
+
+// Map of static animation data
+const STATIC_ANIMATION_MAP: Record<string, object> = {
+  seed: seedAnimation,
+  sprout: sproutAnimation,
+  sapling: saplingAnimation,
+  tree: treeAnimation,
+  blossom: blossomAnimation,
+  'ancient-tree': ancientTreeAnimation,
+  'level-up-burst': levelUpBurstAnimation,
+};
+
+// Dynamic import named export Lottie with { default: mod.Lottie } to support Next.js SSR-safe loading
 const Lottie = dynamic(
-  () => import('lottie-react').then((mod) => mod.Lottie),
+  () => import('lottie-react').then((mod) => ({ default: mod.Lottie })),
   { ssr: false }
 );
 
@@ -31,16 +51,13 @@ interface LottieIconProps {
   fallbackIcon?: React.ReactNode;
 }
 
-const SIZE_MAP: Record<string, { container: string; px: number }> = {
-  xs: { container: 'w-4 h-4', px: 16 },
-  sm: { container: 'w-5 h-5', px: 20 },
-  md: { container: 'w-7 h-7', px: 28 },
-  lg: { container: 'w-10 h-10', px: 40 },
-  xl: { container: 'w-16 h-16', px: 64 },
+const SIZE_MAP: Record<string, { container: string; iconSize: number; px: number }> = {
+  xs: { container: 'w-4 h-4', iconSize: 14, px: 16 },
+  sm: { container: 'w-6 h-6', iconSize: 18, px: 24 },
+  md: { container: 'w-8 h-8', iconSize: 22, px: 32 },
+  lg: { container: 'w-11 h-11', iconSize: 28, px: 44 },
+  xl: { container: 'w-16 h-16', iconSize: 48, px: 64 },
 };
-
-// Global in-memory cache for downloaded animation JSONs to prevent refetching
-const animationCache: Record<string, object> = {};
 
 function useIsMounted() {
   return useSyncExternalStore(
@@ -60,54 +77,32 @@ export function LottieIcon({
   fallbackIcon,
 }: LottieIconProps) {
   const isMounted = useIsMounted();
-  const [animationData, setAnimationData] = useState<object | null>(
-    () => animationCache[animationKey] || null
-  );
-  const [hasError, setHasError] = useState(false);
   const lottieRef = useRef<LottieHandle>(null);
 
   const sizeConfig = SIZE_MAP[size] || SIZE_MAP.md;
 
-  useEffect(() => {
-    let active = true;
-
-    if (animationCache[animationKey]) {
-      return;
-    }
-
-    const jsonPath = `/animations/levels/${animationKey}.json`;
-    fetch(jsonPath)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load ${jsonPath}`);
-        return res.json();
-      })
-      .then((data) => {
-        animationCache[animationKey] = data;
-        if (active) {
-          setAnimationData(data);
-        }
-      })
-      .catch((err) => {
-        console.warn(`Lottie load failed for ${animationKey}, using fallback:`, err);
-        if (active) setHasError(true);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [animationKey]);
+  // Retrieve static animation data directly (no network fetch needed)
+  const animationData = STATIC_ANIMATION_MAP[animationKey] || null;
 
   // Handle trigger on hover
   const handleMouseEnter = () => {
     if (triggerOnHover && lottieRef.current) {
-      lottieRef.current.seek(0);
-      lottieRef.current.play();
+      try {
+        lottieRef.current.seek(0);
+        lottieRef.current.play();
+      } catch {
+        // Safe catch for lottie player instance
+      }
     }
   };
 
   const handleMouseLeave = () => {
     if (triggerOnHover && lottieRef.current) {
-      lottieRef.current.pause();
+      try {
+        lottieRef.current.pause();
+      } catch {
+        // Safe catch for lottie player instance
+      }
     }
   };
 
@@ -115,29 +110,40 @@ export function LottieIcon({
   const renderFallback = () => {
     if (fallbackIcon) return fallbackIcon;
 
+    const iconProps = {
+      size: sizeConfig.iconSize,
+      className: 'transition-transform shrink-0',
+    };
+
     switch (animationKey) {
       case 'seed':
-        return <CircleDot className={cn(sizeConfig.container, 'text-slate-400')} />;
+        return <CircleDot {...iconProps} className="text-amber-400" />;
       case 'sprout':
-        return <Sprout className={cn(sizeConfig.container, 'text-lime-400')} />;
+        return <Sprout {...iconProps} className="text-lime-400" />;
       case 'sapling':
-        return <Leaf className={cn(sizeConfig.container, 'text-emerald-400')} />;
+        return <Leaf {...iconProps} className="text-emerald-400" />;
       case 'tree':
-        return <Trees className={cn(sizeConfig.container, 'text-teal-400')} />;
+        return <Trees {...iconProps} className="text-teal-400" />;
       case 'blossom':
-        return <Flower2 className={cn(sizeConfig.container, 'text-rose-400')} />;
+        return <Flower2 {...iconProps} className="text-rose-400" />;
       case 'ancient-tree':
-        return <Crown className={cn(sizeConfig.container, 'text-amber-300')} />;
+        return <Crown {...iconProps} className="text-amber-300" />;
       case 'level-up-burst':
-        return <Sparkles className={cn(sizeConfig.container, 'text-amber-400')} />;
+        return <Sparkles {...iconProps} className="text-amber-400" />;
       default:
-        return <Sprout className={cn(sizeConfig.container, 'text-lime-400')} />;
+        return <Sprout {...iconProps} className="text-lime-400" />;
     }
   };
 
-  if (!isMounted || hasError || !animationData) {
+  if (!isMounted || !animationData) {
     return (
-      <div className={cn('inline-flex items-center justify-center', sizeConfig.container, className)}>
+      <div
+        className={cn(
+          'inline-flex items-center justify-center shrink-0 select-none',
+          sizeConfig.container,
+          className
+        )}
+      >
         {renderFallback()}
       </div>
     );
@@ -150,8 +156,9 @@ export function LottieIcon({
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      style={{ width: sizeConfig.px, height: sizeConfig.px }}
       className={cn(
-        'inline-flex items-center justify-center shrink-0 select-none pointer-events-auto',
+        'relative inline-flex items-center justify-center shrink-0 select-none overflow-hidden',
         sizeConfig.container,
         className
       )}
@@ -161,7 +168,8 @@ export function LottieIcon({
         src={animationData}
         loop={shouldLoop}
         autoplay={shouldAutoplay}
-        className="w-full h-full"
+        style={{ width: sizeConfig.px, height: sizeConfig.px }}
+        className="w-full h-full object-contain"
       />
     </div>
   );
