@@ -16,13 +16,18 @@ export async function POST(request: Request) {
     }
 
     const body: CompleteReviewSessionDto = await request.json();
-    const { total_xp, cards_reviewed } = body;
+    const { total_xp, cards_reviewed, is_preview_only } = body;
 
     const parsedXp = Math.max(0, Number(total_xp) || 0);
 
     let actualXpAwarded = 0;
     if (parsedXp > 0) {
-      actualXpAwarded = await awardXp(user.id, parsedXp, 'review');
+      actualXpAwarded = await awardXp(
+        user.id,
+        parsedXp,
+        is_preview_only ? 'preview' : 'review',
+        { skipStreak: !!is_preview_only }
+      );
     }
 
     return NextResponse.json({

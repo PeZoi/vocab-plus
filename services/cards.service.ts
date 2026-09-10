@@ -51,4 +51,11 @@ export const cardsService = {
   ): Promise<{ success: boolean; message: string; deleted_count: number }> => {
     return apiClient.delete('/cards', { data: { card_ids: cardIds } });
   },
+
+  /**
+   * Đánh dấu từ vựng đã thuộc (Quick Master), nhảy thẳng lên Level 1/2 với 14 ngày stability
+   */
+  markKnown: (id: string): Promise<{ success: boolean; message: string; user_card: unknown; xp_awarded: number }> => {
+    return apiClient.post(`/cards/${id}/mark-known`);
+  },
 };

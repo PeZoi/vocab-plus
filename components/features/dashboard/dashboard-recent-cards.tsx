@@ -77,15 +77,16 @@ export function DashboardRecentCards({ cards }: DashboardRecentCardsProps) {
                     >
                       {item.word}
                     </Link>
-                    {item.cefr_level && (
-                      <CEFRBadge level={item.cefr_level} size="sm" />
-                    )}
-                    <WordLevelBadge userCard={item.user_card} mode="compact" />
                     {item.ipa && (
                       <span className="font-mono text-[11px] text-text-secondary hidden sm:inline">
                         {item.ipa}
                       </span>
                     )}
+                    {item.cefr_level && (
+                      <CEFRBadge level={item.cefr_level} size="sm" />
+                    )}
+                    <WordLevelBadge userCard={item.user_card} mode="compact" />
+                    
                   </div>
                   <p className="text-xs text-text-secondary truncate mt-0.5">
                     {item.definition}

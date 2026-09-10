@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requestAIWordAnalysis } from '@/lib/ai/word-analyzer';
 import { createEmptyCard } from '@/lib/fsrs';
+import {
+  normalizePartOfSpeech,
+  normalizeCardType,
+  normalizeCEFRLevel,
+} from '@/utils/card-normalizer';
 import type { QuickSaveWordDto } from '@/types/imported-text.types';
 import type { Json } from '@/types/database.types';
 
@@ -85,11 +90,11 @@ export async function POST(request: Request) {
         definition_en: primarySense.definition_en || null,
         example_sentence: finalExampleSentence || null,
         example_translation: finalExampleTranslation,
-        part_of_speech: primarySense.part_of_speech as import('@/types/card.types').PartOfSpeech || 'noun',
-        card_type: analysis.card_type || 'word',
+        part_of_speech: normalizePartOfSpeech(primarySense.part_of_speech) || 'noun',
+        card_type: normalizeCardType(analysis.card_type, finalWord, primarySense.part_of_speech),
         source_type: 'imported',
         sense_number: 1,
-        cefr_level: analysis.cefr_level || null,
+        cefr_level: normalizeCEFRLevel(analysis.cefr_level),
         tags: Array.from(tagsSet),
         mnemonic: analysis.mnemonic || null,
         collocations: (analysis.collocations || []) as unknown as Json,

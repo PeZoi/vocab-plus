@@ -2,11 +2,13 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { cn } from '@/lib/utils';
 import type { CardWithProgress } from '@/types/card.types';
 import type { PracticeMode } from '@/types/practice.types';
+import type { LevelUpItem } from './mixed-practice-runner';
 import {
   GraduationCap,
   RotateCcw,
@@ -23,6 +25,7 @@ interface PracticeSummaryProps {
   wrongCards: CardWithProgress[];
   xpEarned?: number;
   collectionTitle?: string;
+  levelUps?: LevelUpItem[];
   onRestart: () => void;
 }
 
@@ -33,6 +36,7 @@ export function PracticeSummary({
   wrongCards,
   xpEarned: passedXp,
   collectionTitle,
+  levelUps,
   onRestart,
 }: PracticeSummaryProps) {
   const accuracy = Math.round((correctCount / totalQuestions) * 100) || 0;
@@ -125,6 +129,53 @@ export function PracticeSummary({
           </div>
         </div>
       </motion.div>
+
+      {/* Cây Sinh Trưởng Thăng Cấp (Level Ups) */}
+      {levelUps && levelUps.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-emerald-500/10 via-surface to-surface border border-emerald-500/30 shadow-lg shadow-emerald-500/5 space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🌱</span>
+              <h3 className="text-sm sm:text-base font-extrabold text-emerald-400 tracking-tight">
+                Cây Sinh Trưởng Thăng Cấp! ({levelUps.length} từ vựng)
+              </h3>
+            </div>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              Active Recall FSRS
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {levelUps.map(({ card, oldLevel, newLevel }) => (
+              <div
+                key={card.id}
+                className="p-3 rounded-xl bg-base/70 border border-emerald-500/20 hover:border-emerald-500/40 transition-colors flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-text-primary truncate">
+                      {card.word}
+                    </span>
+                    {card.cefr_level && <CEFRBadge level={card.cefr_level} size="sm" />}
+                  </div>
+                  <p className="text-xs text-text-secondary truncate">{card.definition}</p>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <WordLevelBadge level={oldLevel.level} mode="minimal" />
+                  <span className="text-text-secondary text-xs">→</span>
+                  <WordLevelBadge level={newLevel.level} mode="compact" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Words Needing Review (Wrong Cards) */}
       {wrongCards.length > 0 && (

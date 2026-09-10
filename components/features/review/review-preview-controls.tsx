@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, RotateCw, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw, CheckCircle2 } from 'lucide-react';
 
 interface ReviewPreviewControlsProps {
   currentIndex: number;
@@ -11,7 +11,7 @@ interface ReviewPreviewControlsProps {
   onFlip: () => void;
   onPrev: () => void;
   onNext: () => void;
-  onStartQuiz: () => void;
+  onFinishPreview: () => void;
 }
 
 export function ReviewPreviewControls({
@@ -21,7 +21,7 @@ export function ReviewPreviewControls({
   onFlip,
   onPrev,
   onNext,
-  onStartQuiz,
+  onFinishPreview,
 }: ReviewPreviewControlsProps) {
   const isFirst = currentIndex === 0;
   const isLast = currentIndex >= totalCards - 1;
@@ -48,13 +48,13 @@ export function ReviewPreviewControls({
         onNext();
       } else if (e.code === 'Enter') {
         e.preventDefault();
-        onStartQuiz();
+        onFinishPreview();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onFlip, onPrev, onNext, onStartQuiz, isFirst, isLast]);
+  }, [onFlip, onPrev, onNext, onFinishPreview, isFirst, isLast]);
 
   return (
     <div className="space-y-4 pt-2">
@@ -104,24 +104,24 @@ export function ReviewPreviewControls({
         </Button>
       </div>
 
-      {/* Start Quiz CTA Button (Always available or highlighted at last card) */}
+      {/* Finish Preview CTA Button */}
       <div className="text-center pt-1">
         <Button
           type="button"
           variant="primary"
           size="lg"
-          onClick={onStartQuiz}
+          onClick={onFinishPreview}
           className="w-full max-w-md mx-auto gap-2 bg-gradient-to-r from-brand to-amber-500 hover:from-brand-hover hover:to-amber-600 text-white font-bold shadow-lg shadow-brand/20 h-11 transition-all hover:scale-[1.01]"
         >
-          <Zap className="w-4 h-4 fill-white" />
+          <CheckCircle2 className="w-4 h-4" />
           <span>
             {isLast
-              ? `Đã xem hết! Vào Kiểm tra ngay (${totalCards} từ) [Enter]`
-              : `Bắt đầu Kiểm tra trí nhớ (${totalCards} từ) [Enter]`}
+              ? `Đã xem hết thẻ! Hoàn thành nạp từ (${totalCards} từ) [Enter]`
+              : `Hoàn tất xem thẻ & Chuẩn bị kiểm tra (${totalCards} từ) [Enter]`}
           </span>
         </Button>
         <p className="text-[11px] text-text-secondary mt-1.5">
-          💡 Thẻ chỉ được thăng cấp khi bạn trả lời đúng trong bài kiểm tra trắc nghiệm
+          💡 Sau khi xem xong thẻ, bạn sẽ chuyển sang làm bài kiểm tra tổng hợp để kích hoạt thăng cấp Level!
         </p>
       </div>
     </div>

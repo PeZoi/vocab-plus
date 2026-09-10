@@ -94,7 +94,7 @@ export default function VocabDetailPage({ params }: PageProps) {
         {/* Right Column: Word Growth Level, FSRS Memory & Metadata */}
         <div className="lg:col-span-4 space-y-5">
           <VocabDetailLevelCard userCard={userCard} />
-          <VocabDetailFsrsCard userCard={userCard} />
+          <VocabDetailFsrsCard cardId={card.id} userCard={userCard} onRefetch={refetch} />
           <VocabDetailMetadata card={card} />
         </div>
       </div>

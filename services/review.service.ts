@@ -29,7 +29,14 @@ export const reviewService = {
   /**
    * Gửi kết quả đánh giá thẻ (1-4) và tính toán FSRS kế tiếp
    */
-  submitReview: (dto: SubmitReviewDto): Promise<{ success: boolean; due_at: string; state: string; xp_added: number }> => {
+  submitReview: (dto: SubmitReviewDto): Promise<{
+    success: boolean;
+    due_at: string;
+    state: string;
+    xp_added: number;
+    level_preserved?: boolean;
+    is_due?: boolean;
+  }> => {
     return apiClient.post('/review/submit', dto);
   },
 

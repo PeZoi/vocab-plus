@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useGradeSentence } from '@/hooks/features/practice/use-grade-sentence';
 import { cn } from '@/lib/utils';
-import type { CardWithProgress, CollocationItem } from '@/types/card.types';
+import type { CardWithProgress, CollocationItem, UserCard } from '@/types/card.types';
 import type { PracticeQuestionItem, SentenceGradeResponse } from '@/types/practice.types';
+import type { ReviewRating } from '@/types/review.types';
 import { formatIPA } from '@/utils/formatters';
 import {
   ArrowRight,
@@ -26,8 +27,22 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSystemSettingsQuery } from '@/hooks/features/admin/use-system-settings';
 import {
   DEFAULT_PRACTICE_XP_RATES,
+  DEFAULT_VOCAB_LEVEL_SETTINGS,
   type PracticeXpRates,
+  type VocabLevelSettings,
 } from '@/types/system-settings.types';
+import { reviewService } from '@/services/review.service';
+import {
+  calculateWordLevel,
+  mapQuizResultToFSRS,
+  type WordLevelInfo,
+} from '@/utils/fsrs-level';
+
+export interface LevelUpItem {
+  card: CardWithProgress;
+  oldLevel: WordLevelInfo;
+  newLevel: WordLevelInfo;
+}
 
 interface MixedPracticeRunnerProps {
   questions: PracticeQuestionItem[];
@@ -38,6 +53,7 @@ interface MixedPracticeRunnerProps {
     correct: number;
     wrongCards: CardWithProgress[];
     xpEarned: number;
+    levelUps?: LevelUpItem[];
   }) => void;
   onExit: () => void;
 }
@@ -64,23 +80,103 @@ export function MixedPracticeRunner({
     return DEFAULT_PRACTICE_XP_RATES;
   }, [systemSettings]);
 
+  const vocabLevelConfig = useMemo<VocabLevelSettings>(() => {
+    const setting = systemSettings.find((s) => s.key === 'vocab_level_config');
+    if (setting?.value && typeof setting.value === 'object') {
+      const val = setting.value as Partial<VocabLevelSettings>;
+      if (Array.isArray(val.levels) && val.levels.length > 0) {
+        return {
+          penaltyRule: val.penaltyRule || DEFAULT_VOCAB_LEVEL_SETTINGS.penaltyRule,
+          allowLevelUpInCasualMode: !!val.allowLevelUpInCasualMode,
+          levels: val.levels,
+        };
+      }
+    }
+    return DEFAULT_VOCAB_LEVEL_SETTINGS;
+  }, [systemSettings]);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCards, setWrongCards] = useState<CardWithProgress[]>([]);
   const [totalXp, setTotalXp] = useState(0);
+  const [levelUps, setLevelUps] = useState<LevelUpItem[]>([]);
+
+  const questionStartTime = useRef<number>(Date.now());
+
+  useEffect(() => {
+    questionStartTime.current = Date.now();
+  }, [currentIndex]);
 
   const currentQuestion = questions[currentIndex];
   const currentCard = currentQuestion?.card;
 
   if (!currentCard) return null;
 
-  const handleAnswered = (isCorrect: boolean, xp: number, card: CardWithProgress) => {
+  const handleAnswered = async (
+    isCorrect: boolean,
+    xp: number,
+    card: CardWithProgress,
+    overrideRating?: ReviewRating
+  ) => {
+    const responseMs = Math.max(500, Date.now() - questionStartTime.current);
+
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
     } else {
       setWrongCards((prev) => [...prev, card]);
     }
     setTotalXp((prev) => prev + xp);
+
+    const rating: ReviewRating =
+      overrideRating ??
+      mapQuizResultToFSRS(isCorrect, responseMs, currentQuestion.exerciseType);
+
+    const oldLevelInfo = calculateWordLevel(card.user_card, vocabLevelConfig);
+
+    try {
+      // Gửi kết quả FSRS lên server
+      const submitRes = await reviewService.submitReview({
+        card_id: card.id,
+        rating,
+        response_ms: responseMs,
+      });
+
+      // Nếu thẻ được phép thăng cấp (đang đến hạn FSRS), tính toán sự thay đổi level
+      if (submitRes && !submitRes.level_preserved) {
+        const simulatedUserCard: UserCard = {
+          ...(card.user_card || {
+            id: 'temp',
+            card_id: card.id,
+            user_id: '',
+            difficulty: 5,
+            stability: 1,
+            lapse_count: 0,
+            review_count: 0,
+            is_leech: false,
+            created_at: '',
+            updated_at: '',
+          }),
+          state: (submitRes.state || 'learning') as any,
+          due_at: submitRes.due_at,
+          review_count: (card.user_card?.review_count || 0) + 1,
+          lapse_count:
+            rating === 1
+              ? (card.user_card?.lapse_count || 0) + 1
+              : card.user_card?.lapse_count || 0,
+        };
+
+        const newLevelInfo = calculateWordLevel(simulatedUserCard, vocabLevelConfig);
+
+        if (newLevelInfo.level > oldLevelInfo.level) {
+          setLevelUps((prev) => [
+            ...prev.filter((item) => item.card.id !== card.id),
+            { card, oldLevel: oldLevelInfo, newLevel: newLevelInfo },
+          ]);
+        }
+      }
+    } catch (err) {
+      console.error('Lỗi khi gửi kết quả kiểm tra FSRS:', err);
+    }
   };
 
   const handleNext = () => {
@@ -96,6 +192,7 @@ export function MixedPracticeRunner({
         correct: correctCount,
         wrongCards,
         xpEarned: finalTotalXp,
+        levelUps,
       });
     }
   };

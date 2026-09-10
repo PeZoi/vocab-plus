@@ -2,6 +2,11 @@ import type { AIWordAnalysisResponse } from '@/types/card.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import { extractAndParseJson } from './json-parser';
+import {
+  normalizePartOfSpeech,
+  normalizeCardType,
+  normalizeCEFRLevel,
+} from '@/utils/card-normalizer';
 
 import {
   getProviderEndpoint,
@@ -61,6 +66,10 @@ REQUIREMENTS:
 - Whenever "word" differs from "${safeWord}" (either converted to base form OR spelling-corrected): set "is_corrected": true and "original_word": "${safeWord}".
 - If "${safeWord}" is already in its standard dictionary base form and correctly spelled: set "is_corrected": false and "original_word": "${safeWord}".
 4. Topic tags: Include 1-3 English topic tags with '#' in "tags" (e.g., ["#work", "#daily"]) if relevant, otherwise an empty array [].
+5. Card Type & Idiom Recognition:
+- If "${safeWord}" is a single word: set "card_type": "word".
+- If "${safeWord}" is a phrasal verb (e.g. "look after", "give up", "run out of"): set "card_type": "phrasal_verb".
+- If "${safeWord}" is an idiom, proverb, or figurative expression (e.g. "break the ice", "piece of cake", "once in a blue moon", "bite the bullet", "cost an arm and a leg"): set "card_type": "idiom". For idioms, provide the figurative meaning and origin/explanation in definition.
 
 CRITICAL INSTRUCTION:
 Do not include <think> tags or internal reasoning. Return ONLY a single valid JSON object adhering to this schema:
@@ -69,7 +78,7 @@ Do not include <think> tags or internal reasoning. Return ONLY a single valid JS
   "original_word": "${safeWord}",
   "is_corrected": false,
   "ipa": "/.../",
-  "card_type": "word",
+  "card_type": "word | phrasal_verb | idiom",
   "cefr_level": "A1 | A2 | B1 | B2 | C1 | C2",
 ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation": "Bản dịch tiếng Việt chính xác của câu ngữ cảnh trên",` : ''}
   "senses": [
@@ -77,7 +86,7 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
       "part_of_speech": "noun | verb | adjective | adverb | preposition | conjunction | pronoun | interjection",
       "definition_en": "Clear, concise, and accurate English definition explaining the meaning in simple terms",
       "definition": "Định nghĩa bằng tiếng Việt rõ ràng, dễ hiểu",
-      "vietnamese_hint": "Nghĩa ngắn gọn 1-3 từ tiếng Việt",
+      "vietnamese_hint": "nghĩa của từ tiếng anh đó (e.g. "buy: mua", "look after: chăm sóc")",
       "example_sentence": "A simple English example sentence",
       "example_translation": "Bản dịch tiếng Việt chính xác của câu ví dụ tiếng Anh trên",
       "tags": ["#tag1", "#tag2"]
@@ -179,6 +188,19 @@ ${safeContext ? `  "context_sentence": "${safeContext}",\n  "context_translation
   }
 
   const parsed = extractAndParseJson<AIWordAnalysisResponse>(rawContent);
+
+  // Chuẩn hóa part_of_speech cho tất cả senses
+  if (parsed.senses && Array.isArray(parsed.senses)) {
+    parsed.senses = parsed.senses.map((s) => ({
+      ...s,
+      part_of_speech: (normalizePartOfSpeech(s.part_of_speech) || 'noun') as import('@/types/card.types').PartOfSpeech,
+    }));
+  }
+
+  // Chuẩn hóa card_type và cefr_level
+  const firstPos = parsed.senses?.[0]?.part_of_speech;
+  parsed.card_type = normalizeCardType(parsed.card_type, parsed.word, firstPos);
+  parsed.cefr_level = normalizeCEFRLevel(parsed.cefr_level) || undefined;
 
   // Chuẩn hóa: nếu từ trả về khác với từ gốc ban đầu (không phân biệt hoa thường), đảm bảo is_corrected = true
   if (

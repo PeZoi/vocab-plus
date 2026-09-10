@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createEmptyCard } from '@/lib/fsrs';
 import { calculateWordSimilarity } from '@/utils/text-similarity';
-import type { CreateCardDto } from '@/types/card.types';
+import {
+  normalizePartOfSpeech,
+  normalizeCardType,
+  normalizeCEFRLevel,
+} from '@/utils/card-normalizer';
+import type { Card, CardWithProgress, CreateCardDto, UserCard } from '@/types/card.types';
 
 export async function GET(request: Request) {
   try {
@@ -62,7 +67,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    type CardWithUserCards = Card & {
+      user_cards?: UserCard[] | UserCard | null;
+    };
+
+    const formatted: CardWithProgress[] = ((data || []) as unknown as CardWithUserCards[]).map((card) => {
+      const userCards = card.user_cards;
+      const userCard: UserCard | null = Array.isArray(userCards)
+        ? userCards.find((uc) => uc.user_id === user.id) || userCards[0] || null
+        : userCards || null;
+
+      return {
+        ...card,
+        user_card: userCard,
+        is_owner: card.owner_id === user.id,
+      };
+    });
+
+    return NextResponse.json(formatted);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
     return NextResponse.json({ error: msg }, { status: 500 });
@@ -158,11 +180,11 @@ export async function POST(request: Request) {
         definition_en: body.definition_en?.trim() || null,
         example_sentence: body.example_sentence?.trim() || null,
         example_translation: body.example_translation?.trim() || null,
-        part_of_speech: body.part_of_speech || null,
-        card_type: body.card_type || 'word',
+        part_of_speech: normalizePartOfSpeech(body.part_of_speech),
+        card_type: normalizeCardType(body.card_type, trimmedWord, body.part_of_speech),
         source_type: body.source_type || 'manual',
         sense_number: body.sense_number || 1,
-        cefr_level: body.cefr_level || null,
+        cefr_level: normalizeCEFRLevel(body.cefr_level),
         tags: body.tags && Array.isArray(body.tags) ? body.tags : [],
         image_url: body.image_url || null,
         audio_url: body.audio_url || null,

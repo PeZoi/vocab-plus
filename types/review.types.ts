@@ -37,6 +37,7 @@ export interface ReviewForecastDay {
 export interface CompleteReviewSessionDto {
   cards_reviewed: number;
   total_xp: number;
+  is_preview_only?: boolean;
 }
 
 export interface CompleteReviewSessionResponse {

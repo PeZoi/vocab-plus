@@ -77,40 +77,67 @@ export async function GET() {
       });
     }
 
-    // 4. Tính chuỗi ngày streak từ review_logs
-    const { data: logs } = await supabase
-      .from('review_logs')
-      .select('reviewed_at')
-      .eq('user_id', user.id)
-      .order('reviewed_at', { ascending: false });
+    // 4. Lấy và tính toán chuỗi streak chuẩn từ user_streaks và user_daily_xp
+    // (Bảo toàn streak khi người dùng xóa từ vựng vì streak gắn với tài khoản cá nhân)
+    const [
+      { data: userStreakRecord },
+      { data: dailyXpRows },
+      { data: logs }
+    ] = await Promise.all([
+      supabase
+        .from('user_streaks')
+        .select('current_streak, longest_streak, last_active_date, freezes_available')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('user_daily_xp')
+        .select('date, xp_earned')
+        .eq('user_id', user.id)
+        .gt('xp_earned', 0)
+        .order('date', { ascending: false }),
+      supabase
+        .from('review_logs')
+        .select('reviewed_at')
+        .eq('user_id', user.id)
+        .order('reviewed_at', { ascending: false })
+    ]);
+
+    const todayStr = format(now, 'yyyy-MM-dd');
+    const yesterdayStr = format(addDays(now, -1), 'yyyy-MM-dd');
 
     let streak_days = 0;
     let has_reviewed_today = today_xp > 0;
 
-    if (logs && logs.length > 0) {
-      const distinctDays = new Set(
-        logs
-          .filter((l) => l.reviewed_at)
-          .map((l) => format(parseISO(l.reviewed_at!), 'yyyy-MM-dd'))
-      );
-
-      let checkDate = startOfDay(now);
-      const todayStr = format(checkDate, 'yyyy-MM-dd');
-      const yesterdayStr = format(addDays(checkDate, -1), 'yyyy-MM-dd');
-
-      if (distinctDays.has(todayStr)) {
+    // Cách 1: Đọc trực tiếp từ bảng chuyên biệt user_streaks
+    if (userStreakRecord) {
+      const lastActive = userStreakRecord.last_active_date;
+      if (lastActive === todayStr) {
         has_reviewed_today = true;
+        streak_days = userStreakRecord.current_streak;
+      } else if (lastActive === yesterdayStr) {
+        // Streak còn giữ từ hôm qua, hôm nay chưa học hoặc đã học nhưng chưa chốt
+        streak_days = userStreakRecord.current_streak;
       }
+    }
 
-      // Nếu hôm nay có học hoặc hôm qua có học thì streak còn tiếp diễn
-      if (distinctDays.has(todayStr) || distinctDays.has(yesterdayStr)) {
-        if (!distinctDays.has(todayStr)) {
-          checkDate = addDays(checkDate, -1);
-        }
-        while (distinctDays.has(format(checkDate, 'yyyy-MM-dd'))) {
-          streak_days++;
-          checkDate = addDays(checkDate, -1);
-        }
+    // Cách 2: Kiểm chứng và fallback tính chuỗi liên tiếp từ user_daily_xp và review_logs
+    const activeDaysSet = new Set<string>();
+    (dailyXpRows || []).forEach((row) => {
+      if (row.date) activeDaysSet.add(row.date);
+    });
+    (logs || []).forEach((l) => {
+      if (l.reviewed_at) activeDaysSet.add(format(parseISO(l.reviewed_at), 'yyyy-MM-dd'));
+    });
+
+    if (activeDaysSet.has(todayStr)) {
+      has_reviewed_today = true;
+    }
+
+    if (streak_days === 0 && (activeDaysSet.has(todayStr) || activeDaysSet.has(yesterdayStr))) {
+      let checkDate = activeDaysSet.has(todayStr) ? startOfDay(now) : addDays(startOfDay(now), -1);
+      while (activeDaysSet.has(format(checkDate, 'yyyy-MM-dd'))) {
+        streak_days++;
+        checkDate = addDays(checkDate, -1);
       }
     }
 

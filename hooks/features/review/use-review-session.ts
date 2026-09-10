@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { cardKeys, reviewKeys, questKeys, userKeys } from '@/constants/query-keys';
 import { reviewService } from '@/services/review.service';
 import { useSystemSettingsQuery } from '@/hooks/features/admin/use-system-settings';
@@ -43,11 +44,19 @@ export function useReviewSession(params?: {
   const [isSyncingFinal, setIsSyncingFinal] = useState(false);
   const [quizStats, setQuizStats] = useState<QuizSessionStats | null>(null);
   const [totalXpEarned, setTotalXpEarned] = useState(0);
+  const [reviewedCardsCount, setReviewedCardsCount] = useState(0);
   const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
     startTimeRef.current = Date.now();
   }, []);
+
+  // Ghi nhớ số lượng thẻ của phiên học (không bị reset về 0 khi queryClient invalidate dueCards)
+  useEffect(() => {
+    if (dueCards.length > 0) {
+      setReviewedCardsCount(dueCards.length);
+    }
+  }, [dueCards.length]);
 
   const flipCard = useCallback(() => {
     setIsFlipped((prev) => !prev);
@@ -74,42 +83,32 @@ export function useReviewSession(params?: {
     }
   }, [dueCards.length]);
 
-  const startQuiz = useCallback(() => {
-    setPhase('quiz');
-  }, []);
+  const finishPreview = useCallback(async () => {
+    setIsSyncingFinal(true);
 
-  const handleQuizComplete = useCallback(
-    async (stats: QuizSessionStats) => {
-      setQuizStats(stats);
-      setIsSyncingFinal(true);
+    const sessionCardsCount = reviewedCardsCount || dueCards.length;
+    // Thưởng nhẹ 1 XP cho mỗi thẻ đã lướt xem
+    const previewXp = sessionCardsCount * 1;
 
-      const perCardXp = Number(reviewXpRates.per_card) || 1;
-      const previewXp = dueCards.length * perCardXp;
-      const finalXp = previewXp + (stats.xpEarned || 0);
-
-      try {
-        const completeRes = await reviewService.completeSession({
-          total_xp: finalXp,
-          cards_reviewed: dueCards.length,
-        });
-        setTotalXpEarned(completeRes.actual_xp_awarded ?? finalXp);
-      } catch (completeErr) {
-        console.error('Lỗi khi gọi complete review session:', completeErr);
-        setTotalXpEarned(finalXp);
-      } finally {
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: reviewKeys.stats() }),
-          queryClient.invalidateQueries({ queryKey: questKeys.daily() }),
-          queryClient.invalidateQueries({ queryKey: userKeys.profile() }),
-          queryClient.invalidateQueries({ queryKey: cardKeys.due() }),
-          queryClient.invalidateQueries({ queryKey: cardKeys.all }),
-        ]);
-        setIsSyncingFinal(false);
-        setPhase('completed');
-      }
-    },
-    [dueCards.length, queryClient, reviewXpRates]
-  );
+    try {
+      const completeRes = await reviewService.completeSession({
+        total_xp: previewXp,
+        cards_reviewed: sessionCardsCount,
+        is_preview_only: true, // KHÔNG cập nhật streak khi chỉ lướt flashcard
+      });
+      setTotalXpEarned(completeRes.actual_xp_awarded ?? previewXp);
+    } catch (completeErr) {
+      console.error('Lỗi khi gọi complete preview session:', completeErr);
+      setTotalXpEarned(previewXp);
+    } finally {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: userKeys.profile() }),
+        queryClient.invalidateQueries({ queryKey: reviewKeys.stats() }),
+      ]);
+      setIsSyncingFinal(false);
+      setPhase('completed');
+    }
+  }, [dueCards.length, queryClient, reviewedCardsCount]);
 
   const restartReview = useCallback(() => {
     setCurrentIndex(0);
@@ -129,18 +128,17 @@ export function useReviewSession(params?: {
     currentItem,
     currentIndex,
     totalCards,
+    reviewedCardsCount: reviewedCardsCount || totalCards,
     progressPercent,
     isFlipped,
     flipCard,
     nextCard,
     prevCard,
     goToCard,
-    startQuiz,
-    handleQuizComplete,
+    finishPreview,
     restartReview,
     isLoading,
     isSyncingFinal,
-    quizStats,
     totalXpEarned,
     error,
     refetch,

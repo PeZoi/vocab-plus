@@ -7,6 +7,7 @@ import { ImageSelector } from '@/components/features/cards/image-selector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
+import { cn } from '@/lib/utils';
 import { useAiAnalyzer } from '@/hooks/features/ai/use-ai-analyzer';
 import { useCreateCardMutation } from '@/hooks/features/cards/use-card-mutation';
 import {
@@ -15,6 +16,11 @@ import {
 } from '@/hooks/features/cards/use-word-duplicate-check';
 import type { AIWordAnalysisResponse, CardWithProgress, CEFRLevel, CollocationItem, CreateCardDto } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
+import {
+  normalizePartOfSpeech,
+  normalizeCardType,
+  normalizeCEFRLevel,
+} from '@/utils/card-normalizer';
 import type { ReaderToken } from '@/utils/text-extractor';
 import { AlertCircle, BookmarkPlus, Check, Lightbulb, Loader2, RotateCcw, Sparkles, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -62,6 +68,7 @@ export function WordQuickPopover({
     return {
       id: 'temp',
       word: effectiveWord,
+      card_type: analyzedData.card_type || 'word',
       cefr_level: analyzedData.cefr_level,
       ipa: analyzedData.ipa,
       part_of_speech: primarySense?.part_of_speech,
@@ -102,10 +109,10 @@ export function WordQuickPopover({
         definition_en: primarySense.definition_en,
         example_sentence: contextSentence || primarySense.example_sentence,
         example_translation: (contextSentence && analyzedData.context_translation) || primarySense.example_translation,
-        part_of_speech: primarySense.part_of_speech as import('@/types/card.types').PartOfSpeech,
-        card_type: analyzedData.card_type || 'word',
+        part_of_speech: normalizePartOfSpeech(primarySense.part_of_speech) || null,
+        card_type: normalizeCardType(analyzedData.card_type, effectiveWord, primarySense.part_of_speech),
         source_type: 'imported',
-        cefr_level: analyzedData.cefr_level,
+        cefr_level: normalizeCEFRLevel(analyzedData.cefr_level) || undefined,
         tags: Array.from(tagsSet),
         mnemonic: analyzedData.mnemonic,
         collocations: analyzedData.collocations,
@@ -207,6 +214,19 @@ export function WordQuickPopover({
                   <AudioButton text={activeCard?.word || effectiveWord} className="w-8 h-8 shrink-0" />
                   {activeCard?.cefr_level && (
                     <CEFRBadge level={activeCard.cefr_level as CEFRLevel} />
+                  )}
+                  {activeCard?.card_type && activeCard.card_type !== 'word' && (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'text-[11px] font-semibold py-0.5 px-2 border uppercase tracking-wider',
+                        activeCard.card_type === 'idiom'
+                          ? 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+                          : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                      )}
+                    >
+                      {activeCard.card_type === 'idiom' ? 'thành ngữ' : 'cụm động từ'}
+                    </Badge>
                   )}
                   {activeCard?.part_of_speech && (
                     <Badge variant="secondary" className="text-[11px] font-semibold py-0.5 px-2">

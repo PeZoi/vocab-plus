@@ -109,22 +109,46 @@ export async function POST(request: Request) {
       [State.Relearning]: 'relearning',
     };
 
-    const newLapseCount =
-      rating === 1 ? (userCard.lapse_count || 0) + 1 : userCard.lapse_count || 0;
+    // Kiểm tra xem thẻ có thực sự ở trạng thái cần ôn tập hay không
+    // (Đến hạn due_at <= now hoặc là thẻ mới)
+    const isDue =
+      userCard.state === 'new' ||
+      !userCard.due_at ||
+      new Date(userCard.due_at).getTime() <= Date.now() + 60 * 1000;
+
+    const newReviewCount = isDue
+      ? (userCard.review_count || 0) + 1
+      : (userCard.review_count || 0); // Bảo toàn review_count nếu từ chưa đến hạn ôn tập!
+
+    const newLapseCount = isDue
+      ? rating === 1
+        ? (userCard.lapse_count || 0) + 1
+        : userCard.lapse_count || 0
+      : (userCard.lapse_count || 0); // Bảo toàn lapse_count nếu đang học tự do chưa đến hạn
+
     const isLeech = newLapseCount >= 4;
 
     // 4. Cập nhật bảng user_cards
+    // Nếu chưa đến hạn (Not Due), bảo toàn trạng thái FSRS và cấp độ
+    const updatePayload = isDue
+      ? {
+          stability: nextCard.stability,
+          difficulty: nextCard.difficulty,
+          due_at: nextCard.due.toISOString(),
+          state: stateRevMap[nextCard.state],
+          review_count: newReviewCount,
+          lapse_count: newLapseCount,
+          is_leech: isLeech,
+        }
+      : {
+          // Bảo toàn cấp độ: không tăng review_count, không đổi due_at/stability
+          review_count: newReviewCount,
+          lapse_count: newLapseCount,
+        };
+
     const { error: updateError } = await supabase
       .from('user_cards')
-      .update({
-        stability: nextCard.stability,
-        difficulty: nextCard.difficulty,
-        due_at: nextCard.due.toISOString(),
-        state: stateRevMap[nextCard.state],
-        review_count: (userCard.review_count || 0) + 1,
-        lapse_count: newLapseCount,
-        is_leech: isLeech,
-      })
+      .update(updatePayload)
       .eq('id', userCard.id);
 
     if (updateError) {
@@ -151,8 +175,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      due_at: nextCard.due.toISOString(),
-      state: stateRevMap[nextCard.state],
+      due_at: isDue ? nextCard.due.toISOString() : (userCard.due_at || new Date().toISOString()),
+      state: isDue ? stateRevMap[nextCard.state] : (userCard.state || 'new'),
+      is_due: isDue,
+      level_preserved: !isDue,
       xp_added: 0,
     });
   } catch (err: unknown) {

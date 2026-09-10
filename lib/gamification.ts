@@ -2,7 +2,12 @@ import { createClient } from '@/lib/supabase/server';
 import { format, differenceInDays } from 'date-fns';
 import type { QuestTemplate, QuestType } from '@/types/quest.types';
 
-export async function awardXp(userId: string, xpAmount: number, source: string = 'review'): Promise<number> {
+export async function awardXp(
+  userId: string,
+  xpAmount: number,
+  source: string = 'review',
+  options?: { skipStreak?: boolean }
+): Promise<number> {
   const supabase = await createClient();
   const today = new Date();
   const dateStr = format(today, 'yyyy-MM-dd');
@@ -48,8 +53,10 @@ export async function awardXp(userId: string, xpAmount: number, source: string =
       }).eq('id', userId);
     }
     
-    // 5. Cập nhật Streak
-    await updateStreak(userId, today);
+    // 5. Cập nhật Streak (CHỈ kích hoạt khi làm bài kiểm tra hoặc hoạt động chính thức, KHÔNG kích hoạt khi chỉ lướt flashcard preview)
+    if (!options?.skipStreak && source !== 'preview') {
+      await updateStreak(userId, today);
+    }
 
     // 6. Cập nhật tiến độ nhiệm vụ tích lũy XP (tránh đệ quy khi source = 'quest_reward')
     if (source !== 'quest_reward') {

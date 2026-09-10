@@ -119,16 +119,15 @@ export function calculateWordLevel(
   const netCorrect = Math.max(0, reviewCount - lapseCount);
 
   // Tìm level cao nhất mà từ này thỏa mãn điều kiện
-  // Duyệt từ Level 5 xuống Level 0
+  // Duyệt từ Level 5 xuống Level 1: Phải đạt đủ số lần đúng yêu cầu (minConsecutiveCorrect) của Admin
   let matchedConfig: LevelThresholdConfig = levels[0];
   let matchedIndex = 0;
 
-  for (let i = levels.length - 1; i >= 0; i--) {
+  for (let i = levels.length - 1; i >= 1; i--) {
     const lvl = levels[i];
     const meetsCorrect = netCorrect >= lvl.minConsecutiveCorrect;
-    const meetsStability = Boolean(lvl.minStabilityDays && stability >= lvl.minStabilityDays);
 
-    if (meetsCorrect || meetsStability) {
+    if (meetsCorrect) {
       matchedConfig = lvl;
       matchedIndex = i;
       break;
@@ -140,11 +139,12 @@ export function calculateWordLevel(
 
   // Tính % tiến độ tới level tiếp theo
   let progressPercent = 100;
-  let nextTargetCount = matchedConfig.minConsecutiveCorrect;
+  let nextTargetCount = levels[1]?.minConsecutiveCorrect || 1;
 
   if (nextLvl) {
     nextTargetCount = nextLvl.minConsecutiveCorrect;
-    const currentBase = matchedConfig.minConsecutiveCorrect;
+    // Level 0 có base là 0
+    const currentBase = matchedIndex === 0 ? 0 : matchedConfig.minConsecutiveCorrect;
     const gap = Math.max(1, nextTargetCount - currentBase);
     const earnedInGap = Math.max(0, netCorrect - currentBase);
     progressPercent = Math.min(99, Math.round((earnedInGap / gap) * 100));
@@ -202,17 +202,30 @@ export function canCardLevelUp(
 /**
  * Ánh xạ kết quả Quiz phản xạ sang thang điểm FSRS (1 - 4)
  * - Sai: Again (1)
- * - Đúng bình thường: Good (3)
- * - Đúng cực nhanh (< 3000ms): Easy (4)
+ * - Trắc nghiệm đúng: Good (3) (tránh đoán mò trắc nghiệm làm méo mó độ khó)
+ * - Tự luận / Gõ từ đúng nhanh (< 4000ms): Easy (4)
  */
-export function mapQuizResultToFSRS(isCorrect: boolean, responseTimeMs: number): ReviewRating {
+export function mapQuizResultToFSRS(
+  isCorrect: boolean,
+  responseTimeMs: number = 0,
+  questionType: string = 'multiple_choice'
+): ReviewRating {
   if (!isCorrect) {
     return 1; // Again
   }
 
-  // Đúng thần tốc (< 3 giây)
-  if (responseTimeMs > 0 && responseTimeMs < 3000) {
-    return 4; // Easy
+  // Trắc nghiệm nhiều lựa chọn: đúng được ghi nhận là Good (3) chuẩn mực
+  if (questionType === 'multiple_choice') {
+    return 3;
+  }
+
+  // Đối với câu hỏi tự luận / gõ từ / đặt câu: nếu gõ đúng và nhanh (< 4 giây) -> Easy (4)
+  if (
+    (questionType === 'typing' || questionType === 'sentence_writing' || questionType === 'cloze_typing') &&
+    responseTimeMs > 0 &&
+    responseTimeMs < 4000
+  ) {
+    return 4;
   }
 
   return 3; // Good

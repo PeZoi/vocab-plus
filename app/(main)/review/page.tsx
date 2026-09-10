@@ -3,18 +3,19 @@
 import { CustomStudyModal } from '@/components/features/review/custom-study-modal';
 import { Flashcard } from '@/components/features/review/flashcard';
 import { ReviewPreviewControls } from '@/components/features/review/review-preview-controls';
-import { ReviewQuizRunner } from '@/components/features/review/review-quiz-runner';
 import { ReviewCompletionScreen } from '@/components/features/review/review-completion-screen';
 import { ReviewSyncingScreen } from '@/components/features/review/review-syncing-screen';
 import { ReviewEmptyState } from '@/components/features/review/review-empty-state';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { useReviewSession } from '@/hooks/features/review/use-review-session';
+import { cardsService } from '@/services/cards.service';
 import { ArrowLeft, Target, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import ReviewLoading from './loading';
 
 function ReviewSessionContent() {
@@ -34,17 +35,16 @@ function ReviewSessionContent() {
     currentItem,
     currentIndex,
     totalCards,
+    reviewedCardsCount,
     progressPercent,
     isFlipped,
     flipCard,
     nextCard,
     prevCard,
-    startQuiz,
-    handleQuizComplete,
+    finishPreview,
     restartReview,
     isLoading,
     isSyncingFinal,
-    quizStats,
     totalXpEarned,
   } = useReviewSession({
     collection_id: collectionId,
@@ -52,6 +52,16 @@ function ReviewSessionContent() {
     cefr_level: cefrLevel,
     card_ids: cardIds,
   });
+
+  const handleMarkKnown = async (cardId: string) => {
+    try {
+      await cardsService.markKnown(cardId);
+      toast.success('Đã đánh dấu thuộc từ này! Từ được thăng cấp lên Nảy mầm 🌱');
+      nextCard();
+    } catch (err) {
+      toast.error('Có lỗi khi đánh dấu thuộc từ');
+    }
+  };
 
   if (isLoading) {
     return <ReviewLoading />;
@@ -62,15 +72,15 @@ function ReviewSessionContent() {
     return <ReviewSyncingScreen />;
   }
 
-  // Màn hình hoàn thành phiên học (sau bài Quiz)
+  // Màn hình hoàn thành xem thẻ Flashcard
   if (phase === 'completed') {
     return (
       <ReviewCompletionScreen
-        cardsReviewedCount={totalCards}
+        cardsReviewedCount={reviewedCardsCount || totalCards}
+        cardIds={dueCards.map((c) => c.card.id)}
         isCustomSession={isCustomSession}
         collectionId={collectionId}
         totalXpEarned={totalXpEarned}
-        quizStats={quizStats}
         onRestartReview={restartReview}
       />
     );
@@ -89,22 +99,6 @@ function ReviewSessionContent() {
           onClose={() => setIsCustomStudyOpen(false)}
         />
       </>
-    );
-  }
-
-  // GIAI ĐOẠN 2: KIỂM TRA TRÍ NHỚ TRẮC NGHIỆM (ACTIVE RECALL QUIZ)
-  if (phase === 'quiz') {
-    return (
-      <ReviewQuizRunner
-        reviewCards={dueCards}
-        isCustomSession={isCustomSession}
-        onComplete={handleQuizComplete}
-        onExit={() => {
-          if (confirm('Bạn có chắc muốn tạm dừng bài kiểm tra? Tiến trình hiện tại sẽ chưa được lưu.')) {
-            router.push(ROUTES.APP.DASHBOARD);
-          }
-        }}
-      />
     );
   }
 
@@ -197,13 +191,15 @@ function ReviewSessionContent() {
         >
           <Flashcard
             card={currentItem.card}
+            userCard={currentItem.user_card}
             isFlipped={isFlipped}
             onFlip={flipCard}
+            onMarkKnown={handleMarkKnown}
           />
         </motion.div>
       </AnimatePresence>
 
-      {/* Preview Navigation & Start Quiz Action Controls */}
+      {/* Preview Navigation & Finish Preview Action Controls */}
       <ReviewPreviewControls
         currentIndex={currentIndex}
         totalCards={totalCards}
@@ -211,7 +207,7 @@ function ReviewSessionContent() {
         onFlip={flipCard}
         onPrev={prevCard}
         onNext={nextCard}
-        onStartQuiz={startQuiz}
+        onFinishPreview={finishPreview}
       />
 
       <CustomStudyModal

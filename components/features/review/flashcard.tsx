@@ -2,12 +2,15 @@
 
 import { AudioButton } from '@/components/common/audio-button';
 import { CEFRBadge } from '@/components/common/cefr-badge';
+import { LottieIcon } from '@/components/common/lottie-icon';
 import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useWordLevelInfo } from '@/hooks/common/use-word-level-info';
 import { cn } from '@/lib/utils';
 import type { Card, UserCard, CollocationItem, WordFamilyItem } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
-import { Lightbulb, RotateCw } from 'lucide-react';
+import { Lightbulb, RotateCw, Zap } from 'lucide-react';
 import Image from 'next/image';
 
 interface FlashcardProps {
@@ -15,11 +18,13 @@ interface FlashcardProps {
   userCard?: UserCard | null;
   isFlipped: boolean;
   onFlip: () => void;
+  onMarkKnown?: (cardId: string) => void;
 }
 
-export function Flashcard({ card, userCard, isFlipped, onFlip }: FlashcardProps) {
+export function Flashcard({ card, userCard, isFlipped, onFlip, onMarkKnown }: FlashcardProps) {
   const collocations = (card.collocations as unknown as CollocationItem[]) || [];
   const wordFamily = (card.word_family as unknown as WordFamilyItem[]) || [];
+  const levelInfo = useWordLevelInfo({ userCard });
 
   return (
     <div
@@ -32,7 +37,6 @@ export function Flashcard({ card, userCard, isFlipped, onFlip }: FlashcardProps)
           {/* Card Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <WordLevelBadge userCard={userCard} mode="compact" />
               {card.cefr_level && (
                 <CEFRBadge level={card.cefr_level} size="sm" />
               )}
@@ -54,8 +58,8 @@ export function Flashcard({ card, userCard, isFlipped, onFlip }: FlashcardProps)
             </span>
           </div>
 
-          {/* Card Body: Word, IPA, Audio */}
-          <div className="flex-1 flex flex-col items-center justify-center text-center my-6 space-y-4">
+          {/* Card Body: Word, IPA, Audio & Word Level */}
+          <div className="flex-1 flex flex-col items-center justify-center text-center my-6 space-y-3.5">
             <h2 className="text-3xl sm:text-4xl font-semibold text-text-primary tracking-tight">
               {card.word}
             </h2>
@@ -69,21 +73,28 @@ export function Flashcard({ card, userCard, isFlipped, onFlip }: FlashcardProps)
               <AudioButton text={card.word} size="sm" />
             </div>
 
-            {/* Tags display */}
-            {card.tags && card.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 items-center justify-center pt-1">
-                {card.tags
-                  .filter((tag) => typeof tag === 'string' && tag.trim().length > 0)
-                  .map((tag, idx) => (
-                    <span
-                      key={`tag-${tag}-${idx}`}
-                      className="text-[11px] text-brand/80 bg-brand/10 px-2 py-0.5 rounded-md border border-brand/20 font-medium"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+            {/* Word Level Icon centered */}
+            <div className="flex flex-col items-center justify-center mt-8">
+              <LottieIcon
+                  animationKey={levelInfo.lottieKey}
+                  size="xl"
+                  loop
+                  autoplay
+                />
+              <div
+                className={cn(
+                  'inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border transition-all duration-300 shadow-xs backdrop-blur-xs',
+                  levelInfo.colorClasses.bg,
+                  levelInfo.colorClasses.border
+                )}
+                title={`Cấp độ ${levelInfo.level}: ${levelInfo.name} (${levelInfo.stabilityDays} ngày nhớ)`}
+              >
+                
+                <span className={cn('text-[10px] font-semibold tracking-wide', levelInfo.colorClasses.text)}>
+                  Lv.{levelInfo.level} {levelInfo.name}
+                </span>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Card Footer Hint */}
@@ -272,9 +283,27 @@ export function Flashcard({ card, userCard, isFlipped, onFlip }: FlashcardProps)
             )}
           </div>
 
-          {/* Card Footer Hint */}
-          <div className="text-center text-xs text-text-secondary/70">
-            Chọn mức độ ghi nhớ 1, 2, 3, 4 bên dưới
+          {/* Card Footer Hint & Quick Master Action */}
+          <div className="pt-2 border-t border-border/50 flex items-center justify-between gap-2 text-xs">
+            <span className="text-[11px] text-text-secondary/70">
+              Bấm vào thẻ hoặc phím [Space] để lật
+            </span>
+            {onMarkKnown && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMarkKnown(card.id);
+                }}
+                className="h-7 px-2.5 text-[11px] gap-1 text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-400/20 font-medium"
+                title="Bỏ qua giai đoạn Hạt mầm nếu bạn đã thuộc từ này từ trước"
+              >
+                <Zap className="w-3 h-3 fill-amber-400" />
+                <span>Tôi đã thuộc từ này</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

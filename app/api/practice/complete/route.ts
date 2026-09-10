@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { awardXp } from '@/lib/gamification';
+import { awardXp, incrementQuestProgress } from '@/lib/gamification';
 import type { SubmitPracticeSessionDto } from '@/types/practice.types';
 
 export async function POST(request: Request) {
@@ -23,6 +23,10 @@ export async function POST(request: Request) {
     let actualXpAwarded = 0;
     if (parsedXp > 0) {
       actualXpAwarded = await awardXp(user.id, parsedXp, 'practice');
+    }
+
+    if (correct_count && correct_count > 0) {
+      await incrementQuestProgress(user.id, 'review_cards', correct_count);
     }
 
     return NextResponse.json({

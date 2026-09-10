@@ -15,12 +15,32 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 
 interface VocabDetailFsrsCardProps {
+  cardId?: string;
   userCard?: UserCard | null;
+  onRefetch?: () => void;
 }
 
-export function VocabDetailFsrsCard({ userCard }: VocabDetailFsrsCardProps) {
+export function VocabDetailFsrsCard({ cardId, userCard, onRefetch }: VocabDetailFsrsCardProps) {
   const router = useRouter();
+  const [isMarking, setIsMarking] = React.useState(false);
   const isDue = userCard?.due_at ? new Date(userCard.due_at) <= new Date() : false;
+
+  const handleMarkKnown = async () => {
+    if (!cardId) return;
+    try {
+      setIsMarking(true);
+      const { cardsService } = await import('@/services/cards.service');
+      const { toast } = await import('sonner');
+      await cardsService.markKnown(cardId);
+      toast.success('Đã đánh dấu thuộc từ này! Từ được thăng cấp lên Nảy mầm 🌱');
+      onRefetch?.();
+    } catch {
+      const { toast } = await import('sonner');
+      toast.error('Có lỗi khi cập nhật');
+    } finally {
+      setIsMarking(false);
+    }
+  };
 
   return (
     <div className="rounded-2xl p-5 sm:p-6 bg-surface/90 border border-border/70 shadow-sm space-y-5">
@@ -112,28 +132,52 @@ export function VocabDetailFsrsCard({ userCard }: VocabDetailFsrsCardProps) {
           </div>
 
           {/* Review Action Button */}
-          <Button
-            onClick={() => router.push(ROUTES.APP.REVIEW)}
-            variant={isDue ? 'primary' : 'outline'}
-            className="w-full gap-2 font-medium text-white shadow-sm"
-          >
-            <Zap className="w-4 h-4" />
-            <span>{isDue ? 'Ôn tập ngay bây giờ' : 'Đến trang ôn tập SRS'}</span>
-          </Button>
+          <div className="space-y-2 pt-1">
+            {cardId && (!userCard || userCard.state !== 'review' || (Number(userCard.stability) || 0) < 14) && (
+              <Button
+                type="button"
+                onClick={handleMarkKnown}
+                disabled={isMarking}
+                variant="ghost"
+                size="sm"
+                className="w-full gap-1.5 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 border border-amber-400/20 font-medium h-8"
+                title="Bỏ qua giai đoạn Hạt mầm nếu bạn đã thuộc từ này từ trước"
+              >
+                <Zap className="w-3.5 h-3.5 fill-amber-400" />
+                <span className='text-xs'>Tôi đã thuộc từ này</span>
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="py-4 text-center space-y-3">
           <p className="text-xs text-slate-400">
             Thẻ này chưa được đưa vào chu trình ghi nhớ Spaced Repetition.
           </p>
-          <Button
-            onClick={() => router.push(ROUTES.APP.REVIEW)}
-            variant="primary"
-            className="w-full gap-2 text-xs text-white"
-          >
-            <Zap className="w-3.5 h-3.5" />
-            <span>Bắt đầu phiên học</span>
-          </Button>
+          <div className="space-y-2">
+            <Button
+              onClick={() => router.push(ROUTES.APP.REVIEW)}
+              variant="primary"
+              className="w-full gap-2 text-xs text-white"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Bắt đầu phiên học</span>
+            </Button>
+
+            {cardId && (
+              <Button
+                type="button"
+                onClick={handleMarkKnown}
+                disabled={isMarking}
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5 text-xs text-amber-400 hover:text-amber-300 border-amber-400/30"
+              >
+                <Zap className="w-3.5 h-3.5 fill-amber-400" />
+                <span>Tôi đã thuộc từ này</span>
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

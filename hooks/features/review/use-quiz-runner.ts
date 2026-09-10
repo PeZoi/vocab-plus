@@ -70,6 +70,24 @@ export function useQuizRunner({
   const [levelDowns, setLevelDowns] = useState<LevelChangeResult[]>([]);
   const [retestQueue, setRetestQueue] = useState<QuizQuestionItem[]>([]);
 
+  // Ref lưu giữ chính xác thống kê, tránh stale closure khi setTimeout gọi
+  const statsRef = useRef<{
+    correctCount: number;
+    wrongCount: number;
+    xpEarned: number;
+    levelUps: LevelChangeResult[];
+    levelDowns: LevelChangeResult[];
+  }>({
+    correctCount: 0,
+    wrongCount: 0,
+    xpEarned: 0,
+    levelUps: [],
+    levelDowns: [],
+  });
+
+  // Lưu danh sách pending HTTP submit review để await trước khi kết thúc
+  const pendingSubmitsRef = useRef<Promise<unknown>[]>([]);
+
   // Banner hiệu ứng Level Up
   const [levelUpPopup, setLevelUpPopup] = useState<LevelChangeResult | null>(null);
 
@@ -85,7 +103,7 @@ export function useQuizRunner({
   const totalQuestions = questionQueue.length;
   const progressPercent = totalQuestions > 0 ? Math.round(((currentIndex) / totalQuestions) * 100) : 0;
 
-  const handleNextQuestion = useCallback(() => {
+  const handleNextQuestion = useCallback(async () => {
     questionStartTimeRef.current = Date.now();
     setSelectedOptionId(null);
     setIsAnswered(false);
@@ -100,14 +118,19 @@ export function useQuizRunner({
         setRetestQueue([]);
         setCurrentIndex(0);
       } else {
+        // Đợi tất cả API submit review hoàn thành xong trước khi báo onComplete
+        if (pendingSubmitsRef.current.length > 0) {
+          await Promise.allSettled(pendingSubmitsRef.current);
+        }
+
         // Hoàn thành toàn bộ phiên Quiz!
         onComplete({
           totalQuestions: initialQuestions.length,
-          correctCount,
-          wrongCount,
-          xpEarned,
-          levelUps,
-          levelDowns,
+          correctCount: statsRef.current.correctCount,
+          wrongCount: statsRef.current.wrongCount,
+          xpEarned: statsRef.current.xpEarned,
+          levelUps: statsRef.current.levelUps,
+          levelDowns: statsRef.current.levelDowns,
           isRanked: !isCustomSession,
         });
       }
@@ -119,13 +142,13 @@ export function useQuizRunner({
     isRetestMode,
     onComplete,
     initialQuestions.length,
-    correctCount,
-    wrongCount,
-    xpEarned,
-    levelUps,
-    levelDowns,
     isCustomSession,
   ]);
+
+  const handleNextQuestionRef = useRef(handleNextQuestion);
+  useEffect(() => {
+    handleNextQuestionRef.current = handleNextQuestion;
+  });
 
   // Xử lý khi người dùng chọn đáp án
   const handleSelectOption = useCallback(
@@ -144,6 +167,8 @@ export function useQuizRunner({
       if (isCorrect) {
         // Đúng: Cộng XP
         const earned = isRetestMode ? 2 : 10;
+        statsRef.current.correctCount += 1;
+        statsRef.current.xpEarned += earned;
         setCorrectCount((prev) => prev + 1);
         setXpEarned((prev) => prev + earned);
 
@@ -172,21 +197,24 @@ export function useQuizRunner({
               newLevel: newLevelInfo.level,
               direction: 'up',
             };
+            statsRef.current.levelUps.push(upResult);
             setLevelUps((prev) => [...prev, upResult]);
             setLevelUpPopup(upResult);
             setTimeout(() => setLevelUpPopup(null), 2500);
           }
 
-          // Gọi API submit review ngầm
+          // Gọi API submit review ngầm và lưu Promise vào pendingSubmitsRef
           const rating = mapQuizResultToFSRS(true, responseTimeMs);
-          reviewService.submitReview({
+          const submitPromise = reviewService.submitReview({
             card_id: card.id,
             rating,
             response_ms: responseTimeMs,
           }).catch((err) => console.error('Lỗi submit review:', err));
+          pendingSubmitsRef.current.push(submitPromise);
         }
       } else {
         // Sai: Ghi nhận sai
+        statsRef.current.wrongCount += 1;
         setWrongCount((prev) => prev + 1);
 
         if (isRanked && !isRetestMode) {
@@ -200,24 +228,24 @@ export function useQuizRunner({
           const isLvl5Protected = oldLevelInfo.level === 5 && (userCard?.lapse_count || 0) === 0;
 
           if (!isLvl5Protected && newLevelVal < oldLevelInfo.level) {
-            setLevelDowns((prev) => [
-              ...prev,
-              {
-                cardId: card.id,
-                word: card.word,
-                oldLevel: oldLevelInfo.level,
-                newLevel: newLevelVal,
-                direction: 'down',
-              },
-            ]);
+            const downResult: LevelChangeResult = {
+              cardId: card.id,
+              word: card.word,
+              oldLevel: oldLevelInfo.level,
+              newLevel: newLevelVal,
+              direction: 'down',
+            };
+            statsRef.current.levelDowns.push(downResult);
+            setLevelDowns((prev) => [...prev, downResult]);
           }
 
-          // Gọi API submit FSRS Rating.Again (1)
-          reviewService.submitReview({
+          // Gọi API submit FSRS Rating.Again (1) và lưu Promise
+          const submitPromise = reviewService.submitReview({
             card_id: card.id,
             rating: 1,
             response_ms: responseTimeMs,
           }).catch((err) => console.error('Lỗi submit review sai:', err));
+          pendingSubmitsRef.current.push(submitPromise);
         }
 
         // Đưa câu hỏi này vào hàng đợi làm lại (Re-test queue) ở cuối bài
@@ -226,12 +254,12 @@ export function useQuizRunner({
         }
       }
 
-      // Tự động chuyển câu sau 1.2s
+      // Tự động chuyển câu sau 1.2s qua ref mới nhất
       setTimeout(() => {
-        handleNextQuestion();
+        handleNextQuestionRef.current();
       }, 1200);
     },
-    [isAnswered, currentQuestion, isRetestMode, isRanked, levelConfig, handleNextQuestion]
+    [isAnswered, currentQuestion, isRetestMode, isRanked, levelConfig]
   );
 
   return {

@@ -31,7 +31,9 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { useState } from 'react';
+import { createRandomMixedQuestions } from '@/utils/practice-generator';
+import { useMemo, useState } from 'react';
+import { Flame } from 'lucide-react';
 
 interface PracticeSetupProps {
   cards: CardWithProgress[];
@@ -55,31 +57,30 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
 
   const { data: collections = [], isLoading: isLoadingCollections } = useCollectionsQuery();
 
-  // Tạo danh sách câu hỏi kết hợp ngẫu nhiên tất cả các hình thức
-  const createRandomMixedQuestions = (selectedCards: CardWithProgress[]): PracticeQuestionItem[] => {
-    // 3 hình thức bài tập
-    const baseModes: PracticeExerciseType[] = ['multiple_choice', 'cloze', 'sentence_writing'];
+  // Lọc danh sách thẻ đang đến hạn kiểm tra FSRS
+  const dueCards = useMemo(() => {
+    const now = Date.now();
+    return cards.filter((c) => {
+      if (!c.user_card || c.user_card.state === 'new') return true;
+      if (!c.user_card.due_at) return true;
+      return new Date(c.user_card.due_at).getTime() <= now + 60 * 1000;
+    });
+  }, [cards]);
 
-    // Trộn ngẫu nhiên thứ tự các thẻ trước
-    const shuffledCards = [...selectedCards].sort(() => 0.5 - Math.random());
+  const handleStartDueCards = () => {
+    setErrorMessage(null);
+    if (dueCards.length === 0) return;
 
-    return shuffledCards.map((card, idx) => {
-      const hasExampleSentence =
-        !!card.example_sentence && card.example_sentence.trim().length > 0;
+    const shuffled = [...dueCards].sort(() => 0.5 - Math.random());
+    const pickedCards = shuffled.slice(0, Math.min(20, shuffled.length));
+    const mixedQuestions = createRandomMixedQuestions(pickedCards);
 
-      // Xoay vòng và chọn ngẫu nhiên để bài kiểm tra luôn có đủ các hình thức
-      let targetMode = baseModes[idx % baseModes.length];
-
-      // Nếu thẻ không có câu ví dụ thì không thể làm điền khuyết (Cloze) -> đổi sang Trắc nghiệm hoặc Đặt câu
-      if (targetMode === 'cloze' && !hasExampleSentence) {
-        targetMode = Math.random() > 0.5 ? 'multiple_choice' : 'sentence_writing';
-      }
-
-      return {
-        id: `${card.id}-${idx}`,
-        card,
-        exerciseType: targetMode,
-      };
+    onStart({
+      sourceType: 'all',
+      collectionTitle: 'Từ vựng đến hạn FSRS',
+      selectedCards: pickedCards,
+      questions: mixedQuestions,
+      questionCount: mixedQuestions.length,
     });
   };
 
@@ -152,6 +153,44 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
           </p>
         </div>
       </div>
+
+      {/* Fast-Track Banner: Ôn tập & kiểm tra ngay các từ đến hạn FSRS */}
+      {dueCards.length > 0 ? (
+        <div className="relative rounded-2xl overflow-hidden p-5 sm:p-6 bg-gradient-to-r from-brand/20 via-surface to-surface border border-brand/40 shadow-lg shadow-brand/10 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-brand/20 text-brand border border-brand/30">
+                <Flame className="w-3.5 h-3.5 text-brand fill-brand animate-pulse" />
+                <span>Ưu tiên hàng đầu (FSRS Due)</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-text-primary">
+                Hôm nay có <span className="text-brand font-black">{dueCards.length}</span> từ vựng đến hạn cần kiểm tra FSRS
+              </h3>
+              <p className="text-xs text-text-secondary leading-relaxed">
+                Làm bài kiểm tra ngay để tính toán độ bền trí nhớ, duy trì chuỗi Streak và thăng cấp Cây Sinh Trưởng.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="primary"
+              size="default"
+              onClick={handleStartDueCards}
+              className="h-11 px-5 text-xs sm:text-sm font-bold gap-2 shrink-0 shadow-md shadow-brand/30"
+            >
+              <Zap className="w-4 h-4 fill-white" />
+              <span>Kiểm tra ngay ({Math.min(20, dueCards.length)} từ)</span>
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="p-3.5 rounded-xl bg-success/10 border border-success/25 flex items-center gap-2.5 text-xs text-success">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>
+            Tuyệt vời! Hiện tại kho từ vựng của bạn chưa có từ nào quá hạn FSRS. Bạn có thể tự do luyện tập kho từ bên dưới.
+          </span>
+        </div>
+      )}
 
       {/* Thông tin 3 hình thức ngẫu nhiên trong bài */}
       <div className="p-4 rounded-xl bg-surface/70 border border-border/70 space-y-2">

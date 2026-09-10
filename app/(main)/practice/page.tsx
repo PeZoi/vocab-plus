@@ -1,20 +1,25 @@
 'use client';
 
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { EmptyState } from '@/components/common/empty-state';
-import { MixedPracticeRunner } from '@/components/features/practice/mixed-practice-runner';
+import {
+  MixedPracticeRunner,
+  type LevelUpItem,
+} from '@/components/features/practice/mixed-practice-runner';
 import { PracticeSetup } from '@/components/features/practice/practice-setup';
 import { PracticeSummary } from '@/components/features/practice/practice-summary';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
-import { userKeys, reviewKeys, questKeys } from '@/constants/query-keys';
+import { userKeys, reviewKeys, questKeys, cardKeys } from '@/constants/query-keys';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
 import { practiceService } from '@/services/practice.service';
 import type { CardWithProgress } from '@/types/card.types';
 import type { PracticeQuestionItem, PracticeSourceType } from '@/types/practice.types';
+import { createRandomMixedQuestions } from '@/utils/practice-generator';
 import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen } from 'lucide-react';
-import { useState } from 'react';
 
 type PracticeStatus = 'setup' | 'practicing' | 'summary';
 
@@ -31,23 +36,77 @@ interface SessionResultStats {
   correct: number;
   wrongCards: CardWithProgress[];
   xpEarned: number;
+  levelUps?: LevelUpItem[];
 }
 
-export default function PracticePage() {
+function PracticeContent() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const cardIdsParam = searchParams.get('card_ids');
+  const modeParam = searchParams.get('mode');
+
   const { data: cards = [], isLoading, isError } = useCardsQuery();
   const [status, setStatus] = useState<PracticeStatus>('setup');
   const [sessionConfig, setSessionConfig] = useState<ActiveSessionConfig | null>(null);
   const [sessionResult, setSessionResult] = useState<SessionResultStats | null>(null);
+
+  const autoStartProcessed = useRef(false);
 
   const handleStart = (config: ActiveSessionConfig) => {
     setSessionConfig(config);
     setStatus('practicing');
   };
 
+  // Tự động kích hoạt bài kiểm tra nếu có query params (ví dụ chuyển từ màn Flashcard Review hoặc fast-track mode)
+  useEffect(() => {
+    if (isLoading || cards.length === 0 || autoStartProcessed.current || status !== 'setup') {
+      return;
+    }
+
+    if (cardIdsParam) {
+      autoStartProcessed.current = true;
+      const targetIds = cardIdsParam
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const pickedCards = cards.filter((c) => targetIds.includes(c.id));
+      if (pickedCards.length > 0) {
+        const questions = createRandomMixedQuestions(pickedCards);
+        handleStart({
+          sourceType: 'all',
+          collectionTitle: 'Từ vựng vừa xem Flashcard',
+          selectedCards: pickedCards,
+          questions,
+          questionCount: questions.length,
+        });
+      }
+    } else if (modeParam === 'due') {
+      autoStartProcessed.current = true;
+      const now = Date.now();
+      const dueCards = cards.filter((c) => {
+        if (!c.user_card || c.user_card.state === 'new') return true;
+        if (!c.user_card.due_at) return true;
+        return new Date(c.user_card.due_at).getTime() <= now + 60 * 1000;
+      });
+
+      if (dueCards.length > 0) {
+        const pickedCards = dueCards.slice(0, Math.min(20, dueCards.length));
+        const questions = createRandomMixedQuestions(pickedCards);
+        handleStart({
+          sourceType: 'all',
+          collectionTitle: 'Từ vựng đến hạn FSRS',
+          selectedCards: pickedCards,
+          questions,
+          questionCount: questions.length,
+        });
+      }
+    }
+  }, [cardIdsParam, modeParam, cards, isLoading, status]);
+
   const handleComplete = async (stats: SessionResultStats) => {
     try {
-      // Gọi API tổng kết và cập nhật XP một lần duy nhất vào database
+      // Gọi API tổng kết và cập nhật XP một lần duy nhất vào database (đồng thời ghi nhận Streak & Quest progress)
       const res = await practiceService.completeSession({
         xp_earned: stats.xpEarned,
         total_questions: stats.total,
@@ -56,8 +115,9 @@ export default function PracticePage() {
         collection_title: sessionConfig?.collectionTitle,
       });
 
-      // Cập nhật header XP, daily quests và profile
+      // Cập nhật toàn bộ cache liên quan: cards, header XP/streak, daily quests và profile
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: cardKeys.all }),
         queryClient.invalidateQueries({ queryKey: userKeys.profile() }),
         queryClient.invalidateQueries({ queryKey: reviewKeys.stats() }),
         queryClient.invalidateQueries({ queryKey: questKeys.daily() }),
@@ -145,9 +205,29 @@ export default function PracticePage() {
           correctCount={sessionResult.correct}
           wrongCards={sessionResult.wrongCards}
           xpEarned={sessionResult.xpEarned}
+          levelUps={sessionResult.levelUps}
           onRestart={handleRestart}
         />
       )}
     </div>
+  );
+}
+
+export default function PracticePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-2xl mx-auto space-y-6 py-6">
+          <Skeleton className="h-44 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Skeleton className="h-28 rounded-xl" />
+            <Skeleton className="h-28 rounded-xl" />
+          </div>
+          <Skeleton className="h-48 w-full rounded-xl" />
+        </div>
+      }
+    >
+      <PracticeContent />
+    </Suspense>
   );
 }
