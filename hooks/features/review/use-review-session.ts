@@ -87,8 +87,9 @@ export function useReviewSession(params?: {
     setIsSyncingFinal(true);
 
     const sessionCardsCount = reviewedCardsCount || dueCards.length;
-    // Thưởng nhẹ 1 XP cho mỗi thẻ đã lướt xem
-    const previewXp = sessionCardsCount * 1;
+    // Thưởng XP theo cấu hình hệ thống (review_xp_rates.per_card) cho mỗi thẻ đã lướt xem
+    const xpPerCard = Math.max(0, Number(reviewXpRates.per_card) ?? 1);
+    const previewXp = sessionCardsCount * xpPerCard;
 
     try {
       const completeRes = await reviewService.completeSession({
@@ -108,7 +109,7 @@ export function useReviewSession(params?: {
       setIsSyncingFinal(false);
       setPhase('completed');
     }
-  }, [dueCards.length, queryClient, reviewedCardsCount]);
+  }, [dueCards.length, queryClient, reviewedCardsCount, reviewXpRates]);
 
   const restartReview = useCallback(() => {
     setCurrentIndex(0);
