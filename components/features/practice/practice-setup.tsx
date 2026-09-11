@@ -14,7 +14,6 @@ import { collectionsService } from '@/services/collections.service';
 import type { CardWithProgress } from '@/types/card.types';
 import type { Collection } from '@/types/collection.types';
 import type {
-  PracticeExerciseType,
   PracticeQuestionItem,
   PracticeSourceType,
 } from '@/types/practice.types';
@@ -32,7 +31,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { createRandomMixedQuestions } from '@/utils/practice-generator';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Flame } from 'lucide-react';
 
 interface PracticeSetupProps {
@@ -54,18 +53,26 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
   const [selectedCount, setSelectedCount] = useState<number>(10);
   const [isLoadingCollection, setIsLoadingCollection] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mountedTime, setMountedTime] = useState<number>(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMountedTime(Date.now());
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const { data: collections = [], isLoading: isLoadingCollections } = useCollectionsQuery();
 
   // Lọc danh sách thẻ đang đến hạn kiểm tra FSRS
   const dueCards = useMemo(() => {
-    const now = Date.now();
+    if (!mountedTime) return [];
     return cards.filter((c) => {
       if (!c.user_card || c.user_card.state === 'new') return true;
       if (!c.user_card.due_at) return true;
-      return new Date(c.user_card.due_at).getTime() <= now + 60 * 1000;
+      return new Date(c.user_card.due_at).getTime() <= mountedTime + 60 * 1000;
     });
-  }, [cards]);
+  }, [cards, mountedTime]);
 
   const handleStartDueCards = () => {
     setErrorMessage(null);

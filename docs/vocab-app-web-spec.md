@@ -14,10 +14,10 @@
    - **Tags (Cá nhân & Linh hoạt)**: Gắn nhãn tự do cho từng thẻ (`#ielts`, `#technology`, `#daily`), hỗ trợ tạo **Custom Study Session** ôn tập chuyên sâu theo chủ đề/tag bất kỳ.
    - **Collections / Study Sets (Bộ từ vựng đóng gói / Playlists chia sẻ cộng đồng)**: Đóng gói các bộ từ có chủ đề (IELTS 7.5, 3000 từ Oxford, IT Vocab...) với đầy đủ metadata (Title, Description, Cover). Người dùng khác có thể xem trước và **1-Click Clone/Fork** vào kho từ cá nhân để bắt đầu học với FSRS.
 3. **Đọc hiểu & Trích xuất từ vựng ngữ cảnh (Smart Contextual Reader)**: Đọc văn bản tiếng Anh, bôi đen từ vựng để tra nghĩa tức thì và lưu thẻ kèm chính xác câu ngữ cảnh thật (`example_sentence`).
-4. **Chế độ ôn tập Active Recall 2 Giai Đoạn & Hệ Thống Cấp Độ Cây Sinh Trưởng (Tree-Growth Levels 0 ➔ 5)**:
-   - **Giai đoạn 1 — Lướt xem Flashcard (Passive Preview & Warm-up)**: Lướt nhanh các thẻ cần ôn và thẻ mới (+1 XP/thẻ) với phím tắt lật thẻ, chuyển thẻ, loại bỏ hoàn toàn 4 nút tự chấm điểm chủ quan.
-   - **Giai đoạn 2 — Kiểm tra trí nhớ phản xạ (Active Recall Quiz)**: Trọng tài khách quan quyết định thăng/hạ cấp FSRS và cấp độ cây thông qua 4 dạng trắc nghiệm (Từ ➔ Nghĩa, Nghĩa ➔ Từ, Nghe ➔ Từ, Điền khuyết) với kho distractor pool dự phòng và vòng lặp sửa sai thông minh.
-   - **Hệ thống Cây Sinh Trưởng Lottie 60fps**: 6 cấp độ trực quan (Hạt mầm ➔ Nảy mầm ➔ Nhánh non ➔ Cây xanh ➔ Nở hoa ➔ Đại thụ) với hoạt ảnh Lottie sống động, có cơ chế bảo vệ Đại thụ và phân định rạch ròi giữa Ôn tập Chuẩn (Ranked) vs Luyện tập Tự do (Casual Practice).
+4. **Phân Tách Rạch Ròi: Học Từ Vựng (Flashcard `/review`) vs Ôn Tập & Kiểm Tra (Active Recall `/practice`) & Hệ Thống Cây Sinh Trưởng (Levels 0 ➔ 5)**:
+   - **Phân hệ 1 — Học từ vựng (`/review`) (Passive Input & Nạp từ mới)**: Lướt nhanh thẻ Flashcard 3D hai mặt (Từ vựng, IPA, Audio, Nghĩa Việt & Anh, Ngữ cảnh, Mnemonic, Ảnh minh họa, Collocations) với phím tắt linh hoạt. **Không có bài Quiz trắc nghiệm**, **Không gọi FSRS submit**, **Không đổi Level**, **Không tính Streak** (chỉ cộng nhẹ +1 XP/thẻ lướt xem). Tích hợp nút **⚡ "Tôi đã thuộc từ này" (Quick Master)** nhảy thẳng lên Level 2 Cây con (14 ngày). Màn hình hoàn tất hiển thị nút CTA nổi bật: *"Bắt đầu bài kiểm tra ngay ([X] từ)"* dẫn sang `/practice?card_ids=...`.
+   - **Phân hệ 2 — Ôn tập & Kiểm tra (`/practice`) (Active Recall Assessment & Quyết định Level)**: Trọng tài khách quan duy nhất quyết định cập nhật thuật toán FSRS (`due_at`, `stability`, `difficulty`), kích hoạt thăng/hạ cấp Cây Sinh Trưởng và **ghi nhận Chuỗi ngày học liên tục (Streak 🔥)**. Kết hợp 3 hình thức kiểm tra: Trắc nghiệm 4 đáp án (Đúng = Good 3, Sai = Again 1), Điền từ khuyết (Cloze Deletion) và Đặt câu chấm điểm AI (Sentence Writing). Hỗ trợ tính năng **Ôn tập ngay (Fast-Track Due Cards)** 1-click cho các từ đến hạn FSRS.
+   - **Hệ thống Cây Sinh Trưởng Lottie 60fps**: 6 cấp độ trực quan (Hạt mầm ➔ Nảy mầm ➔ Cây con ➔ Cây xanh ➔ Nở hoa ➔ Đại thụ) với hoạt ảnh Lottie sống động, chuẩn hóa ngưỡng số lần đúng và cơ chế bảo vệ Đại thụ.
 5. **Hỗ trợ AI học sâu**: AI Word Analyzer tự động phân tích cấp độ CEFR, tầng nghĩa, collocations; hình ảnh liên tưởng (Dual-Coding), chấm câu viết ngữ pháp và gợi ý bản xứ.
 6. **Nhắc nhở & báo cáo qua Telegram**: Theo "giờ vàng" cá nhân hóa dựa trên hiệu suất học thực tế qua `pg_cron`.
 7. **Kho từ vựng & Quản lý từ vựng tập trung (`/vocab`)**: Trang quản trị toàn bộ vốn từ vựng cá nhân, tích hợp tìm kiếm tức thời, lọc đa chiều (CEFR, Tags, Trạng thái FSRS, Loại từ), sắp xếp linh hoạt, xem chi tiết thẻ, chỉnh sửa, xóa và thao tác hàng loạt.
@@ -150,7 +150,7 @@ create table public.cards (
   example_translation text, -- Dịch nghĩa tiếng Việt của câu ví dụ
   source_type text check (source_type in ('manual','imported','ai_generated','admin_curated')),
   card_type text default 'word' check (card_type in ('word','phrasal_verb','idiom')),
-  part_of_speech text check (part_of_speech in ('noun','verb','adjective','adverb','preposition','conjunction','pronoun','interjection')),
+  part_of_speech text check (part_of_speech is null or part_of_speech in ('noun','verb','adjective','adverb','preposition','conjunction','pronoun','interjection','phrase')),
   cefr_level text check (cefr_level in ('A1','A2','B1','B2','C1','C2')), -- Cấp độ chuẩn CEFR
   tags text[] default '{}', -- Mảng tags cá nhân: ['#ielts', '#marketing', '#reading']
   sense_number int default 1,
@@ -336,34 +336,60 @@ create table public.system_settings (
 
 ### 🟦 Phase 1 — Nền tảng Core FSRS + Hệ Thống Cấp Độ Cây Sinh Trưởng (Tree Levels 0 ➔ 5) & Chuẩn hóa CEFR Level
 - Xác thực đăng nhập qua Google OAuth.
-- Thuật toán **FSRS** (`ts-fsrs`): tính toán chu kỳ lặp tối ưu dựa trên độ ổn định (stability) và độ khó (difficulty).
-- **Quy trình Ôn tập 2 Giai Đoạn Hoàn Chỉnh (`/review`)**:
-  - **Giai đoạn 1 — Lướt xem Flashcard (Passive Preview & Warm-up)**:
-    - Hiển thị thẻ 3D trực quan (Từ vựng, IPA, Audio, Nghĩa, Ví dụ ngữ cảnh, Mnemonic, Ảnh minh họa).
-    - **Loại bỏ hoàn toàn 4 nút tự chấm điểm chủ quan** (Again, Hard, Good, Easy).
-    - Bộ điều khiển phím tắt mượt mà: `Space` (Lật thẻ), `←` (Thẻ trước), `→` (Thẻ sau), `Enter` (Bắt đầu kiểm tra ngay).
-    - Tích lũy +1 XP khởi động cho mỗi thẻ xem qua.
-  - **Giai đoạn 2 — Kiểm tra Trí nhớ Phản xạ (Active Recall Quiz)**:
-    - Trọng tài khách quan quyết định việc thăng/hạ cấp FSRS và cấp độ cây.
-    - 4 hình thức câu hỏi trắc nghiệm phản xạ nhanh (0ms delay): Từ ➔ Nghĩa, Nghĩa ➔ Từ, Nghe ➔ Từ, và Điền khuyết (Cloze test).
-    - **Kho từ gây nhiễu dự phòng (System Distractor Pool)**: Tự động mượn từ vựng hệ thống làm đáp án sai nếu kho từ của người học có dưới 4 từ, đảm bảo bài test luôn đủ 4 lựa chọn chuẩn chỉnh.
-    - **Vòng lặp sửa sai (Re-test loop)**: Câu trả lời sai được hỏi lại ở cuối buổi test để học viên ghi nhớ lỗi sai (làm lại đúng chỉ để xác nhận hiểu bài, không thăng cấp tức thời mà FSRS sẽ hẹn lịch ôn lại vào ngày mai).
+- **Thuật toán FSRS Engine Chuẩn Hóa (`ts-fsrs`)**:
+  - Tích hợp tham số native FSRS bảo toàn toán học giữa độ ổn định (`stability`) và độ khó (`difficulty`):
+    - `learning_steps: ['10m', '4h', '1d']`: Hạt mầm đúng lần 1 hẹn ôn sau 4 tiếng (trong ngày), đúng lần 2 hẹn sau 1 ngày (sáng hôm sau), giúp củng cố phản xạ kịp thời mà không bị kéo giãn quá mức.
+    - `relearning_steps: ['10m', '2h']`: Bước tái học tập khi từ bị quên.
+    - `request_retention: 0.9` (Mục tiêu nhớ 90%).
+    - `maximum_interval: 365` (Giãn cách tối đa 1 năm cho cấp Đại thụ).
+  - **Tuyệt đối không cắt ngọn (clamp) `due_at` thô bạo**: FSRS tự tính toán khoảng cách chuẩn xác, tránh tích lũy sai số gây lệch mô hình trí nhớ thực tế.
+  - **Chuẩn hóa điểm Quiz sang FSRS Rating**:
+    - Trắc nghiệm 4 đáp án đúng: Gán `Rating.Good (3)` (thay vì gán `Easy 4` làm tụt độ khó về 1.0 sai lệch).
+    - Trả lời sai: Gán `Rating.Again (1)`.
+    - Trả lời tự luận / điền từ đúng nhanh (< 4 giây): Gán `Rating.Easy (4)`.
+
+- **Kiến Trúc Phân Tách Tuyệt Đối: Học Từ Vựng (`/review`) vs Ôn Tập & Kiểm Tra (`/practice`)**:
+  - **1. Phân hệ Học Từ Vựng (`/review`) — Passive Input / Nạp & Xem Trước**:
+    - Giao diện Flashcard 3D lật 2 mặt (Mặt trước: từ, phiên âm, audio TTS, cấp độ cây; Mặt sau: định nghĩa Việt & Anh, ngữ cảnh, collocations, mẹo nhớ mnemonic, ảnh minh họa).
+    - **Không có bài Quiz trắc nghiệm lồng ghép tại đây**.
+    - **Không gọi FSRS `submitReview`**, **Không làm thay đổi Level từ vựng**, **Không tính Streak** (tránh cày streak ảo chỉ bằng việc lướt thẻ).
+    - Thưởng nhẹ XP học tập (+1 XP/thẻ lướt xem) với cờ `is_preview_only: true`.
+    - **Tính năng ⚡ "Tôi đã thuộc từ này" (Quick Master)**: Nút bấm trên mặt sau Flashcard và Modal chi tiết từ. Dành cho từ vựng người học đã biết từ trước: nhảy thẳng sang `state: 'review'`, `stability: 14`, `review_count: 5`, `due_at: now + 14 ngày` (tương đương Level 2 Cây con / Sapling) bỏ qua chu kỳ học lặp lại sơ khởi.
+    - **Màn hình hoàn tất Flashcard**: Chúc mừng số thẻ đã xem và hiển thị nút kêu gọi hành động lớn màu cam:
+      👉 **"BẮT ĐẦU BÀI KIỂM TRA NGAY ([X] TỪ VỪNG)"** điều hướng thẳng sang `/practice?card_ids=...`.
+
+  - **2. Phân hệ Ôn Tập & Kiểm Tra (`/practice`) — Active Recall Assessment / Đánh giá & Level Up**:
+    - Môi trường kiểm tra phản xạ trí nhớ chủ động, kết hợp ngẫu nhiên 3 định dạng:
+      1. *Multiple Choice*: Trắc nghiệm 4 lựa chọn (Từ ➔ Nghĩa, Nghĩa ➔ Từ, Nghe ➔ Từ) với kho từ gây nhiễu dự phòng (`System Distractor Pool`) đảm bảo luôn đủ 4 đáp án.
+      2. *Cloze Deletion*: Ẩn từ mục tiêu trong câu văn ngữ cảnh kèm gợi ý.
+      3. *Sentence Writing*: Tự đặt câu tiếng Anh với từ vựng, AI chấm điểm ngữ pháp tức thì.
+    - **NƠI DUY NHẤT THỰC THI**:
+      1. Gửi kết quả từng câu qua FSRS `submitReview` để cập nhật `due_at`, `stability`, `difficulty`.
+      2. Kích hoạt tính toán **Thăng cấp (Level Up)** hoặc **Hạ cấp (Level Down)** cho Cây Sinh Trưởng.
+      3. **Ghi nhận chuỗi học liên tục (Streak 🔥)** cho ngày hôm nay vào `profiles.streak_count` (hoàn toàn độc lập với việc thêm/xóa thẻ trong kho).
+      4. Tăng tiến độ Nhiệm vụ hàng ngày (`daily_quests`) và thưởng XP kiểm tra (10-20 XP/câu, bonus bài thi hoàn hảo).
+    - **Tính năng Ôn tập ngay (Fast-Track Due Cards)**:
+      - Banner ưu tiên trên đầu trang `/practice`: *"🎯 Hôm nay có [N] từ đến hạn cần ôn tập theo FSRS"* kèm nút *"ÔN TẬP & KIỂM TRA NGAY"*, 1-click gom toàn bộ từ đến hạn vào bài thi ngay lập tức.
+      - Tự động bỏ qua màn hình thiết lập khi được điều hướng từ Flashcard sang có tham số `card_ids`.
+
 - **Hệ thống Cấp độ Cây Sinh Trưởng (Gamification Tree Levels 0 ➔ 5) Với Lottie Animation (`lottie-react`)**:
-  - Hình tượng hóa sự phát triển trí nhớ theo vòng đời cây xanh:
-    - **Lv 0: Hạt mầm (Seed)** 🌰: Trạng thái tiềm năng, từ mới thêm vào kho.
-    - **Lv 1: Nảy mầm (Sprout)** 🌱: Vượt qua bài test Ranked đúng 1 lần (Stability ~1-2 ngày).
-    - **Lv 2: Nhánh non (Sapling)** 🌿: Đúng 2 lần liên tiếp (Stability ~3-6 ngày).
-    - **Lv 3: Cây xanh (Green Tree)** 🌳: Đúng 3 lần liên tiếp (Stability ~7-20 ngày).
-    - **Lv 4: Nở hoa (Blossom)** 🌸: Đúng 5 lần liên tiếp (Stability ~21-59 ngày).
-    - **Lv 5: Đại thụ (Ancient Tree)** 👑: Đúng 8 lần liên tiếp (Stability >= 60 ngày).
-  - **Cơ chế bảo vệ Level 5**: Khi trả lời sai lần đầu, hiển thị cảnh báo *"⚠️ Cây Đại thụ cần thêm nước!"* để ôn lại ngày mai thay vì giáng cấp tức tưởi do bấm nhầm.
-  - **Tối ưu hiệu năng Lottie**: Chế độ tĩnh hoặc hover tại danh sách nhiều từ `/vocab`, chạy full 60fps tại Flashcard Preview, Modal chi tiết từ và Màn hình Thăng Cấp (`level-up-burst`).
+  - Chuẩn hóa 6 cấp độ trực quan theo ngưỡng số lần kiểm tra đúng (`minConsecutiveCorrect`) và độ bền FSRS (`minStabilityDays`):
+    - **Lv 0: Hạt mầm (Seed)** 🌰: Trạng thái tiềm năng, vừa thêm vào kho (0 lần test, Stability 0).
+    - **Lv 1: Nảy mầm (Sprout)** 🌱: Vượt qua chu kỳ học ban đầu (Test đúng 1-3 lần, Stability >= 1 ngày).
+    - **Lv 2: Cây con / Nhánh non (Sapling)** 🌿: Hình thành phản xạ tốt (Test đúng 2-5 lần, Stability >= 3-14 ngày).
+    - **Lv 3: Cây xanh (Green Tree)** 🌳: Trí nhớ vững vàng (Test đúng 3-8 lần, Stability >= 7-30 ngày).
+    - **Lv 4: Nở hoa (Blossom)** 🌸: Thành thạo sâu sắc (Test đúng 5-12 lần, Stability >= 21-90 ngày).
+    - **Lv 5: Cổ thụ / Đại thụ (Ancient Tree)** 👑: Khắc sâu vĩnh viễn (Test đúng 8-15 lần, Stability >= 60-365 ngày).
+  - **Cơ chế bảo vệ Level 5**: Khi trả lời sai lần đầu ở Lv 5, hiển thị cảnh báo *"⚠️ Cây Đại thụ cần thêm nước!"* để chuyển vào chu kỳ tái học tập ngắn (`relearning_steps`) thay vì bị giáng cấp nặng nề do bấm nhầm.
+  - **Tối ưu hiệu năng Lottie**: Chế độ tĩnh hoặc icon nhẹ trên danh sách `/vocab`, chạy full 60fps tại Flashcard Preview, Modal chi tiết từ và Màn hình Thăng Cấp (`level-up-burst`).
+
 - **Phân Định 2 Chế Độ: Ôn Tập Chuẩn (Ranked) vs Luyện Tập Tự Do (Casual Practice)**:
-  - **🎯 Ôn Tập Chuẩn (Ranked SRS Review)**: Áp dụng cho các từ đến hạn (`isDue`) và tối đa 5-10 từ mới (`Level 0`) nạp vào mỗi ngày. Trả lời Đúng ➔ Cây lớn lên (Level Up) & tính FSRS; Trả lời Sai ➔ Hạ cấp.
-  - **🎮 Luyện Tập Tự Do (Casual Practice)**: Áp dụng khi người học ôn luyện theo Bộ sưu tập / Tag tùy chọn khi đã hết từ cần ôn. Thoải mái nhận XP và làm Daily Quests nhưng **Cấp độ Cây và lịch FSRS được bảo toàn 100%**, chống cày cuốc ảo.
+  - **🎯 Ôn Tập Chuẩn (Ranked Assessment)**: Áp dụng cho các từ đến hạn (`isDue`) và từ mới (`Level 0`). Trả lời Đúng ➔ Cây lớn lên (Level Up) & tính FSRS; Trả lời Sai ➔ Hạ cấp (giảm 1 cấp).
+  - **🎮 Luyện Tập Tự Do (Casual Practice)**: Áp dụng khi người học tự chọn ôn luyện theo Bộ sưu tập / Tag tùy chọn khi chưa đến hạn. Thoải mái nhận XP và làm Daily Quests nhưng **Cấp độ Cây và lịch FSRS được bảo toàn 100%**, chống cày cuốc ảo.
+
 - **Dashboard cá nhân & Khu vườn từ vựng (Vocabulary Garden)**:
-  - Widget thống kê số lượng Hạt mầm, Nảy mầm, Nhánh non, Cây xanh, Nở hoa, Đại thụ.
-  - Thống kê số thẻ đến hạn hôm nay, chuỗi streak, biểu đồ forecast 7 ngày và biểu đồ phân bổ CEFR (A1-C2).
+  - Widget thống kê trực quan số lượng cây theo từng cấp độ (Hạt mầm ➔ Cổ thụ).
+  - Thống kê số thẻ đến hạn hôm nay, chuỗi streak bất biến, biểu đồ forecast 7 ngày và biểu đồ phân bổ CEFR (A1-C2).
 
 **1.x. Thêm từ vựng mới — 2 chế độ hoàn chỉnh**:
 - **Chế độ 1 — Nhập thủ công**:
@@ -535,17 +561,20 @@ create table public.system_settings (
 
 | Endpoint / Hàm | Phương thức | Mô tả chức năng |
 |---|---|---|
-| `/api/cards` | GET / POST | Lấy danh sách thẻ / Tạo thẻ mới (kèm CEFR level, tags) |
+| `/api/cards` | GET / POST | Lấy danh sách thẻ / Tạo thẻ mới (kèm CEFR level, tags, card_type, part_of_speech) |
 | `/api/cards/:id` | PUT / DELETE | Cập nhật thông tin thẻ / Xóa thẻ |
+| `/api/cards/:id/mark-known` | POST | **⚡ "Tôi đã thuộc từ này" (Quick Master)**: Nhảy thẳng lên Level 2 Cây con (stability 14 ngày, review_count 5) |
 | `/api/review/due` | GET | Lấy danh sách thẻ FSRS đến hạn ôn hôm nay |
-| `/api/review/submit` | POST | Gửi kết quả review, cập nhật FSRS state & ghi log |
+| `/api/review/complete` | POST | Hoàn thành lướt Flashcard: cộng nhẹ preview XP (`is_preview_only: true`, không tính streak) |
+| `/api/review/submit` | POST | Gửi kết quả câu hỏi kiểm tra: cập nhật FSRS state (`due_at`, `stability`), thăng/hạ cấp Cây & ghi log |
+| `/api/practice/complete` | POST | Hoàn thành bài thi kiểm tra: cộng XP kiểm tra, cập nhật nhiệm vụ ngày & **ghi nhận Streak 🔥** |
 | `/api/review/custom-session` | GET | Lấy danh sách thẻ ôn tập theo Tag hoặc Collection |
 | `/api/collections` | GET / POST | Lấy danh sách collections (cá nhân & public) / Tạo mới |
 | `/api/collections/:id` | GET / PUT / DELETE | Xem chi tiết collection kèm preview thẻ / Chỉnh sửa / Xóa |
 | `/api/collections/:id/fork` | POST | **1-Click Clone toàn bộ thẻ trong collection vào kho FSRS cá nhân** |
 | `/api/collections/:id/cards` | POST / DELETE | Thêm / xóa thẻ khỏi bộ sưu tập |
 | `/api/import/extract` | POST | Trích xuất từ mới từ đoạn văn bản |
-| `/api/ai/analyze-word` | POST | AI Word Analyzer: phân tích CEFR, nghĩa, IPA, collocations, tags, mnemonic |
+| `/api/ai/analyze-word` | POST | AI Word Analyzer: phân tích CEFR, nghĩa, IPA, collocations, tags, mnemonic, card_type |
 | `/api/ai/mnemonic` | POST | Sinh mẹo nhớ sinh động cho từ |
 | `/api/ai/grade-sentence` | POST | Chấm điểm câu tiếng Anh người dùng tự viết |
 | `/api/telegram/webhook` | POST | Webhook tiếp nhận tin nhắn từ Telegram bot |
@@ -561,7 +590,7 @@ create table public.system_settings (
 | **M1** | Core SRS (FSRS) + Auth Google + CRUD Card + Phân loại CEFR Level (A1-C2) + Tags cá nhân + **Hệ Thống Cấp Độ Cây Sinh Trưởng (Level 0-5 Lottie Animation)** |
 | **M2** | Collections & Chia sẻ cộng đồng (Tạo bộ từ, Public lên Thư viện, 1-Click Fork/Clone) + Custom Study Session theo Tag |
 | **M3** | Smart Contextual Reader (Đọc bài tương tác, bôi đen lưu từ kèm câu gốc ngữ cảnh) + Batch Import |
-| **M4** | **Quy trình Ôn tập 2 Giai Đoạn**: Flashcard 3D Preview (Khởi động) + **Active Recall Quiz** (Trắc nghiệm quyết định FSRS & Thăng/Hạ cấp độ Cây) + Phân định Ranked vs Casual |
+| **M4** | **Phân Tách Toàn Diện Review vs Practice**: Flashcard 3D Preview (`/review`) + Quick Master ⚡ + **Active Recall Assessment (`/practice`)** (Trắc nghiệm, Điền khuyết, Đặt câu chấm điểm FSRS, Streak & Thăng/Hạ cấp độ Cây) + Fast-Track Due Cards |
 | **M5** | AI học sâu: Dual-Coding ảnh Pexels + AI Grader chấm câu viết & gợi ý bản xứ |
 | **M6** | Tích hợp Telegram: Liên kết tài khoản + Thuật toán Giờ vàng + Nhắc nhở tự động qua `pg_cron` |
 | **M7** | Admin Dashboard hoàn chỉnh + Cấu hình AI Provider động linh hoạt |

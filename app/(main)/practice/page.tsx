@@ -73,13 +73,16 @@ function PracticeContent() {
       const pickedCards = cards.filter((c) => targetIds.includes(c.id));
       if (pickedCards.length > 0) {
         const questions = createRandomMixedQuestions(pickedCards);
-        handleStart({
-          sourceType: 'all',
-          collectionTitle: 'Từ vựng vừa xem Flashcard',
-          selectedCards: pickedCards,
-          questions,
-          questionCount: questions.length,
-        });
+        const timer = setTimeout(() => {
+          handleStart({
+            sourceType: 'all',
+            collectionTitle: 'Từ vựng vừa xem Flashcard',
+            selectedCards: pickedCards,
+            questions,
+            questionCount: questions.length,
+          });
+        }, 0);
+        return () => clearTimeout(timer);
       }
     } else if (modeParam === 'due') {
       autoStartProcessed.current = true;
@@ -93,13 +96,16 @@ function PracticeContent() {
       if (dueCards.length > 0) {
         const pickedCards = dueCards.slice(0, Math.min(20, dueCards.length));
         const questions = createRandomMixedQuestions(pickedCards);
-        handleStart({
-          sourceType: 'all',
-          collectionTitle: 'Từ vựng đến hạn FSRS',
-          selectedCards: pickedCards,
-          questions,
-          questionCount: questions.length,
-        });
+        const timer = setTimeout(() => {
+          handleStart({
+            sourceType: 'all',
+            collectionTitle: 'Từ vựng đến hạn FSRS',
+            selectedCards: pickedCards,
+            questions,
+            questionCount: questions.length,
+          });
+        }, 0);
+        return () => clearTimeout(timer);
       }
     }
   }, [cardIdsParam, modeParam, cards, isLoading, status]);

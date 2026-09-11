@@ -102,7 +102,7 @@ export function MixedPracticeRunner({
   const [totalXp, setTotalXp] = useState(0);
   const [levelUps, setLevelUps] = useState<LevelUpItem[]>([]);
 
-  const questionStartTime = useRef<number>(Date.now());
+  const questionStartTime = useRef<number>(0);
 
   useEffect(() => {
     questionStartTime.current = Date.now();
@@ -119,7 +119,9 @@ export function MixedPracticeRunner({
     card: CardWithProgress,
     overrideRating?: ReviewRating
   ) => {
-    const responseMs = Math.max(500, Date.now() - questionStartTime.current);
+    const now = Date.now();
+    const responseMs =
+      questionStartTime.current > 0 ? Math.max(500, now - questionStartTime.current) : 1000;
 
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
@@ -157,7 +159,7 @@ export function MixedPracticeRunner({
             created_at: '',
             updated_at: '',
           }),
-          state: (submitRes.state || 'learning') as any,
+          state: submitRes.state || 'learning',
           due_at: submitRes.due_at,
           review_count: (card.user_card?.review_count || 0) + 1,
           lapse_count:

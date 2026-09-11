@@ -32,8 +32,9 @@
    [Lib / Core / Utils] (Axios config, Supabase config, QueryClient, Pure Helpers)
    ```
 
-4. **Type Safety Tuyệt Đối**:
-   - 100% sử dụng TypeScript, không dùng `any`.
+4. **Type Safety Tuyệt Đối — Cấm Tuyệt Đối `any`, Luôn Dùng `unknown`**:
+   - 100% sử dụng TypeScript, **nghiêm cấm sử dụng `any` dưới mọi hình thức** (`: any`, `as any`, `<any>`).
+   - Bất cứ khi nào gặp dữ liệu chưa rõ kiểu (dynamic payload, generic, catch block, response từ bên ngoài), **BẮT BUỘC LUÔN LUÔN dùng `unknown` thay vì `any`**, sau đó thu hẹp kiểu (type narrowing, type guards, `typeof`, `instanceof`) hoặc Zod schema parse an toàn.
    - Dùng `Zod` để validate runtime data (Form inputs, API responses, Server Actions payload) và infer type thông qua `z.infer<typeof schema>`.
 
 5. **Phân Định Trách Nhiệm Dữ Liệu**:
@@ -488,7 +489,7 @@ Trước khi commit code hoặc kết thúc một công việc, Agent/Developer 
 - [ ] **Component gọn gàng**: Không chứa logic gọi API hay tính toán phức tạp trực tiếp bên trong JSX; đã tách ra Custom Hook.
 - [ ] **API đồng bộ**: Gọi API thông qua `apiClient` (`services/`), không gọi axios tùy tiện trong component.
 - [ ] **Data Fetching chuẩn**: Dùng TanStack Query kết hợp `QUERY_KEYS` tập trung, có cấu hình invalidate rõ ràng khi mutate.
-- [ ] **Type Safety đầy đủ**: Không còn kiểu `any`, các response và props đều có type/interface tường minh.
+- [ ] **Type Safety tuyệt đối**: Tuyệt đối không dùng kiểu `any` dưới mọi hình thức (luôn luôn thay thế bằng `unknown` hoặc kiểu dữ liệu cụ thể), các response và props đều có type/interface tường minh.
 - [ ] **Tắt Spellcheck**: Toàn bộ `input`, `textarea` và form fields đều có `spellCheck={false}`, `autoCorrect="off"`, `autoCapitalize="off"`.
 - [ ] **UI nhất quán**: Màu sắc dùng đúng token Design System "Deep Focus", bo góc và font chữ tuân thủ thiết kế.
 - [ ] **Layout phân định đúng**: Server Component cho nội dung tĩnh/fetch ban đầu, `'use client'` chỉ đặt ở lá cây tương tác.

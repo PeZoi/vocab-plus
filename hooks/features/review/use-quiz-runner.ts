@@ -61,13 +61,6 @@ export function useQuizRunner({
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isRetestMode, setIsRetestMode] = useState(false);
-
-  // Thống kê kết quả
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
-  const [xpEarned, setXpEarned] = useState(0);
-  const [levelUps, setLevelUps] = useState<LevelChangeResult[]>([]);
-  const [levelDowns, setLevelDowns] = useState<LevelChangeResult[]>([]);
   const [retestQueue, setRetestQueue] = useState<QuizQuestionItem[]>([]);
 
   // Ref lưu giữ chính xác thống kê, tránh stale closure khi setTimeout gọi
@@ -169,8 +162,6 @@ export function useQuizRunner({
         const earned = isRetestMode ? 2 : 10;
         statsRef.current.correctCount += 1;
         statsRef.current.xpEarned += earned;
-        setCorrectCount((prev) => prev + 1);
-        setXpEarned((prev) => prev + earned);
 
         // Nếu là phiên Ranked và chưa phải câu làm lại (re-test):
         if (isRanked && !isRetestMode) {
@@ -198,7 +189,6 @@ export function useQuizRunner({
               direction: 'up',
             };
             statsRef.current.levelUps.push(upResult);
-            setLevelUps((prev) => [...prev, upResult]);
             setLevelUpPopup(upResult);
             setTimeout(() => setLevelUpPopup(null), 2500);
           }
@@ -215,7 +205,6 @@ export function useQuizRunner({
       } else {
         // Sai: Ghi nhận sai
         statsRef.current.wrongCount += 1;
-        setWrongCount((prev) => prev + 1);
 
         if (isRanked && !isRetestMode) {
           const oldLevelInfo = calculateWordLevel(userCard, levelConfig);
@@ -236,7 +225,6 @@ export function useQuizRunner({
               direction: 'down',
             };
             statsRef.current.levelDowns.push(downResult);
-            setLevelDowns((prev) => [...prev, downResult]);
           }
 
           // Gọi API submit FSRS Rating.Again (1) và lưu Promise

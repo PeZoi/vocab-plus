@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { cardKeys, reviewKeys, questKeys, userKeys } from '@/constants/query-keys';
+import { cardKeys, reviewKeys, userKeys } from '@/constants/query-keys';
 import { reviewService } from '@/services/review.service';
 import { useSystemSettingsQuery } from '@/hooks/features/admin/use-system-settings';
 import {
   DEFAULT_REVIEW_XP_RATES,
   type ReviewXpRates,
 } from '@/types/system-settings.types';
-import type { QuizSessionStats, ReviewPhase } from '@/types/review.types';
+import type { ReviewPhase } from '@/types/review.types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -42,7 +42,6 @@ export function useReviewSession(params?: {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSyncingFinal, setIsSyncingFinal] = useState(false);
-  const [quizStats, setQuizStats] = useState<QuizSessionStats | null>(null);
   const [totalXpEarned, setTotalXpEarned] = useState(0);
   const [reviewedCardsCount, setReviewedCardsCount] = useState(0);
   const startTimeRef = useRef<number>(0);
@@ -114,7 +113,6 @@ export function useReviewSession(params?: {
   const restartReview = useCallback(() => {
     setCurrentIndex(0);
     setIsFlipped(false);
-    setQuizStats(null);
     setTotalXpEarned(0);
     setPhase('preview');
   }, []);

@@ -4,14 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
-import { ArrowLeft, BookOpen, GraduationCap, RotateCcw, Sparkles, Trophy } from 'lucide-react';
+import { ArrowLeft, BookOpen, GraduationCap, RotateCcw, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { LottieIcon } from '@/components/common/lottie-icon';
 
 interface ReviewCompletionScreenProps {
   cardsReviewedCount: number;
   cardIds?: string[];
-  isCustomSession: boolean;
+  isCustomSession?: boolean;
   collectionId?: string;
   totalXpEarned?: number;
   onRestartReview?: () => void;
@@ -20,7 +20,6 @@ interface ReviewCompletionScreenProps {
 export function ReviewCompletionScreen({
   cardsReviewedCount,
   cardIds = [],
-  isCustomSession,
   collectionId,
   totalXpEarned = 0,
   onRestartReview,

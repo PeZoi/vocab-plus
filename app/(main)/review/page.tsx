@@ -12,14 +12,13 @@ import { useReviewSession } from '@/hooks/features/review/use-review-session';
 import { cardsService } from '@/services/cards.service';
 import { ArrowLeft, Target, Eye } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import ReviewLoading from './loading';
 
 function ReviewSessionContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const collectionId = searchParams.get('collection_id') || undefined;
   const tag = searchParams.get('tag') || undefined;
@@ -58,7 +57,7 @@ function ReviewSessionContent() {
       await cardsService.markKnown(cardId);
       toast.success('Đã đánh dấu thuộc từ này! Từ được thăng cấp lên Nảy mầm 🌱');
       nextCard();
-    } catch (err) {
+    } catch {
       toast.error('Có lỗi khi đánh dấu thuộc từ');
     }
   };
