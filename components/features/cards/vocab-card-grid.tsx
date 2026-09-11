@@ -6,9 +6,9 @@ import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { CardWithProgress } from '@/types/card.types';
-import { formatDateTime } from '@/utils/datetime';
+import { formatDateTime, formatRemainingTime } from '@/utils/datetime';
 import { formatIPA } from '@/utils/formatters';
-import { AlertTriangle, Calendar, Check, Edit2, FolderPlus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Check, Clock, Edit2, FolderPlus, Trash2 } from 'lucide-react';
 
 interface VocabCardGridProps {
   cards: CardWithProgress[];
@@ -95,7 +95,7 @@ export function VocabCardGrid({
               )}
             >
             {/* Header: Badges, Checkbox & Actions */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 m-0">
               <div className="flex items-center justify-between">
                   {onToggleSelectCard && (
                     <button
@@ -171,7 +171,7 @@ export function VocabCardGrid({
             </div>
 
             {/* Word & IPA */}
-            <div className="space-y-1">
+            <div className="space-y-1 flex-1">
               <div className="flex items-baseline gap-2">
                 <h3 className="text-lg font-bold text-text-primary group-hover:text-brand transition-colors tracking-tight">
                   {card.word}
@@ -190,24 +190,10 @@ export function VocabCardGrid({
                     {card.definition_en}
                   </p>
                 )}
-                <p className={`text-xs ${card.definition_en ? 'text-text-secondary line-clamp-1' : 'text-text-primary/90 font-medium line-clamp-2'} leading-relaxed`}>
+                <p className={`text-xs ${card.definition_en ? 'text-text-secondary line-clamp-2' : 'text-text-primary/90 font-medium line-clamp-2'} leading-relaxed`}>
                   {card.definition}
                 </p>
               </div>
-
-              {/* Example sentence snippet */}
-              {card.example_sentence && (
-                <div className="pt-0.5 space-y-0.5">
-                  <p className="text-xs text-text-secondary italic line-clamp-1">
-                    &ldquo;{card.example_sentence}&rdquo;
-                  </p>
-                  {card.example_translation && (
-                    <p className="text-[11px] text-text-secondary/70 line-clamp-1">
-                      {card.example_translation}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Footer: Tags & FSRS Status */}
@@ -234,16 +220,16 @@ export function VocabCardGrid({
               </div>
 
               {/* Due Date or State */}
-              <div className="flex items-center gap-1 text-[10px] shrink-0 font-medium">
+              <div className="flex items-center gap-1 text-[10px] shrink-0">
                 {userCard ? (
                   isDue ? (
-                    <span className="text-brand font-semibold px-1.5 py-0.5 rounded bg-brand/15 border border-brand/30 flex items-center gap-1">
+                    <span className="text-brand font-semibold px-2 py-0.5 rounded-md bg-brand/15 border border-brand/30 flex items-center gap-1.5 shadow-xs shadow-brand/10">
                       <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                       Cần ôn tập
                     </span>
                   ) : (Number(userCard.stability) || 0) >= 20 ? (
                     <span
-                      className="text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/25 flex items-center gap-1"
+                      className="text-emerald-400 font-semibold px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-1.5 shadow-xs shadow-emerald-950/20"
                       title={`Đã thuộc vững chắc (Độ bền trí nhớ: ${Math.round(Number(userCard.stability) || 0)} ngày)`}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -251,22 +237,19 @@ export function VocabCardGrid({
                     </span>
                   ) : userCard.state !== 'new' && userCard.due_at ? (
                     <span
-                      className="text-sky-400 font-medium px-1.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/25 flex items-center gap-1"
+                      className="text-sky-300 font-semibold px-2 py-0.5 rounded-md bg-gradient-to-r from-sky-500/20 to-blue-600/15 border border-sky-400/35 flex items-center gap-1.5 shadow-xs shadow-sky-950/30"
                       title={`Đang học. Hạn ôn kế tiếp: ${formatDateTime(userCard.due_at)}`}
                     >
-                      <Calendar className="w-2.5 h-2.5" />
-                      Ôn {new Date(userCard.due_at).toLocaleDateString('vi-VN', {
-                        month: 'numeric',
-                        day: 'numeric',
-                      })}
+                      <Clock className="w-3 h-3 text-sky-400 shrink-0" />
+                      <span>{formatRemainingTime(userCard.due_at)}</span>
                     </span>
                   ) : (
-                    <span className="text-text-secondary/70 px-1.5 py-0.5 rounded bg-surface border border-border/60">
+                    <span className="text-text-secondary/70 px-2 py-0.5 rounded-md bg-surface border border-border/60">
                       Chưa học
                     </span>
                   )
                 ) : (
-                  <span className="text-text-secondary/70 px-1.5 py-0.5 rounded bg-surface border border-border/60">
+                  <span className="text-text-secondary/70 px-2 py-0.5 rounded-md bg-surface border border-border/60">
                     Chưa học
                   </span>
                 )}

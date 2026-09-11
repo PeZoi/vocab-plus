@@ -4,6 +4,7 @@ import { CustomStudyModal } from '@/components/features/review/custom-study-moda
 import { Flashcard } from '@/components/features/review/flashcard';
 import { ReviewPreviewControls } from '@/components/features/review/review-preview-controls';
 import { ReviewCompletionScreen } from '@/components/features/review/review-completion-screen';
+import { ReviewWarmupScreen } from '@/components/features/review/review-warmup-screen';
 import { ReviewSyncingScreen } from '@/components/features/review/review-syncing-screen';
 import { ReviewEmptyState } from '@/components/features/review/review-empty-state';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { cardsService } from '@/services/cards.service';
 import { ArrowLeft, Target, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import ReviewLoading from './loading';
@@ -31,6 +32,7 @@ function ReviewSessionContent() {
   const {
     phase,
     dueCards,
+    rawDueCards,
     currentItem,
     currentIndex,
     totalCards,
@@ -42,6 +44,8 @@ function ReviewSessionContent() {
     prevCard,
     finishPreview,
     restartReview,
+    startSession,
+    autoPronounceEnabled,
     isLoading,
     isSyncingFinal,
     totalXpEarned,
@@ -51,6 +55,23 @@ function ReviewSessionContent() {
     cefr_level: cefrLevel,
     card_ids: cardIds,
   });
+
+  // Tự động phát âm khi lướt thẻ nếu bật auto-pronounce
+  useEffect(() => {
+    if (
+      autoPronounceEnabled &&
+      phase === 'preview' &&
+      currentItem?.card.word &&
+      typeof window !== 'undefined' &&
+      'speechSynthesis' in window
+    ) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(currentItem.card.word);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [autoPronounceEnabled, currentItem?.card.word, phase, isFlipped]);
 
   const handleMarkKnown = async (cardId: string) => {
     try {
@@ -64,6 +85,36 @@ function ReviewSessionContent() {
 
   if (isLoading) {
     return <ReviewLoading />;
+  }
+
+  // Không có thẻ nào cần ôn hôm nay
+  const availableCardsCount = rawDueCards.length || totalCards;
+  if (availableCardsCount === 0) {
+    return (
+      <>
+        <ReviewEmptyState
+          isCustomSession={isCustomSession}
+          onOpenCustomStudy={() => setIsCustomStudyOpen(true)}
+        />
+        <CustomStudyModal
+          isOpen={isCustomStudyOpen}
+          onClose={() => setIsCustomStudyOpen(false)}
+        />
+      </>
+    );
+  }
+
+  // Màn hình chờ / cấu hình trước khi học Flashcard
+  if (phase === 'warmup') {
+    return (
+      <ReviewWarmupScreen
+        totalCards={availableCardsCount}
+        dueCards={rawDueCards.length > 0 ? rawDueCards : dueCards}
+        isCustomSession={isCustomSession}
+        expectedXp={availableCardsCount * 2}
+        onStartSession={startSession}
+      />
+    );
   }
 
   // Trạng thái hệ thống đang tính toán kết quả đồng bộ dữ liệu
@@ -82,22 +133,6 @@ function ReviewSessionContent() {
         totalXpEarned={totalXpEarned}
         onRestartReview={restartReview}
       />
-    );
-  }
-
-  // Không có thẻ nào cần ôn hôm nay
-  if (!currentItem || totalCards === 0) {
-    return (
-      <>
-        <ReviewEmptyState
-          isCustomSession={isCustomSession}
-          onOpenCustomStudy={() => setIsCustomStudyOpen(true)}
-        />
-        <CustomStudyModal
-          isOpen={isCustomStudyOpen}
-          onClose={() => setIsCustomStudyOpen(false)}
-        />
-      </>
     );
   }
 

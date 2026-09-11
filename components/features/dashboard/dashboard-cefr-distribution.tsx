@@ -18,7 +18,7 @@ export function DashboardCefrDistribution({
   const maxLvl = Math.max(...Object.values(cefrDistribution), 1);
 
   return (
-    <div className="p-5 rounded-xl bg-surface/80 border border-border/70 space-y-3 flex flex-col justify-between">
+    <div className="p-5 rounded-xl bg-surface/80 border border-border/70 flex flex-col justify-start gap-3.5 h-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart2 className="w-4 h-4 text-brand" />
@@ -29,7 +29,7 @@ export function DashboardCefrDistribution({
         <span className="text-[11px] text-text-secondary">Chuẩn quốc tế</span>
       </div>
 
-      <div className="space-y-2 py-1">
+      <div className="space-y-2.5 py-1">
         {CEFR_LEVELS_LIST.map((lvl) => {
           const count = cefrDistribution[lvl] || 0;
           const pct = totalCards > 0 ? Math.round((count / totalCards) * 100) : 0;
@@ -60,6 +60,11 @@ export function DashboardCefrDistribution({
             </div>
           );
         })}
+      </div>
+
+      <div className="pt-2.5 border-t border-border/40 flex items-center justify-between text-[11px] text-text-secondary mt-auto">
+        <span>Tổng số từ đã lưu</span>
+        <span className="font-mono font-semibold text-text-primary">{totalCards} từ</span>
       </div>
     </div>
   );

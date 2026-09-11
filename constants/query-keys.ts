@@ -53,6 +53,8 @@ export const imageKeys = {
 export const adminKeys = {
   all: ['admin'] as const,
   settings: () => [...adminKeys.all, 'settings'] as const,
+  users: (params?: Record<string, unknown>) => [...adminKeys.all, 'users', params] as const,
+  userDetail: (id: string) => [...adminKeys.all, 'users', 'detail', id] as const,
 };
 
 export const questKeys = {

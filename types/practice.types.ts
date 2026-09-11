@@ -1,8 +1,22 @@
-import type { Card } from './card.types';
+import type { Card, CardWithProgress } from './card.types';
+import type { WordLevelInfo } from '@/utils/fsrs-level';
 
 export type PracticeExerciseType = 'multiple_choice' | 'cloze' | 'sentence_writing';
 export type PracticeSourceType = 'all' | 'collection';
 export type PracticeMode = 'mixed' | PracticeExerciseType;
+
+export interface LevelUpItem {
+  card: CardWithProgress;
+  oldLevel: WordLevelInfo;
+  newLevel: WordLevelInfo;
+}
+
+export interface WateredCardItem {
+  card: CardWithProgress;
+  oldLevel: WordLevelInfo;
+  newLevel: WordLevelInfo;
+  isLevelUp: boolean;
+}
 
 export interface PracticeQuestionItem {
   id: string;
@@ -83,5 +97,7 @@ export interface SubmitPracticeSessionDto {
 export interface SubmitPracticeSessionResponse {
   success: boolean;
   actual_xp_awarded: number;
+  streak_activated?: boolean;
+  streak_count?: number;
 }
 

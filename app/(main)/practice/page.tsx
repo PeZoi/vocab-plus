@@ -1,27 +1,33 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { EmptyState } from '@/components/common/empty-state';
-import {
-  MixedPracticeRunner,
-  type LevelUpItem,
-} from '@/components/features/practice/mixed-practice-runner';
+import { MixedPracticeRunner } from '@/components/features/practice/mixed-practice-runner';
+import { PracticeProcessing } from '@/components/features/practice/practice-processing';
 import { PracticeSetup } from '@/components/features/practice/practice-setup';
 import { PracticeSummary } from '@/components/features/practice/practice-summary';
+import { StreakActivatedPopup } from '@/components/features/practice/streak-activated-popup';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROUTES } from '@/constants/routes';
 import { userKeys, reviewKeys, questKeys, cardKeys } from '@/constants/query-keys';
 import { useCardsQuery } from '@/hooks/features/cards/use-cards-query';
+import { cardsService } from '@/services/cards.service';
 import { practiceService } from '@/services/practice.service';
 import type { CardWithProgress } from '@/types/card.types';
-import type { PracticeQuestionItem, PracticeSourceType } from '@/types/practice.types';
+import type {
+  LevelUpItem,
+  PracticeQuestionItem,
+  PracticeSourceType,
+  WateredCardItem,
+} from '@/types/practice.types';
 import { createRandomMixedQuestions } from '@/utils/practice-generator';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, GraduationCap, Loader2 } from 'lucide-react';
 
-type PracticeStatus = 'setup' | 'practicing' | 'summary';
+type PracticeStatus = 'setup' | 'practicing' | 'processing' | 'summary';
 
 interface ActiveSessionConfig {
   sourceType: PracticeSourceType;
@@ -37,6 +43,7 @@ interface SessionResultStats {
   wrongCards: CardWithProgress[];
   xpEarned: number;
   levelUps?: LevelUpItem[];
+  wateredCards?: WateredCardItem[];
 }
 
 function PracticeContent() {
@@ -49,6 +56,10 @@ function PracticeContent() {
   const [status, setStatus] = useState<PracticeStatus>('setup');
   const [sessionConfig, setSessionConfig] = useState<ActiveSessionConfig | null>(null);
   const [sessionResult, setSessionResult] = useState<SessionResultStats | null>(null);
+  const [streakPopupState, setStreakPopupState] = useState<{
+    isOpen: boolean;
+    count: number;
+  }>({ isOpen: false, count: 1 });
 
   const autoStartProcessed = useRef(false);
 
@@ -57,34 +68,58 @@ function PracticeContent() {
     setStatus('practicing');
   };
 
-  // Tự động kích hoạt bài kiểm tra nếu có query params (ví dụ chuyển từ màn Flashcard Review hoặc fast-track mode)
+  // Tự động kích hoạt bài kiểm tra nếu có query params (chuyển từ Flashcard Review hoặc fast-track FSRS)
   useEffect(() => {
-    if (isLoading || cards.length === 0 || autoStartProcessed.current || status !== 'setup') {
+    if (autoStartProcessed.current || status !== 'setup') {
       return;
     }
 
     if (cardIdsParam) {
-      autoStartProcessed.current = true;
       const targetIds = cardIdsParam
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
 
+      if (targetIds.length === 0) return;
+
+      // Kiểm tra xem các thẻ đã có trong cache chưa
       const pickedCards = cards.filter((c) => targetIds.includes(c.id));
-      if (pickedCards.length > 0) {
+
+      if (pickedCards.length === targetIds.length && pickedCards.length > 0) {
+        autoStartProcessed.current = true;
         const questions = createRandomMixedQuestions(pickedCards);
-        const timer = setTimeout(() => {
-          handleStart({
-            sourceType: 'all',
-            collectionTitle: 'Từ vựng vừa xem Flashcard',
-            selectedCards: pickedCards,
-            questions,
-            questionCount: questions.length,
-          });
-        }, 0);
-        return () => clearTimeout(timer);
+        handleStart({
+          sourceType: 'all',
+          collectionTitle: 'Từ vựng vừa xem Flashcard',
+          selectedCards: pickedCards,
+          questions,
+          questionCount: questions.length,
+        });
+      } else if (!isLoading) {
+        // Nếu trong cache TanStack Query chưa kịp có thẻ (ví dụ thẻ vừa tạo mới), fetch trực tiếp
+        autoStartProcessed.current = true;
+        (async () => {
+          try {
+            const fetched = await Promise.all(
+              targetIds.map((id) => cardsService.getCardById(id).catch(() => null))
+            );
+            const validFetched = fetched.filter((c): c is CardWithProgress => c !== null);
+            if (validFetched.length > 0) {
+              const questions = createRandomMixedQuestions(validFetched);
+              handleStart({
+                sourceType: 'all',
+                collectionTitle: 'Từ vựng vừa xem Flashcard',
+                selectedCards: validFetched,
+                questions,
+                questionCount: questions.length,
+              });
+            }
+          } catch (err) {
+            console.error('Lỗi nạp danh sách từ kiểm tra:', err);
+          }
+        })();
       }
-    } else if (modeParam === 'due') {
+    } else if (modeParam === 'due' && !isLoading && cards.length > 0) {
       autoStartProcessed.current = true;
       const now = Date.now();
       const dueCards = cards.filter((c) => {
@@ -96,21 +131,21 @@ function PracticeContent() {
       if (dueCards.length > 0) {
         const pickedCards = dueCards.slice(0, Math.min(20, dueCards.length));
         const questions = createRandomMixedQuestions(pickedCards);
-        const timer = setTimeout(() => {
-          handleStart({
-            sourceType: 'all',
-            collectionTitle: 'Từ vựng đến hạn FSRS',
-            selectedCards: pickedCards,
-            questions,
-            questionCount: questions.length,
-          });
-        }, 0);
-        return () => clearTimeout(timer);
+        handleStart({
+          sourceType: 'all',
+          collectionTitle: 'Từ vựng đến hạn FSRS',
+          selectedCards: pickedCards,
+          questions,
+          questionCount: questions.length,
+        });
       }
     }
   }, [cardIdsParam, modeParam, cards, isLoading, status]);
 
   const handleComplete = async (stats: SessionResultStats) => {
+    setStatus('processing');
+    const startTime = Date.now();
+
     try {
       // Gọi API tổng kết và cập nhật XP một lần duy nhất vào database (đồng thời ghi nhận Streak & Quest progress)
       const res = await practiceService.completeSession({
@@ -129,12 +164,30 @@ function PracticeContent() {
         queryClient.invalidateQueries({ queryKey: questKeys.daily() }),
       ]);
 
+      // Đảm bảo thời gian hiển thị chuyển tiếp tối thiểu 1.2s để animation mượt mà
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 1200) {
+        await new Promise((resolve) => setTimeout(resolve, 1200 - elapsed));
+      }
+
       setSessionResult({
         ...stats,
         xpEarned: res.actual_xp_awarded ?? stats.xpEarned,
       });
+
+      // Nếu bài kiểm tra kích hoạt chuỗi streak cho ngày hôm nay, bật popup chúc mừng siêu ngầu
+      if (res.streak_activated) {
+        setStreakPopupState({
+          isOpen: true,
+          count: res.streak_count || 1,
+        });
+      }
     } catch (err) {
       console.error('Lỗi cập nhật XP kiểm tra:', err);
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 1000) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 - elapsed));
+      }
       setSessionResult(stats);
     }
 
@@ -145,17 +198,29 @@ function PracticeContent() {
     setStatus('setup');
     setSessionConfig(null);
     setSessionResult(null);
+    setStreakPopupState({ isOpen: false, count: 1 });
   };
 
-  if (isLoading) {
+  const isAutoStarting = !!(cardIdsParam || modeParam) && status === 'setup';
+
+  if (isAutoStarting || (isLoading && !isError)) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6 py-6">
-        <Skeleton className="h-44 w-full rounded-2xl" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Skeleton className="h-28 rounded-xl" />
-          <Skeleton className="h-28 rounded-xl" />
+      <div className="max-w-md mx-auto py-24 text-center space-y-4 animate-fadeIn">
+        <div className="w-16 h-16 rounded-2xl bg-brand/15 border border-brand/30 flex items-center justify-center mx-auto text-brand shadow-lg shadow-brand/10">
+          <GraduationCap className="w-8 h-8 animate-pulse" />
         </div>
-        <Skeleton className="h-48 w-full rounded-xl" />
+        <div className="space-y-1.5">
+          <h2 className="text-xl font-bold font-heading text-text-primary">
+            Đang nạp bài kiểm tra tổng hợp...
+          </h2>
+          <p className="text-xs text-text-secondary max-w-xs mx-auto">
+            Hệ thống đang xáo trộn câu hỏi và chuẩn bị phản xạ cho bạn.
+          </p>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-xs text-brand font-medium pt-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Vào làm bài ngay...</span>
+        </div>
       </div>
     );
   }
@@ -203,17 +268,29 @@ function PracticeContent() {
         />
       )}
 
+      {status === 'processing' && (
+        <PracticeProcessing />
+      )}
+
       {status === 'summary' && sessionConfig && sessionResult && (
-        <PracticeSummary
-          mode="mixed"
-          collectionTitle={sessionConfig.collectionTitle}
-          totalQuestions={sessionResult.total}
-          correctCount={sessionResult.correct}
-          wrongCards={sessionResult.wrongCards}
-          xpEarned={sessionResult.xpEarned}
-          levelUps={sessionResult.levelUps}
-          onRestart={handleRestart}
-        />
+        <>
+          <PracticeSummary
+            mode="mixed"
+            collectionTitle={sessionConfig.collectionTitle}
+            totalQuestions={sessionResult.total}
+            correctCount={sessionResult.correct}
+            wrongCards={sessionResult.wrongCards}
+            xpEarned={sessionResult.xpEarned}
+            levelUps={sessionResult.levelUps}
+            wateredCards={sessionResult.wateredCards}
+            onRestart={handleRestart}
+          />
+          <StreakActivatedPopup
+            isOpen={streakPopupState.isOpen}
+            streakCount={streakPopupState.count}
+            onClose={() => setStreakPopupState((prev) => ({ ...prev, isOpen: false }))}
+          />
+        </>
       )}
     </div>
   );

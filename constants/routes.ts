@@ -22,6 +22,7 @@ export const ROUTES = {
   ADMIN: {
     DASHBOARD: '/admin/dashboard',
     USERS: '/admin/users',
+    USER_DETAIL: (id: string) => `/admin/users/${id}`,
     CARDS: '/admin/cards',
     AI_PROVIDERS: '/admin/ai-providers',
     TELEGRAM: '/admin/telegram',

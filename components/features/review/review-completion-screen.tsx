@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { ArrowLeft, BookOpen, GraduationCap, RotateCcw, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
-import { LottieIcon } from '@/components/common/lottie-icon';
 
 interface ReviewCompletionScreenProps {
   cardsReviewedCount: number;
@@ -39,13 +38,6 @@ export function ReviewCompletionScreen({
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="max-w-lg mx-auto text-center py-6 px-3 space-y-6"
     >
-      {/* Celebration Animation */}
-      <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
-        <div className="w-full h-full flex items-center justify-center">
-          <LottieIcon animationKey="sprout" size="xl" loop={true} autoplay={true} />
-        </div>
-      </div>
-
       {/* Heading */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-success">

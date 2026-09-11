@@ -45,7 +45,7 @@ export interface CompleteReviewSessionResponse {
   actual_xp_awarded: number;
 }
 
-export type ReviewPhase = 'preview' | 'quiz' | 'syncing' | 'completed';
+export type ReviewPhase = 'warmup' | 'preview' | 'quiz' | 'syncing' | 'completed';
 
 export type QuizQuestionType = 'en_to_vi' | 'vi_to_en' | 'audio_to_en' | 'cloze';
 

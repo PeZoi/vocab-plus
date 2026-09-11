@@ -1,24 +1,26 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
-import { CEFRBadge } from '@/components/common/cefr-badge';
-import { WordLevelBadge } from '@/components/common/word-level-badge';
-import { Button } from '@/components/ui/button';
-import { ROUTES } from '@/constants/routes';
-import { cn } from '@/lib/utils';
-import type { CardWithProgress } from '@/types/card.types';
-import type { PracticeMode } from '@/types/practice.types';
-import type { LevelUpItem } from './mixed-practice-runner';
+import React, { useEffect } from 'react';
+import Link from 'next/link';
+import { motion } from 'motion/react';
+import { toast } from 'sonner';
 import {
   GraduationCap,
   RotateCcw,
   Sparkles,
-  Trophy
+  Sprout,
+  Trophy,
 } from 'lucide-react';
-import { motion } from 'motion/react';
-import Link from 'next/link';
+import { AudioButton } from '@/components/common/audio-button';
+import { CEFRBadge } from '@/components/common/cefr-badge';
+import { LottieIcon } from '@/components/common/lottie-icon';
+import { Button } from '@/components/ui/button';
+import { ROUTES } from '@/constants/routes';
+import { cn } from '@/lib/utils';
+import type { CardWithProgress } from '@/types/card.types';
+import type { LevelUpItem, PracticeMode, WateredCardItem } from '@/types/practice.types';
 
-interface PracticeSummaryProps {
+export interface PracticeSummaryProps {
   mode: PracticeMode;
   totalQuestions: number;
   correctCount: number;
@@ -26,6 +28,7 @@ interface PracticeSummaryProps {
   xpEarned?: number;
   collectionTitle?: string;
   levelUps?: LevelUpItem[];
+  wateredCards?: WateredCardItem[];
   onRestart: () => void;
 }
 
@@ -37,6 +40,7 @@ export function PracticeSummary({
   xpEarned: passedXp,
   collectionTitle,
   levelUps,
+  wateredCards,
   onRestart,
 }: PracticeSummaryProps) {
   const accuracy = Math.round((correctCount / totalQuestions) * 100) || 0;
@@ -44,6 +48,21 @@ export function PracticeSummary({
     passedXp !== undefined
       ? passedXp
       : correctCount * (mode === 'sentence_writing' ? 20 : mode === 'cloze' ? 15 : 10);
+
+  // Bắn Toast chúc mừng nếu có từ vựng lên level
+  useEffect(() => {
+    if (levelUps && levelUps.length > 0) {
+      if (levelUps.length === 1) {
+        toast.success(
+          `🎉 Chúc mừng! Từ "${levelUps[0].card.word}" đã thăng cấp lên ${levelUps[0].newLevel.name}! 🌱`
+        );
+      } else {
+        toast.success(
+          `🎉 Chúc mừng! Có ${levelUps.length} từ vựng đã thăng cấp Cây Sinh Trưởng! 🌱`
+        );
+      }
+    }
+  }, [levelUps]);
 
   const getModeLabel = (m: PracticeMode) => {
     switch (m) {
@@ -60,116 +79,206 @@ export function PracticeSummary({
     }
   };
 
+  const hasLevelUps = Boolean(levelUps && levelUps.length > 0);
+  const hasWateredCards = Boolean(wateredCards && wateredCards.length > 0);
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Celebration Header Card */}
+      {/* 1. Hero Celebration Card */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="rounded-2xl p-6 sm:p-8 bg-gradient-to-b from-surface via-surface to-base border border-border/80 shadow-lg text-center relative overflow-hidden space-y-5"
+        className="rounded-3xl p-6 sm:p-8 bg-gradient-to-b from-surface via-surface to-base border border-border/80 shadow-xl text-center relative overflow-hidden space-y-6"
       >
+        {/* Ambient Top Glow & Banner Line */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand via-purple-500 to-emerald-400" />
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-48 bg-brand/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-52 h-52 bg-brand/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-brand/15 border border-brand/30 flex items-center justify-center text-brand shadow-lg shadow-brand/20">
-          <Trophy className="w-8 h-8" />
+        {/* Trophy icon */}
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-brand/25 via-brand/10 to-transparent border border-brand/40 flex items-center justify-center text-brand shadow-lg shadow-brand/20">
+          <Trophy className="w-8 h-8 text-brand" />
         </div>
 
-        <div className="space-y-1.5">
-          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-brand/15 text-brand border border-brand/30">
+        {/* Title & Subtitle */}
+        <div className="space-y-2">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-brand/15 text-brand border border-brand/30 inline-block">
             {getModeLabel(mode)}
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight">
-            Hoàn Thành Bài Luyện Tập!
+          <h2 className="text-2xl sm:text-3xl font-black text-text-primary tracking-tight">
+            Hoàn Thành Bài Kiểm Tra!
           </h2>
-          <p className="text-xs sm:text-sm text-text-secondary max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-text-secondary max-w-md mx-auto leading-relaxed">
             {accuracy >= 80
-              ? 'Phong độ xuất sắc! Bạn đã ghi nhớ rất tốt các từ vựng này.'
+              ? 'Phong độ xuất sắc! Bạn đã phản xạ và ghi nhớ rất tốt các từ vựng này.'
               : accuracy >= 50
-              ? 'Khá tốt! Hãy ôn lại các từ chưa nhớ để củng cố thêm trí nhớ dài hạn.'
+              ? 'Khá tốt! Hãy ôn lại các từ chưa nhớ để củng cố thêm phản xạ lâu dài.'
               : 'Đừng nản lòng! Luyện tập đều đặn sẽ giúp phản xạ của bạn tăng lên nhanh chóng.'}
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border/60">
-          <div className="p-3 rounded-xl bg-base/60 border border-border/70 text-center">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary block mb-1">
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-4 pt-3 border-t border-border/60">
+          {/* Accuracy */}
+          <div className="p-3.5 rounded-2xl bg-base/70 border border-border/70 text-center">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block mb-1">
               Độ chính xác
             </span>
             <span
               className={cn(
-                'text-xl sm:text-2xl font-black',
-                accuracy >= 80 ? 'text-success' : accuracy >= 50 ? 'text-amber-400' : 'text-danger'
+                'text-xl sm:text-3xl font-black tracking-tight',
+                accuracy >= 80
+                  ? 'text-emerald-400'
+                  : accuracy >= 50
+                  ? 'text-amber-400'
+                  : 'text-rose-400'
               )}
             >
               {accuracy}%
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-base/60 border border-border/70 text-center">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary block mb-1">
+          {/* Correct count */}
+          <div className="p-3.5 rounded-2xl bg-base/70 border border-border/70 text-center">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary block mb-1">
               Số câu đúng
             </span>
-            <span className="text-xl sm:text-2xl font-black text-text-primary">
+            <span className="text-xl sm:text-3xl font-black text-text-primary tracking-tight">
               {correctCount}
-              <span className="text-xs text-text-secondary font-normal">/{totalQuestions}</span>
+              <span className="text-xs sm:text-sm text-text-secondary font-normal">
+                /{totalQuestions}
+              </span>
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-base/60 border border-border/70 text-center">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-brand block mb-1">
+          {/* XP earned */}
+          <div className="p-3.5 rounded-2xl bg-base/70 border border-border/70 text-center">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-brand block mb-1">
               Điểm thưởng XP
             </span>
-            <span className="text-xl sm:text-2xl font-black text-brand flex items-center justify-center gap-1">
-              <Sparkles className="w-4 h-4 text-amber-300" />
+            <span className="text-xl sm:text-3xl font-black text-brand flex items-center justify-center gap-1 tracking-tight">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
               +{xpEarned}
             </span>
           </div>
         </div>
       </motion.div>
 
-      {/* Cây Sinh Trưởng Thăng Cấp (Level Ups) */}
-      {levelUps && levelUps.length > 0 && (
+      {/* 2. PHẦN TƯỚI NƯỚC (CHỈ HIỂN THỊ KHI CÓ TỪ VỰNG CẦN ÔN TẬP ĐÃ ĐƯỢC TƯỚI NƯỚC) */}
+      {hasWateredCards && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-emerald-500/10 via-surface to-surface border border-emerald-500/30 shadow-lg shadow-emerald-500/5 space-y-4"
+          className="rounded-3xl p-5 sm:p-6 bg-surface/90 border border-emerald-500/30 shadow-lg shadow-emerald-500/5 space-y-4"
         >
-          <div className="flex items-center justify-between">
+          {/* Section Header */}
+          <div className="flex items-center justify-between flex-wrap gap-2 border-b border-border/50 pb-3">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🌱</span>
-              <h3 className="text-sm sm:text-base font-extrabold text-emerald-400 tracking-tight">
-                Cây Sinh Trưởng Thăng Cấp! ({levelUps.length} từ vựng)
-              </h3>
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <Sprout className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-extrabold text-emerald-400 tracking-tight flex items-center gap-1.5">
+                  <span>Khu Vườn Vừa Được Tưới Nước! 💧</span>
+                  <span className="text-xs text-emerald-300/80 font-normal">
+                    ({wateredCards?.length} từ)
+                  </span>
+                </h3>
+              </div>
             </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              Active Recall FSRS
-            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {levelUps.map(({ card, oldLevel, newLevel }) => (
+          {/* Banner Thông Báo Thăng Cấp (nếu có từ vựng lên level) */}
+          {hasLevelUps && (
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-transparent border border-emerald-500/40 flex items-center gap-2.5">
+              <span className="text-xl">🎉</span>
+              <div className="text-xs">
+                <span className="font-extrabold text-emerald-300 block">
+                  Cây Sinh Trưởng Thăng Cấp! ({levelUps?.length} từ vựng)
+                </span>
+                <span className="text-text-secondary text-[11px]">
+                  Các từ vựng đã tích lũy đủ độ bền và lần làm đúng để tiến hóa lên cấp độ mới.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Danh sách từ vựng được tưới nước: cuộn ngang (scroll ngang) mượt mà, icon size md */}
+          <div className="flex items-stretch gap-3 overflow-x-auto custom-scrollbar pb-2.5 pt-1 px-1 -mx-1 snap-x snap-mandatory">
+            {wateredCards?.map(({ card, oldLevel, newLevel, isLevelUp }) => (
               <div
                 key={card.id}
-                className="p-3 rounded-xl bg-base/70 border border-emerald-500/20 hover:border-emerald-500/40 transition-colors flex items-center justify-between gap-3"
+                className={cn(
+                  'flex flex-col items-center justify-between p-3.5 rounded-2xl bg-base/70 border transition-all text-center gap-2 w-[115px] sm:w-[125px] shrink-0 snap-start select-none group',
+                  isLevelUp
+                    ? 'border-emerald-500/50 bg-emerald-500/10 shadow-xs shadow-emerald-500/15'
+                    : 'border-border/70 hover:border-border'
+                )}
               >
-                <div className="min-w-0 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-text-primary truncate">
-                      {card.word}
-                    </span>
-                    {card.cefr_level && <CEFRBadge level={card.cefr_level} size="sm" />}
-                  </div>
-                  <p className="text-xs text-text-secondary truncate">{card.definition}</p>
-                </div>
+                {/* Icon hạt mầm / cây sinh trưởng size md */}
+                <LottieIcon
+                  animationKey={newLevel.lottieKey}
+                  size="md"
+                  loop
+                  autoplay
+                />
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <WordLevelBadge level={oldLevel.level} mode="minimal" />
-                  <span className="text-text-secondary text-xs">→</span>
-                  <WordLevelBadge level={newLevel.level} mode="compact" />
+                {/* Tên từ vựng */}
+                <span
+                  className="text-xs sm:text-sm font-bold text-text-primary truncate max-w-[110px]"
+                  title={card.word}
+                >
+                  {card.word}
+                </span>
+
+                {/* Cấp độ */}
+                {isLevelUp ? (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[10px] font-black text-emerald-300 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40">
+                      Lv.{oldLevel.level} → Lv.{newLevel.level}
+                    </span>
+                    <span className="text-[10px] font-medium text-emerald-400">
+                      {newLevel.name}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[11px] font-mono font-bold text-text-secondary">
+                      Lv.{newLevel.level}
+                    </span>
+                    <span className="text-[10px] text-text-secondary/70 font-medium">
+                      {newLevel.name}
+                    </span>
+                  </div>
+                )}
+
+                {/* Thanh Progress mini & số lần đúng nữa sẽ lên cấp */}
+                <div className="w-full pt-1.5 border-t border-border/50 flex flex-col items-center gap-1">
+                  <div className="w-full h-1 bg-surface rounded-full overflow-hidden border border-border/60">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all duration-300',
+                        isLevelUp
+                          ? 'bg-emerald-400'
+                          : newLevel.progressPercent >= 50
+                          ? 'bg-amber-400'
+                          : 'bg-brand'
+                      )}
+                      style={{
+                        width: isLevelUp
+                          ? '100%'
+                          : `${Math.max(10, newLevel.progressPercent)}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-[9px] text-text-secondary/90 font-medium leading-none">
+                    {newLevel.isMaxLevel
+                      ? 'Tối đa ⭐'
+                      : isLevelUp
+                      ? 'Lên cấp! 🎉'
+                      : `Còn ${Math.max(1, newLevel.nextTargetCount - newLevel.currentCount)} lần đúng`}
+                  </span>
                 </div>
               </div>
             ))}
@@ -177,9 +286,9 @@ export function PracticeSummary({
         </motion.div>
       )}
 
-      {/* Words Needing Review (Wrong Cards) */}
+      {/* 3. Từ vựng cần ôn lại (Wrong Cards) */}
       {wrongCards.length > 0 && (
-        <div className="rounded-2xl p-5 sm:p-6 bg-surface/80 border border-border/80 shadow-xs space-y-3">
+        <div className="rounded-3xl p-5 sm:p-6 bg-surface/80 border border-border/80 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
               <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
@@ -187,11 +296,11 @@ export function PracticeSummary({
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {wrongCards.map((card) => (
               <div
                 key={card.id}
-                className="p-3 rounded-xl bg-base/60 border border-border/70 flex items-center justify-between gap-2"
+                className="p-3 rounded-xl bg-base/60 border border-border/70 flex items-center justify-between gap-2 hover:border-amber-500/30 transition-colors"
               >
                 <div className="space-y-0.5 min-w-0">
                   <div className="flex items-center gap-2">
@@ -211,14 +320,14 @@ export function PracticeSummary({
         </div>
       )}
 
-      {/* Action Buttons */}
+      {/* 4. Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <Button
           type="button"
           variant="primary"
           size="lg"
           onClick={onRestart}
-          className="flex-1 h-11 text-xs sm:text-sm font-bold gap-2"
+          className="flex-1 h-11 text-xs sm:text-sm font-bold gap-2 shadow-md shadow-brand/20"
         >
           <RotateCcw className="w-4 h-4" />
           <span>Luyện tập bài khác</span>

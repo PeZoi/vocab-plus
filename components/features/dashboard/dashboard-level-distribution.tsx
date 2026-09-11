@@ -55,7 +55,7 @@ export function DashboardLevelDistribution({ cards }: DashboardLevelDistribution
                   <div className="w-5 h-5 flex items-center justify-center shrink-0">
                     <LottieIcon
                       animationKey={lvl.lottieKey}
-                      size="xs"
+                      size="sm"
                       triggerOnHover={true}
                     />
                   </div>

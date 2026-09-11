@@ -11,9 +11,11 @@ import type { CardWithProgress, CollocationItem, UserCard } from '@/types/card.t
 import type { PracticeQuestionItem, SentenceGradeResponse } from '@/types/practice.types';
 import type { ReviewRating } from '@/types/review.types';
 import { formatIPA } from '@/utils/formatters';
+import { playCorrectChime } from '@/utils/sound';
 import {
   ArrowRight,
   CheckCircle2,
+  CornerDownLeft,
   Eye,
   FileQuestion,
   Lightbulb,
@@ -23,7 +25,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSystemSettingsQuery } from '@/hooks/features/admin/use-system-settings';
 import {
   DEFAULT_PRACTICE_XP_RATES,
@@ -35,15 +37,11 @@ import { reviewService } from '@/services/review.service';
 import {
   calculateWordLevel,
   mapQuizResultToFSRS,
-  type WordLevelInfo,
 } from '@/utils/fsrs-level';
 import { getDistractors } from '@/utils/quiz-distractors';
+import type { LevelUpItem, WateredCardItem } from '@/types/practice.types';
 
-export interface LevelUpItem {
-  card: CardWithProgress;
-  oldLevel: WordLevelInfo;
-  newLevel: WordLevelInfo;
-}
+export type { LevelUpItem, WateredCardItem };
 
 interface MixedPracticeRunnerProps {
   questions: PracticeQuestionItem[];
@@ -55,6 +53,7 @@ interface MixedPracticeRunnerProps {
     wrongCards: CardWithProgress[];
     xpEarned: number;
     levelUps?: LevelUpItem[];
+    wateredCards?: WateredCardItem[];
   }) => void;
   onExit: () => void;
 }
@@ -100,8 +99,14 @@ export function MixedPracticeRunner({
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCards, setWrongCards] = useState<CardWithProgress[]>([]);
   const [totalXp, setTotalXp] = useState(0);
-  const [levelUps, setLevelUps] = useState<LevelUpItem[]>([]);
+  const [, setLevelUps] = useState<LevelUpItem[]>([]);
+  const [, setWateredCards] = useState<WateredCardItem[]>([]);
+  const [isNavigatingNext, setIsNavigatingNext] = useState(false);
 
+  // Refs để lưu trữ đồng bộ tức thì, tránh race condition & stale closure khi bấm Xem kết quả ở câu cuối
+  const wateredCardsRef = useRef<WateredCardItem[]>([]);
+  const levelUpsRef = useRef<LevelUpItem[]>([]);
+  const pendingReviewsRef = useRef<Map<string, Promise<unknown>>>(new Map());
   const questionStartTime = useRef<number>(0);
 
   useEffect(() => {
@@ -135,57 +140,126 @@ export function MixedPracticeRunner({
       mapQuizResultToFSRS(isCorrect, responseMs, currentQuestion.exerciseType);
 
     const oldLevelInfo = calculateWordLevel(card.user_card, vocabLevelConfig);
+    const isDue =
+      !card.user_card ||
+      card.user_card.state === 'new' ||
+      !card.user_card.due_at ||
+      new Date(card.user_card.due_at).getTime() <= Date.now() + 60 * 1000;
 
-    try {
-      // Gửi kết quả FSRS lên server
-      const submitRes = await reviewService.submitReview({
-        card_id: card.id,
-        rating,
-        response_ms: responseMs,
-      });
+    // Tạo Promise gửi kết quả FSRS và lưu vào pendingReviewsRef để handleNext có thể chờ nếu cần
+    const reviewPromise = (async () => {
+      try {
+        const submitRes = await reviewService.submitReview({
+          card_id: card.id,
+          rating,
+          response_ms: responseMs,
+        });
 
-      // Nếu thẻ được phép thăng cấp (đang đến hạn FSRS), tính toán sự thay đổi level
-      if (submitRes && !submitRes.level_preserved) {
-        const simulatedUserCard: UserCard = {
-          ...(card.user_card || {
-            id: 'temp',
-            card_id: card.id,
-            user_id: '',
-            difficulty: 5,
-            stability: 1,
-            lapse_count: 0,
-            review_count: 0,
-            is_leech: false,
-            created_at: '',
-            updated_at: '',
-          }),
-          state: submitRes.state || 'learning',
-          due_at: submitRes.due_at,
-          review_count: (card.user_card?.review_count || 0) + 1,
-          lapse_count:
-            rating === 1
-              ? (card.user_card?.lapse_count || 0) + 1
-              : card.user_card?.lapse_count || 0,
-        };
+        const wasWatered = Boolean(submitRes?.is_due ?? isDue);
 
-        const newLevelInfo = calculateWordLevel(simulatedUserCard, vocabLevelConfig);
+        // Trường hợp 1: Thẻ đến hạn ôn tập FSRS hoặc thẻ mới được tưới nước FSRS
+        if (wasWatered) {
+          const simulatedUserCard: UserCard = {
+            ...(card.user_card || {
+              id: 'temp',
+              card_id: card.id,
+              user_id: '',
+              difficulty: 5,
+              stability: 1,
+              lapse_count: 0,
+              review_count: 0,
+              is_leech: false,
+              created_at: '',
+              updated_at: '',
+            }),
+            state: submitRes?.state || 'learning',
+            due_at: submitRes?.due_at || new Date().toISOString(),
+            review_count: (card.user_card?.review_count || 0) + 1,
+            lapse_count:
+              rating === 1
+                ? (card.user_card?.lapse_count || 0) + 1
+                : card.user_card?.lapse_count || 0,
+          };
 
-        if (newLevelInfo.level > oldLevelInfo.level) {
-          setLevelUps((prev) => [
-            ...prev.filter((item) => item.card.id !== card.id),
-            { card, oldLevel: oldLevelInfo, newLevel: newLevelInfo },
-          ]);
+          const newLevelInfo = calculateWordLevel(simulatedUserCard, vocabLevelConfig);
+          const isLevelUp = newLevelInfo.level > oldLevelInfo.level;
+
+          const wateredItem: WateredCardItem = {
+            card,
+            oldLevel: oldLevelInfo,
+            newLevel: newLevelInfo,
+            isLevelUp,
+          };
+
+          wateredCardsRef.current = [
+            ...wateredCardsRef.current.filter((item) => item.card.id !== card.id),
+            wateredItem,
+          ];
+          setWateredCards([...wateredCardsRef.current]);
+
+          if (isLevelUp) {
+            const upItem: LevelUpItem = { card, oldLevel: oldLevelInfo, newLevel: newLevelInfo };
+            levelUpsRef.current = [
+              ...levelUpsRef.current.filter((item) => item.card.id !== card.id),
+              upItem,
+            ];
+            setLevelUps([...levelUpsRef.current]);
+          }
+        } else {
+          // Trường hợp 2: Thẻ chưa đến hạn FSRS (học tự do/tùy chỉnh hoặc đã đánh dấu thuộc)
+          // VẪN GHI NHẬN vào danh sách từ vựng đã được luyện tập trong phiên kiểm tra này!
+          const wateredItem: WateredCardItem = {
+            card,
+            oldLevel: oldLevelInfo,
+            newLevel: oldLevelInfo,
+            isLevelUp: false,
+          };
+
+          wateredCardsRef.current = [
+            ...wateredCardsRef.current.filter((item) => item.card.id !== card.id),
+            wateredItem,
+          ];
+          setWateredCards([...wateredCardsRef.current]);
         }
+      } catch (err) {
+        console.error('Lỗi khi gửi kết quả kiểm tra FSRS:', err);
+        // Ngay cả khi có lỗi mạng, vẫn ghi nhận thẻ vào wateredCardsRef để người dùng không bị mất kết quả phiên học
+        const fallbackItem: WateredCardItem = {
+          card,
+          oldLevel: oldLevelInfo,
+          newLevel: oldLevelInfo,
+          isLevelUp: false,
+        };
+        wateredCardsRef.current = [
+          ...wateredCardsRef.current.filter((item) => item.card.id !== card.id),
+          fallbackItem,
+        ];
+        setWateredCards([...wateredCardsRef.current]);
+      } finally {
+        pendingReviewsRef.current.delete(card.id);
       }
-    } catch (err) {
-      console.error('Lỗi khi gửi kết quả kiểm tra FSRS:', err);
-    }
+    })();
+
+    pendingReviewsRef.current.set(card.id, reviewPromise);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (isNavigatingNext) return;
+
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((prev) => prev + 1);
     } else {
+      setIsNavigatingNext(true);
+
+      // Nếu còn request submit FSRS đang chạy trên mạng, đợi tất cả hoàn tất
+      if (pendingReviewsRef.current.size > 0) {
+        try {
+          await Promise.all(Array.from(pendingReviewsRef.current.values()));
+        } catch (err) {
+          console.error('Lỗi khi chờ hoàn tất các câu submit FSRS:', err);
+        }
+      }
+
       // Nếu đúng 100% tất cả các câu, cộng thêm điểm thưởng hoàn hảo (perfect_bonus)
       const isPerfect = correctCount === questions.length;
       const finalTotalXp = totalXp + (isPerfect ? practiceRates.perfect_bonus : 0);
@@ -195,7 +269,8 @@ export function MixedPracticeRunner({
         correct: correctCount,
         wrongCards,
         xpEarned: finalTotalXp,
-        levelUps,
+        levelUps: levelUpsRef.current,
+        wateredCards: wateredCardsRef.current,
       });
     }
   };
@@ -283,6 +358,7 @@ export function MixedPracticeRunner({
               rates={practiceRates}
               onAnswered={(isCorrect, xp) => handleAnswered(isCorrect, xp, currentCard)}
               onNext={handleNext}
+              isSubmitting={isNavigatingNext}
             />
           )}
 
@@ -293,6 +369,7 @@ export function MixedPracticeRunner({
               rates={practiceRates}
               onAnswered={(isCorrect, xp) => handleAnswered(isCorrect, xp, currentCard)}
               onNext={handleNext}
+              isSubmitting={isNavigatingNext}
             />
           )}
 
@@ -303,6 +380,7 @@ export function MixedPracticeRunner({
               rates={practiceRates}
               onAnswered={(isCorrect, xp) => handleAnswered(isCorrect, xp, currentCard)}
               onNext={handleNext}
+              isSubmitting={isNavigatingNext}
             />
           )}
         </motion.div>
@@ -321,6 +399,7 @@ function MultipleChoiceQuestionCard({
   rates,
   onAnswered,
   onNext,
+  isSubmitting = false,
 }: {
   card: CardWithProgress;
   allCards: CardWithProgress[];
@@ -328,6 +407,7 @@ function MultipleChoiceQuestionCard({
   rates: PracticeXpRates;
   onAnswered: (isCorrect: boolean, xp: number) => void;
   onNext: () => void;
+  isSubmitting?: boolean;
 }) {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -379,12 +459,50 @@ function MultipleChoiceQuestionCard({
     };
   });
 
-  const handleSelect = (option: ChoiceOption) => {
-    if (isAnswered) return;
-    setSelectedOptionId(option.id);
-    setIsAnswered(true);
-    onAnswered(option.isCorrect, option.isCorrect ? rates.multiple_choice : 0);
-  };
+  const handleSelect = useCallback(
+    (option: ChoiceOption) => {
+      if (isAnswered) return;
+      setSelectedOptionId(option.id);
+      setIsAnswered(true);
+      if (option.isCorrect) {
+        playCorrectChime();
+      }
+      onAnswered(option.isCorrect, option.isCorrect ? rates.multiple_choice : 0);
+    },
+    [isAnswered, onAnswered, rates.multiple_choice]
+  );
+
+  // Lắng nghe phím số 1..4 để chọn đáp án và phím Enter để tiếp tục
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Bỏ qua nếu đang tương tác trong input/textarea khác
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        return;
+      }
+
+      if (!isAnswered) {
+        let pickedIndex = -1;
+        if (e.key === '1' || e.code === 'Numpad1') pickedIndex = 0;
+        else if (e.key === '2' || e.code === 'Numpad2') pickedIndex = 1;
+        else if (e.key === '3' || e.code === 'Numpad3') pickedIndex = 2;
+        else if (e.key === '4' || e.code === 'Numpad4') pickedIndex = 3;
+
+        if (pickedIndex >= 0 && pickedIndex < state.options.length) {
+          e.preventDefault();
+          handleSelect(state.options[pickedIndex]);
+        }
+      } else {
+        if (e.key === 'Enter' && !isSubmitting) {
+          e.preventDefault();
+          onNext();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSelect, isAnswered, isSubmitting, onNext, state.options]);
 
   const isCorrect = selectedOptionId === card.id;
 
@@ -427,11 +545,11 @@ function MultipleChoiceQuestionCard({
         )}
       </div>
 
-      {/* 4 Lựa chọn */}
+      {/* 4 Lựa chọn đánh số 1, 2, 3, 4 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {state.options.map((option, idx) => {
           const isSelected = selectedOptionId === option.id;
-          const letter = String.fromCharCode(65 + idx);
+          const numberLabel = `${idx + 1}`;
 
           let optionStyle =
             'bg-surface/70 border-border/80 hover:bg-surface hover:border-brand/50 text-text-primary';
@@ -453,21 +571,21 @@ function MultipleChoiceQuestionCard({
               disabled={isAnswered}
               onClick={() => handleSelect(option)}
               className={cn(
-                'p-3.5 sm:p-4 rounded-xl border text-left transition-all duration-200 flex items-center gap-3 select-none',
+                'p-3.5 sm:p-4 rounded-xl border text-left transition-all duration-200 flex items-center gap-3 select-none relative group',
                 optionStyle
               )}
             >
               <div
                 className={cn(
-                  'w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 border',
+                  'w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 border transition-transform group-hover:scale-105',
                   isAnswered && option.isCorrect
                     ? 'bg-success text-white border-success'
                     : isAnswered && isSelected && !option.isCorrect
                     ? 'bg-danger text-white border-danger'
-                    : 'bg-base/70 text-text-secondary border-border/70'
+                    : 'bg-base/70 text-text-secondary border-border/70 group-hover:border-brand/50 group-hover:text-brand'
                 )}
               >
-                {letter}
+                {numberLabel}
               </div>
               <span className="text-xs sm:text-sm font-medium leading-snug flex-1">
                 {option.text}
@@ -482,6 +600,18 @@ function MultipleChoiceQuestionCard({
           );
         })}
       </div>
+
+      {/* Gợi ý phím tắt khi chưa trả lời */}
+      {!isAnswered && (
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-text-secondary/70">
+          <span>Bấm phím</span>
+          <span className="px-1.5 py-0.5 rounded bg-surface border border-border/70 font-mono text-[10px] text-text-primary">1</span>
+          <span className="px-1.5 py-0.5 rounded bg-surface border border-border/70 font-mono text-[10px] text-text-primary">2</span>
+          <span className="px-1.5 py-0.5 rounded bg-surface border border-border/70 font-mono text-[10px] text-text-primary">3</span>
+          <span className="px-1.5 py-0.5 rounded bg-surface border border-border/70 font-mono text-[10px] text-text-primary">4</span>
+          <span>để chọn nhanh đáp án</span>
+        </div>
+      )}
 
       {/* Bottom Action Bar */}
       {isAnswered && (
@@ -511,10 +641,24 @@ function MultipleChoiceQuestionCard({
             variant="primary"
             size="default"
             onClick={onNext}
-            className="gap-1.5 text-xs sm:text-sm font-bold shrink-0"
+            disabled={isSubmitting}
+            className="gap-2 text-xs sm:text-sm font-bold shrink-0 shadow-md shadow-brand/20"
           >
-            <span>{isLast ? 'Xem kết quả' : 'Câu tiếp theo'}</span>
-            <ArrowRight className="w-4 h-4" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tổng kết...</span>
+              </>
+            ) : (
+              <>
+                <span>{isLast ? 'Xem kết quả' : 'Câu tiếp theo'}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-mono flex items-center gap-0.5">
+                  <CornerDownLeft className="w-2.5 h-2.5" />
+                  Enter
+                </span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </Button>
         </motion.div>
       )}
@@ -531,12 +675,14 @@ function ClozeQuestionCard({
   rates,
   onAnswered,
   onNext,
+  isSubmitting = false,
 }: {
   card: CardWithProgress;
   isLast: boolean;
   rates: PracticeXpRates;
   onAnswered: (isCorrect: boolean, xp: number) => void;
   onNext: () => void;
+  isSubmitting?: boolean;
 }) {
   const [inputVal, setInputVal] = useState('');
   const [isAnswered, setIsAnswered] = useState(false);
@@ -552,8 +698,26 @@ function ClozeQuestionCard({
     : [sentence.slice(0, 20) + ' ', ' ' + sentence.slice(20)];
 
   useEffect(() => {
-    inputRef.current?.focus();
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 60);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Lắng nghe phím Enter để chuyển sang câu tiếp theo khi đã có kết quả
+  useEffect(() => {
+    if (!isAnswered) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !isSubmitting) {
+        e.preventDefault();
+        onNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAnswered, isSubmitting, onNext]);
 
   const isCorrect = inputVal.trim().toLowerCase() === cleanWord.toLowerCase();
 
@@ -561,6 +725,9 @@ function ClozeQuestionCard({
     e?.preventDefault();
     if (isAnswered || !inputVal.trim()) return;
     setIsAnswered(true);
+    if (isCorrect) {
+      playCorrectChime();
+    }
     onAnswered(isCorrect, isCorrect ? rates.cloze : 0);
   };
 
@@ -641,6 +808,7 @@ function ClozeQuestionCard({
         <div className="flex gap-2">
           <Input
             ref={inputRef}
+            autoFocus
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
             disabled={isAnswered}
@@ -661,9 +829,10 @@ function ClozeQuestionCard({
               type="submit"
               variant="primary"
               disabled={!inputVal.trim()}
-              className="h-11 px-5 font-bold shrink-0"
+              className="h-11 px-5 font-bold shrink-0 shadow-md shadow-brand/20 gap-1.5"
             >
-              Kiểm tra
+              <span>Kiểm tra</span>
+              <span className="text-[10px] px-1 py-0.2 rounded bg-white/20 text-white font-mono">↵</span>
             </Button>
           ) : (
             <div className="shrink-0 flex items-center">
@@ -711,10 +880,24 @@ function ClozeQuestionCard({
             variant="primary"
             size="default"
             onClick={onNext}
-            className="gap-1.5 text-xs sm:text-sm font-bold shrink-0"
+            disabled={isSubmitting}
+            className="gap-2 text-xs sm:text-sm font-bold shrink-0 shadow-md shadow-brand/20"
           >
-            <span>{isLast ? 'Xem kết quả' : 'Câu tiếp theo'}</span>
-            <ArrowRight className="w-4 h-4" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang tổng kết...</span>
+              </>
+            ) : (
+              <>
+                <span>{isLast ? 'Xem kết quả' : 'Câu tiếp theo'}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-mono flex items-center gap-0.5">
+                  <CornerDownLeft className="w-2.5 h-2.5" />
+                  Enter
+                </span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </Button>
         </motion.div>
       )}
@@ -731,20 +914,46 @@ function SentenceWritingQuestionCard({
   rates,
   onAnswered,
   onNext,
+  isSubmitting = false,
 }: {
   card: CardWithProgress;
   isLast: boolean;
   rates: PracticeXpRates;
   onAnswered: (isCorrect: boolean, xp: number) => void;
   onNext: () => void;
+  isSubmitting?: boolean;
 }) {
   const [userSentence, setUserSentence] = useState('');
   const [isAnswered, setIsAnswered] = useState(false);
   const [gradeResult, setGradeResult] = useState<SentenceGradeResponse | null>(null);
   const [gradeError, setGradeError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const gradeMutation = useGradeSentence();
   const collocations = (card.collocations as unknown as CollocationItem[]) || [];
+
+  // Tự động focus vào Textarea khi câu hỏi xuất hiện
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 60);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Lắng nghe phím Enter để chuyển sang câu tiếp theo khi đã có kết quả chấm điểm
+  useEffect(() => {
+    if (!isAnswered) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !isSubmitting) {
+        e.preventDefault();
+        onNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAnswered, isSubmitting, onNext]);
 
   const handleGrade = async () => {
     if (!userSentence.trim() || gradeMutation.isPending) return;
@@ -759,8 +968,12 @@ function SentenceWritingQuestionCard({
 
       setGradeResult(res);
       setIsAnswered(true);
+      const isPassed = res.score >= 70;
+      if (isPassed) {
+        playCorrectChime();
+      }
       const awardedXp = Math.round((res.score / 100) * rates.sentence_writing);
-      onAnswered(res.score >= 70, awardedXp);
+      onAnswered(isPassed, awardedXp);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Có lỗi khi gọi AI chấm điểm.';
       setGradeError(msg);
@@ -815,12 +1028,20 @@ function SentenceWritingQuestionCard({
 
       <div className="space-y-2.5">
         <Textarea
+          ref={textareaRef}
+          autoFocus
           value={userSentence}
           onChange={(e) => setUserSentence(e.target.value)}
-          placeholder={`Viết một câu tiếng Anh hoàn chỉnh sử dụng từ "${card.word}"...`}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              handleGrade();
+            }
+          }}
+          placeholder={`Viết một câu tiếng Anh hoàn chỉnh sử dụng từ "${card.word}"... (Nhấn Ctrl + Enter để chấm nhanh)`}
           rows={3}
           disabled={gradeMutation.isPending || isAnswered}
-          className="text-sm"
+          className="text-sm focus:border-brand"
         />
 
         {gradeError && (
@@ -830,14 +1051,17 @@ function SentenceWritingQuestionCard({
         )}
 
         {!isAnswered && (
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-text-secondary/70 hidden sm:inline">
+              Mẹo: Nhấn <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-[10px] font-mono">Ctrl + Enter</kbd> để nộp bài
+            </span>
             <Button
               type="button"
               variant="primary"
               size="default"
               onClick={handleGrade}
               disabled={!userSentence.trim() || gradeMutation.isPending}
-              className="h-10 px-5 text-xs font-bold gap-2 bg-gradient-to-r from-purple-600 to-brand"
+              className="h-10 px-5 text-xs font-bold gap-2 bg-gradient-to-r from-purple-600 to-brand shadow-md shadow-brand/20 ml-auto"
             >
               {gradeMutation.isPending ? (
                 <>
@@ -908,10 +1132,24 @@ function SentenceWritingQuestionCard({
               variant="primary"
               size="default"
               onClick={onNext}
-              className="gap-1.5 text-xs sm:text-sm font-bold"
+              disabled={isSubmitting}
+              className="gap-2 text-xs sm:text-sm font-bold shadow-md shadow-brand/20"
             >
-              <span>{isLast ? 'Xem kết quả' : 'Câu tiếp theo'}</span>
-              <ArrowRight className="w-4 h-4" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Đang tổng kết...</span>
+                </>
+              ) : (
+                <>
+                  <span>{isLast ? 'Xem kết quả' : 'Câu tiếp theo'}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-mono flex items-center gap-0.5">
+                    <CornerDownLeft className="w-2.5 h-2.5" />
+                    Enter
+                  </span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </Button>
           </div>
         </motion.div>

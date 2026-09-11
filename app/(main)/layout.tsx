@@ -16,7 +16,7 @@ export default function MainLayout({
         <div className="flex-1 pb-16 md:pb-0">
           <AppSidebar />
           <div className="md:pl-60 transition-all">
-            <main className="p-4 sm:p-6 md:p-8 max-w-5xl mx-auto w-full">
+            <main className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full">
               {children}
             </main>
           </div>

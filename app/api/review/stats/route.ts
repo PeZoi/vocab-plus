@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { addDays, format, parseISO, startOfDay } from 'date-fns';
+import { addDays, differenceInDays, format, parseISO, startOfDay } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
 export async function GET() {
@@ -108,36 +108,52 @@ export async function GET() {
     let streak_days = 0;
     let has_reviewed_today = today_xp > 0;
 
-    // Cách 1: Đọc trực tiếp từ bảng chuyên biệt user_streaks
+    // 4. Lấy và tính toán chuỗi streak chuẩn từ user_streaks (nguồn dữ liệu chính thức)
     if (userStreakRecord) {
       const lastActive = userStreakRecord.last_active_date;
       if (lastActive === todayStr) {
         has_reviewed_today = true;
         streak_days = userStreakRecord.current_streak;
       } else if (lastActive === yesterdayStr) {
-        // Streak còn giữ từ hôm qua, hôm nay chưa học hoặc đã học nhưng chưa chốt
+        has_reviewed_today = today_xp > 0;
         streak_days = userStreakRecord.current_streak;
+      } else if (!lastActive) {
+        // Chưa có ngày học hoặc vừa được Admin reset về 0
+        has_reviewed_today = false;
+        streak_days = userStreakRecord.current_streak;
+      } else {
+        // Ngày học cuối là từ 2 ngày trước trở lên -> kiểm tra freeze
+        const lastDate = parseISO(lastActive);
+        const diffDays = differenceInDays(startOfDay(now), startOfDay(lastDate));
+        const missedDays = diffDays - 1;
+        const freezes = userStreakRecord.freezes_available || 0;
+        if (freezes >= missedDays && missedDays > 0) {
+          streak_days = userStreakRecord.current_streak;
+        } else {
+          streak_days = 0; // Đứt streak do không học
+        }
+        has_reviewed_today = false;
       }
-    }
+    } else {
+      // Fallback: Chỉ dùng khi user chưa có bản ghi user_streaks nào trong hệ thống
+      const activeDaysSet = new Set<string>();
+      (dailyXpRows || []).forEach((row) => {
+        if (row.date) activeDaysSet.add(row.date);
+      });
+      (logs || []).forEach((l) => {
+        if (l.reviewed_at) activeDaysSet.add(format(parseISO(l.reviewed_at), 'yyyy-MM-dd'));
+      });
 
-    // Cách 2: Kiểm chứng và fallback tính chuỗi liên tiếp từ user_daily_xp và review_logs
-    const activeDaysSet = new Set<string>();
-    (dailyXpRows || []).forEach((row) => {
-      if (row.date) activeDaysSet.add(row.date);
-    });
-    (logs || []).forEach((l) => {
-      if (l.reviewed_at) activeDaysSet.add(format(parseISO(l.reviewed_at), 'yyyy-MM-dd'));
-    });
+      if (activeDaysSet.has(todayStr)) {
+        has_reviewed_today = true;
+      }
 
-    if (activeDaysSet.has(todayStr)) {
-      has_reviewed_today = true;
-    }
-
-    if (streak_days === 0 && (activeDaysSet.has(todayStr) || activeDaysSet.has(yesterdayStr))) {
-      let checkDate = activeDaysSet.has(todayStr) ? startOfDay(now) : addDays(startOfDay(now), -1);
-      while (activeDaysSet.has(format(checkDate, 'yyyy-MM-dd'))) {
-        streak_days++;
-        checkDate = addDays(checkDate, -1);
+      if (activeDaysSet.has(todayStr) || activeDaysSet.has(yesterdayStr)) {
+        let checkDate = activeDaysSet.has(todayStr) ? startOfDay(now) : addDays(startOfDay(now), -1);
+        while (activeDaysSet.has(format(checkDate, 'yyyy-MM-dd'))) {
+          streak_days++;
+          checkDate = addDays(checkDate, -1);
+        }
       }
     }
 

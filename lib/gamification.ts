@@ -67,7 +67,10 @@ export async function awardXp(
   return actualXpToAdd;
 }
 
-export async function updateStreak(userId: string, activeDate: Date) {
+export async function updateStreak(
+  userId: string,
+  activeDate: Date
+): Promise<{ streakActivated: boolean; streakCount: number }> {
   const supabase = await createClient();
   const dateStr = format(activeDate, 'yyyy-MM-dd');
 
@@ -86,12 +89,12 @@ export async function updateStreak(userId: string, activeDate: Date) {
       freezes_available: 0,
       last_active_date: dateStr
     });
-    return;
+    return { streakActivated: true, streakCount: 1 };
   }
 
   if (streak.last_active_date === dateStr) {
     // Đã tính streak hôm nay rồi
-    return;
+    return { streakActivated: false, streakCount: streak.current_streak };
   }
 
   // Tính số ngày chênh lệch giữa hôm nay và lần học cuối
@@ -130,6 +133,8 @@ export async function updateStreak(userId: string, activeDate: Date) {
     last_active_date: dateStr,
     updated_at: new Date().toISOString()
   }).eq('user_id', userId);
+
+  return { streakActivated: true, streakCount: newStreak };
 }
 
 /**

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { awardXp, incrementQuestProgress } from '@/lib/gamification';
+import { awardXp, incrementQuestProgress, updateStreak } from '@/lib/gamification';
 import type { SubmitPracticeSessionDto } from '@/types/practice.types';
 
 export async function POST(request: Request) {
@@ -22,8 +22,11 @@ export async function POST(request: Request) {
 
     let actualXpAwarded = 0;
     if (parsedXp > 0) {
-      actualXpAwarded = await awardXp(user.id, parsedXp, 'practice');
+      actualXpAwarded = await awardXp(user.id, parsedXp, 'practice', { skipStreak: true });
     }
+
+    // Cập nhật chuỗi học Streak chính thức cho bài kiểm tra hôm nay
+    const streakResult = await updateStreak(user.id, new Date());
 
     if (correct_count && correct_count > 0) {
       await incrementQuestProgress(user.id, 'review_cards', correct_count);
@@ -35,6 +38,8 @@ export async function POST(request: Request) {
       correct_count: correct_count || 0,
       mode: mode || 'mixed',
       actual_xp_awarded: actualXpAwarded,
+      streak_activated: streakResult?.streakActivated ?? false,
+      streak_count: streakResult?.streakCount ?? 1,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';

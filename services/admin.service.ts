@@ -1,5 +1,11 @@
 import { apiClient } from '@/lib/axios';
 import type { Tables } from '@/types/database.types';
+import type {
+  AdminUserDetail,
+  AdminUserListItem,
+  ResetStreakPayload,
+  ResetStreakResponse,
+} from '@/types/admin-user.types';
 
 export type AIProviderConfig = Tables<'ai_provider_configs'>;
 
@@ -66,5 +72,36 @@ export const adminService = {
    */
   updateSystemSetting: (key: string, value: unknown): Promise<SystemSetting> => {
     return apiClient.patch('/admin/settings', { key, value });
+  },
+
+  /**
+   * Lấy danh sách người dùng kèm thống kê
+   */
+  getUsers: (params?: { search?: string; role?: string }): Promise<{ users: AdminUserListItem[]; total: number }> => {
+    return apiClient.get('/admin/users', { params });
+  },
+
+  /**
+   * Lấy chi tiết thông tin và thống kê học tập của một người dùng
+   */
+  getUserDetail: (userId: string): Promise<AdminUserDetail> => {
+    return apiClient.get(`/admin/users/${userId}`);
+  },
+
+  /**
+   * Reset hoặc giả lập chuỗi streak của người dùng
+   */
+  resetUserStreak: (
+    userId: string,
+    payload: ResetStreakPayload
+  ): Promise<ResetStreakResponse> => {
+    return apiClient.post(`/admin/users/${userId}/reset-streak`, payload);
+  },
+
+  /**
+   * Cập nhật vai trò tài khoản (admin / user)
+   */
+  updateUserRole: (userId: string, role: 'admin' | 'user'): Promise<{ success: boolean; role: string }> => {
+    return apiClient.patch(`/admin/users/${userId}/role`, { role });
   },
 };
