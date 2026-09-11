@@ -288,6 +288,11 @@ final class LocalSystemSetting {
     - **Tính năng Ôn tập ngay (Fast-Track Due Cards)**:
       - Banner ưu tiên trên đầu `PracticeView`: *"🎯 Hôm nay có [N] từ đến hạn cần ôn tập theo FSRS"* kèm nút *"ÔN TẬP & KIỂM TRA NGAY"*, 1-tap gom toàn bộ từ đến hạn vào bài thi ngay lập tức.
       - Tự động vào bài kiểm tra ngay khi mở từ Flashcard có tham số `cardIDs`.
+    - **Màn hình Chuyển Tiếp Xử Lý (`PracticeProcessingView`)**:
+      - Khi nộp câu hỏi cuối cùng, hiển thị màn hình loading native gradient với thanh tiến trình và chỉ báo 4 bước: Ghi nhận câu trả lời ➔ Tưới nước FSRS ➔ Đánh giá Cây Sinh Trưởng ➔ Ghi nhận Streak 🔥.
+    - **Màn hình Kết Quả (`PracticeSummaryView`) — Phần Tưới Nước & Thông Báo Level Up**:
+      - **Khối "Khu Vườn Vừa Được Tưới Nước! 💧"**: Hiển thị danh sách cây đến hạn đã được tưới nước và phục hồi sinh khí, số lượng cây xanh tốt, kèm thời điểm hẹn tưới nước tiếp theo on-device (`dueAt`).
+      - **Thông báo Thăng Cấp (Haptic & Toast/Banner)**: Rung phản hồi haptic chúc mừng và hiển thị banner/toast nổi bật khi có từ vựng lên level.
 
 - **Hệ thống Cấp độ Cây Sinh Trưởng (Gamification Tree Levels 0 ➔ 5) Với Lottie-iOS**:
   - Tích hợp thư viện `Lottie-iOS` (Airbnb) hiển thị hoạt ảnh vector 60fps mượt mà theo 6 cấp độ:

@@ -371,6 +371,11 @@ create table public.system_settings (
     - **Tính năng Ôn tập ngay (Fast-Track Due Cards)**:
       - Banner ưu tiên trên đầu trang `/practice`: *"🎯 Hôm nay có [N] từ đến hạn cần ôn tập theo FSRS"* kèm nút *"ÔN TẬP & KIỂM TRA NGAY"*, 1-click gom toàn bộ từ đến hạn vào bài thi ngay lập tức.
       - Tự động bỏ qua màn hình thiết lập khi được điều hướng từ Flashcard sang có tham số `card_ids`.
+    - **Màn hình Chuyển Tiếp Xử Lý (`PracticeProcessing`)**:
+      - Khi nộp câu cuối cùng, hệ thống hiển thị màn hình chuyển tiếp sinh động (`PracticeProcessing`) với thanh tiến trình gradient và chỉ báo 4 bước xử lý: Ghi nhận câu trả lời ➔ Tưới nước FSRS ➔ Đánh giá Cây Sinh Trưởng ➔ Ghi nhận Streak 🔥, tạo trải nghiệm mượt mà trước khi vào bảng kết quả.
+    - **Trang Tổng Kết (`PracticeSummary`) — Phần Tưới Nước & Thông Báo Thăng Cấp**:
+      - **Khối "Khu Vườn Vừa Được Tưới Nước! 💧"**: Hiển thị danh sách cây đến hạn đã được tưới nước và phục hồi sinh khí, số lượng cây xanh tốt, kèm thời điểm hẹn tưới nước tiếp theo (`due_at`).
+      - **Thông báo Thăng Cấp Tức Thì (Toast & Badge)**: Bắn Toast chúc mừng rực rỡ ngay khi vào trang kết quả nếu có từ vựng lên level, đồng thời hiển thị khối trực quan Cây Sinh Trưởng Thăng Cấp với huy hiệu chuyển cấp cũ ➔ mới.
 
 - **Hệ thống Cấp độ Cây Sinh Trưởng (Gamification Tree Levels 0 ➔ 5) Với Lottie Animation (`lottie-react`)**:
   - Chuẩn hóa 6 cấp độ trực quan theo ngưỡng số lần kiểm tra đúng (`minConsecutiveCorrect`) và độ bền FSRS (`minStabilityDays`):
