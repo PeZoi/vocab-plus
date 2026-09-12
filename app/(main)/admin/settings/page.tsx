@@ -31,9 +31,14 @@ import {
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { adminService } from '@/services/admin.service';
 import { QuestSettingsCard } from '@/components/features/admin/quest-settings-card';
 import { XpSettingsCard } from '@/components/features/admin/xp-settings-card';
 import { VocabLevelSettingsCard } from '@/components/features/admin/vocab-level-settings-card';
+import { LeagueRankSettingsCard } from '@/components/features/admin/league-rank-settings-card';
+import type { LeagueTier } from '@/constants/leagues';
+import type { TierConfigItem } from '@/services/leaderboard.service';
 import type { QuestTemplate } from '@/types/quest.types';
 import {
   type ReviewXpRates,
@@ -51,6 +56,7 @@ export default function AdminSettingsPage() {
 
   const { data: settings = [], isLoading: settingsLoading } = useSystemSettingsQuery(!!isAdmin);
   const updateMutation = useUpdateSystemSettingMutation();
+  const queryClient = useQueryClient();
 
   // Tab state (đồng bộ URL search param nếu có)
   const [activeTab, setActiveTab] = useState<AdminSettingsTab>(() => {
@@ -107,6 +113,25 @@ export default function AdminSettingsPage() {
       return Number(setting.value) || 200;
     }
     return 200;
+  }, [settings]);
+
+  const dbLeagueTierConfigs = useMemo<Record<LeagueTier, TierConfigItem>>(() => {
+    const setting = settings.find((s) => s.key === 'league_tier_configs');
+    if (setting?.value && typeof setting.value === 'object') {
+      return setting.value as Record<LeagueTier, TierConfigItem>;
+    }
+    return {
+      unranked: { promoteXp: 50, stayXp: 0 },
+      iron: { promoteXp: 120, stayXp: 30 },
+      bronze: { promoteXp: 180, stayXp: 50 },
+      silver: { promoteXp: 250, stayXp: 80 },
+      platinum: { promoteXp: 350, stayXp: 120 },
+      emerald: { promoteXp: 480, stayXp: 180 },
+      diamond: { promoteXp: 650, stayXp: 260 },
+      master: { promoteXp: 850, stayXp: 380 },
+      grandmaster: { promoteXp: 1100, stayXp: 550 },
+      challenger: { promoteXp: 0, stayXp: 750 },
+    };
   }, [settings]);
 
   const [customThreshold, setCustomThreshold] = useState<number | null>(null);
@@ -190,6 +215,47 @@ export default function AdminSettingsPage() {
         type: 'error',
         message: msg,
       });
+    }
+  };
+
+  const handleSaveTierConfigs = async (newConfigs: Record<LeagueTier, TierConfigItem>) => {
+    try {
+      setNotification(null);
+      await updateMutation.mutateAsync({
+        key: 'league_tier_configs',
+        value: newConfigs,
+      });
+      setNotification({
+        type: 'success',
+        message: 'Đã lưu cấu hình 10 Bậc Rank giải đấu thành công!',
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu cấu hình bậc rank';
+      setNotification({
+        type: 'error',
+        message: msg,
+      });
+    }
+  };
+
+  const handleResetRank = async () => {
+    try {
+      setNotification(null);
+      const res = await adminService.resetAllLeagues();
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
+      setNotification({
+        type: 'success',
+        message:
+          res.message ||
+          'Đã reset toàn bộ rank về Chưa có rank thành công! Tổng XP được bảo toàn 100%.',
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể reset rank';
+      setNotification({
+        type: 'error',
+        message: msg,
+      });
+      throw err;
     }
   };
 
@@ -770,6 +836,14 @@ export default function AdminSettingsPage() {
               initialPracticeRates={dbPracticeXpRates}
               onSave={handleSaveXpRates}
               isSaving={updateMutation.isPending}
+            />
+
+            {/* Card: Cấu hình 10 Bậc Rank Giải đấu (Thăng hạng & Trụ hạng) */}
+            <LeagueRankSettingsCard
+              initialConfigs={dbLeagueTierConfigs}
+              onSave={handleSaveTierConfigs}
+              isSaving={updateMutation.isPending}
+              onResetRank={handleResetRank}
             />
           </motion.div>
         )}

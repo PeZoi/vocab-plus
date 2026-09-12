@@ -23,7 +23,17 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(profile);
+    // Lấy bậc rank hiện tại của người dùng từ user_leagues
+    const { data: userLeague } = await supabase
+      .from('user_leagues')
+      .select('league')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    return NextResponse.json({
+      ...profile,
+      league: userLeague?.league || 'unranked',
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
     return NextResponse.json({ error: msg }, { status: 500 });

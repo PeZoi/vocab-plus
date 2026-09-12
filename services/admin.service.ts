@@ -104,4 +104,11 @@ export const adminService = {
   updateUserRole: (userId: string, role: 'admin' | 'user'): Promise<{ success: boolean; role: string }> => {
     return apiClient.patch(`/admin/users/${userId}/role`, { role });
   },
+
+  /**
+   * Reset toàn bộ rank về 'unranked', làm mới điểm tuần, BẢO TOÀN 100% Tổng XP
+   */
+  resetAllLeagues: (): Promise<{ success: boolean; message: string; result?: unknown }> => {
+    return apiClient.post('/admin/leagues/reset');
+  },
 };

@@ -652,7 +652,17 @@ export type Database = {
       }
     }
     Enums: {
-      league_tier: "bronze" | "silver" | "gold" | "diamond" | "master"
+      league_tier:
+        | "unranked"
+        | "iron"
+        | "bronze"
+        | "silver"
+        | "platinum"
+        | "emerald"
+        | "diamond"
+        | "master"
+        | "grandmaster"
+        | "challenger"
       quest_type: "review_cards" | "learn_new" | "accuracy" | "earn_xp"
     }
     CompositeTypes: {
@@ -781,7 +791,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      league_tier: ["bronze", "silver", "gold", "diamond", "master"],
+      league_tier: [
+        "unranked",
+        "iron",
+        "bronze",
+        "silver",
+        "platinum",
+        "emerald",
+        "diamond",
+        "master",
+        "grandmaster",
+        "challenger",
+      ],
       quest_type: ["review_cards", "learn_new", "accuracy", "earn_xp"],
     },
   },

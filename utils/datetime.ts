@@ -1,8 +1,59 @@
-import { formatDistanceToNow, parseISO } from 'date-fns';
+import { formatDistanceToNow, parseISO, endOfWeek } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
 export const DEFAULT_TIMEZONE = 'Asia/Ho_Chi_Minh';
+
+/**
+ * Dữ liệu đếm ngược thời gian reset rank giải đấu tuần
+ */
+export interface RankResetCountdown {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  formatted: string;
+  isExpired: boolean;
+}
+
+/**
+ * Tính thời gian còn lại đến thời điểm chốt sổ & reset rank tuần (23:59:59 Chủ Nhật)
+ */
+export function getRankResetCountdown(now: Date = new Date()): RankResetCountdown {
+  const sundayEnd = endOfWeek(now, { weekStartsOn: 1 });
+  const diffMs = sundayEnd.getTime() - now.getTime();
+
+  if (diffMs <= 0) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      formatted: 'Đang xét duyệt rank',
+      isExpired: true,
+    };
+  }
+
+  const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  const minutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000));
+  const seconds = Math.floor((diffMs % (60 * 1000)) / 1000);
+
+  let formatted = '';
+  if (days > 0) {
+    formatted += `${days} ngày `;
+  }
+  formatted += `${hours} giờ ${minutes} phút`;
+
+  return {
+    days,
+    hours,
+    minutes,
+    seconds,
+    formatted,
+    isExpired: false,
+  };
+}
 
 /**
  * Định dạng ngày giờ thân thiện theo locale tiếng Việt

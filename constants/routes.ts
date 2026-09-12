@@ -18,6 +18,7 @@ export const ROUTES = {
     IMPORT: '/import',
     LEADERBOARD: '/leaderboard',
     SETTINGS: '/settings',
+    PROFILE: '/profile',
   },
   ADMIN: {
     DASHBOARD: '/admin/dashboard',

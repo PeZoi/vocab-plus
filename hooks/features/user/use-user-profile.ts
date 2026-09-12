@@ -3,11 +3,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { userKeys } from '@/constants/query-keys';
 import type { Tables } from '@/types/database.types';
+import type { LeagueTier } from '@/constants/leagues';
 
-type Profile = Tables<'profiles'>;
+export type UserProfile = Tables<'profiles'> & {
+  league?: LeagueTier;
+};
 
 export function useUserProfile() {
-  const query = useQuery<Profile>({
+  const query = useQuery<UserProfile>({
     queryKey: userKeys.profile(),
     queryFn: async () => {
       const res = await fetch('/api/user/profile');
