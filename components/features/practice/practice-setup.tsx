@@ -84,7 +84,7 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
 
     onStart({
       sourceType: 'all',
-      collectionTitle: 'Từ vựng đến hạn FSRS',
+      collectionTitle: 'Từ vựng đến hạn',
       selectedCards: pickedCards,
       questions: mixedQuestions,
       questionCount: mixedQuestions.length,
@@ -168,10 +168,10 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-brand/20 text-brand border border-brand/30">
                 <Flame className="w-3.5 h-3.5 text-brand fill-brand animate-pulse" />
-                <span>Ưu tiên hàng đầu (FSRS Due)</span>
+                <span>Ưu tiên hàng đầu</span>
               </div>
               <h3 className="text-base sm:text-lg font-bold text-text-primary">
-                Hôm nay có <span className="text-brand font-black">{dueCards.length}</span> từ vựng đến hạn cần kiểm tra FSRS
+                Hôm nay có <span className="text-brand font-black">{dueCards.length}</span> từ vựng đến hạn cần kiểm tra
               </h3>
               <p className="text-xs text-text-secondary leading-relaxed">
                 Làm bài kiểm tra ngay để tính toán độ bền trí nhớ, duy trì chuỗi Streak và thăng cấp Cây Sinh Trưởng.
@@ -194,7 +194,7 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
         <div className="p-3.5 rounded-xl bg-success/10 border border-success/25 flex items-center gap-2.5 text-xs text-success">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>
-            Tuyệt vời! Hiện tại kho từ vựng của bạn chưa có từ nào quá hạn FSRS. Bạn có thể tự do luyện tập kho từ bên dưới.
+            Tuyệt vời! Hiện tại kho từ vựng của bạn chưa có từ nào quá hạn. Bạn có thể tự do luyện tập kho từ bên dưới.
           </span>
         </div>
       )}

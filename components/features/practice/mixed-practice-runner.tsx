@@ -1110,21 +1110,39 @@ function SentenceWritingQuestionCard({
             </span>
           </div>
 
-          <p className="text-xs text-text-primary leading-relaxed">{gradeResult.feedback_vi}</p>
+          <p className="text-xs text-text-primary leading-relaxed whitespace-pre-line">{gradeResult.feedback_vi}</p>
 
           {gradeResult.improved_sentence && (
-            <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-xs">
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-xs space-y-1">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-bold text-purple-300 uppercase">
-                  Gợi ý tự nhiên hơn:
+                <span className="text-[10px] font-bold text-emerald-400 uppercase flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Câu sửa chuẩn (giữ từ &quot;{card.word}&quot;):
                 </span>
                 <AudioButton text={gradeResult.improved_sentence} size="sm" />
               </div>
-              <p className="text-purple-100 italic">
+              <p className="text-emerald-100 italic">
                 &ldquo;{gradeResult.improved_sentence}&rdquo;
               </p>
             </div>
           )}
+
+          {gradeResult.native_suggestion &&
+            gradeResult.native_suggestion.toLowerCase().trim() !==
+              gradeResult.improved_sentence?.toLowerCase().trim() && (
+              <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/25 text-xs space-y-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-purple-300 uppercase flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Người bản xứ thường nói trong ngữ cảnh này:
+                  </span>
+                  <AudioButton text={gradeResult.native_suggestion} size="sm" />
+                </div>
+                <p className="text-purple-100 italic">
+                  &ldquo;{gradeResult.native_suggestion}&rdquo;
+                </p>
+              </div>
+            )}
 
           <div className="pt-2 flex justify-end">
             <Button

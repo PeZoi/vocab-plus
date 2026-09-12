@@ -62,7 +62,7 @@ export function VocabTableView({
             <th className="py-3 px-3 font-semibold">Từ loại</th>
             <th className="py-3 px-4 font-semibold">Định nghĩa tiếng Việt</th>
             <th className="py-3 px-3 font-semibold">Tags</th>
-            <th className="py-3 px-3 font-semibold">Trạng thái FSRS</th>
+            <th className="py-3 px-3 font-semibold">Trạng thái</th>
             <th className="py-3 px-4 font-semibold text-right">Thao tác</th>
           </tr>
         </thead>

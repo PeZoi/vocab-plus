@@ -5,8 +5,7 @@ import type { QuestTemplate, QuestType } from '@/types/quest.types';
 export async function awardXp(
   userId: string,
   xpAmount: number,
-  source: string = 'review',
-  options?: { skipStreak?: boolean }
+  source: string = 'review'
 ): Promise<number> {
   const supabase = await createClient();
   const today = new Date();
@@ -53,12 +52,8 @@ export async function awardXp(
       }).eq('id', userId);
     }
     
-    // 5. Cập nhật Streak (CHỈ kích hoạt khi làm bài kiểm tra hoặc hoạt động chính thức, KHÔNG kích hoạt khi chỉ lướt flashcard preview)
-    if (!options?.skipStreak && source !== 'preview') {
-      await updateStreak(userId, today);
-    }
-
-    // 6. Cập nhật tiến độ nhiệm vụ tích lũy XP (tránh đệ quy khi source = 'quest_reward')
+    // 5. Cập nhật tiến độ nhiệm vụ tích lũy XP (tránh đệ quy khi source = 'quest_reward')
+    // LƯU Ý: Streak KHÔNG được cập nhật tại đây mà chỉ cập nhật khi hoàn thành bài ôn tập & kiểm tra (practice/complete)
     if (source !== 'quest_reward') {
       await incrementQuestProgress(userId, 'earn_xp', actualXpToAdd);
     }

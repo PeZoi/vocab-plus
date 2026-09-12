@@ -391,9 +391,6 @@ export function AdminUserTable({
             Hiển thị <strong className="text-text-primary">{users.length}</strong> học viên
           </span>
         </div>
-        <div className="text-text-secondary/70">
-          Dữ liệu đồng bộ trực tiếp qua FSRS & Supabase
-        </div>
       </div>
     </div>
   );

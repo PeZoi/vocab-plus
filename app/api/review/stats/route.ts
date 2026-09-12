@@ -77,11 +77,10 @@ export async function GET() {
       });
     }
 
-    // 4. Lấy và tính toán chuỗi streak chuẩn từ user_streaks và user_daily_xp
+    // 4. Lấy và tính toán chuỗi streak chuẩn từ user_streaks
     // (Bảo toàn streak khi người dùng xóa từ vựng vì streak gắn với tài khoản cá nhân)
     const [
       { data: userStreakRecord },
-      { data: dailyXpRows },
       { data: logs }
     ] = await Promise.all([
       supabase
@@ -89,12 +88,6 @@ export async function GET() {
         .select('current_streak, longest_streak, last_active_date, freezes_available')
         .eq('user_id', user.id)
         .maybeSingle(),
-      supabase
-        .from('user_daily_xp')
-        .select('date, xp_earned')
-        .eq('user_id', user.id)
-        .gt('xp_earned', 0)
-        .order('date', { ascending: false }),
       supabase
         .from('review_logs')
         .select('reviewed_at')
@@ -106,16 +99,18 @@ export async function GET() {
     const yesterdayStr = format(addDays(now, -1), 'yyyy-MM-dd');
 
     let streak_days = 0;
-    let has_reviewed_today = today_xp > 0;
+    let has_reviewed_today = false;
 
     // 4. Lấy và tính toán chuỗi streak chuẩn từ user_streaks (nguồn dữ liệu chính thức)
     if (userStreakRecord) {
       const lastActive = userStreakRecord.last_active_date;
       if (lastActive === todayStr) {
+        // Hôm nay đã hoàn thành bài kiểm tra/ôn tập (đã kích hoạt updateStreak)
         has_reviewed_today = true;
         streak_days = userStreakRecord.current_streak;
       } else if (lastActive === yesterdayStr) {
-        has_reviewed_today = today_xp > 0;
+        // Hôm qua đã học, hôm nay CHƯA làm bài kiểm tra/ôn tập (chỉ lướt flashcard không tính)
+        has_reviewed_today = false;
         streak_days = userStreakRecord.current_streak;
       } else if (!lastActive) {
         // Chưa có ngày học hoặc vừa được Admin reset về 0
@@ -136,10 +131,8 @@ export async function GET() {
       }
     } else {
       // Fallback: Chỉ dùng khi user chưa có bản ghi user_streaks nào trong hệ thống
+      // QUAN TRỌNG: Chỉ dựa vào review_logs (bài kiểm tra/ôn tập FSRS), TUYỆT ĐỐI KHÔNG dùng dailyXpRows vì lướt flashcard cũng có XP
       const activeDaysSet = new Set<string>();
-      (dailyXpRows || []).forEach((row) => {
-        if (row.date) activeDaysSet.add(row.date);
-      });
       (logs || []).forEach((l) => {
         if (l.reviewed_at) activeDaysSet.add(format(parseISO(l.reviewed_at), 'yyyy-MM-dd'));
       });

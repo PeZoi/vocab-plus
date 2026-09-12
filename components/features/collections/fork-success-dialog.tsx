@@ -60,7 +60,7 @@ export function ForkSuccessDialog({
             Fork Bộ Sưu Tập Hoàn Tất!
           </h3>
           <p className="text-xs text-text-secondary leading-relaxed max-w-xs mx-auto">
-            Toàn bộ từ vựng và câu ví dụ đã được đưa vào kho cá nhân của bạn kèm lịch ôn tập FSRS.
+            Toàn bộ từ vựng và câu ví dụ đã được đưa vào kho cá nhân của bạn kèm lịch ôn tập.
           </p>
         </div>
 

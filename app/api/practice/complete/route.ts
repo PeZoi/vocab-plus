@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
     let actualXpAwarded = 0;
     if (parsedXp > 0) {
-      actualXpAwarded = await awardXp(user.id, parsedXp, 'practice', { skipStreak: true });
+      actualXpAwarded = await awardXp(user.id, parsedXp, 'practice');
     }
 
     // Cập nhật chuỗi học Streak chính thức cho bài kiểm tra hôm nay

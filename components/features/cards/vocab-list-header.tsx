@@ -44,7 +44,7 @@ export function VocabListHeader({
               </span>
             </div>
             <p className="text-xs text-text-secondary mt-0.5">
-              Quản lý, tìm kiếm, lọc theo cấp độ CEFR và theo dõi tiến độ ghi nhớ FSRS
+              Quản lý, tìm kiếm, lọc theo cấp độ CEFR và theo dõi tiến độ ghi nhớ
             </p>
           </div>
         </div>

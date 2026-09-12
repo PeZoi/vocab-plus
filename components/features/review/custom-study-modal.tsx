@@ -125,7 +125,7 @@ export function CustomStudyModal({ isOpen, onClose }: CustomStudyModalProps) {
           <div>
             <h3 className="text-base font-bold text-text-primary">Phiên Học Tùy Chỉnh (Custom Study)</h3>
             <p className="text-xs text-text-secondary">
-              Ôn tập tập trung theo Tag, Trình độ CEFR hoặc Bộ sưu tập mà không ảnh hưởng lịch FSRS
+              Ôn tập tập trung theo Tag, Trình độ CEFR hoặc Bộ sưu tập mà không ảnh hưởng lịch
             </p>
           </div>
         </div>

@@ -47,7 +47,7 @@ export function VocabDetailFsrsCard({ cardId, userCard, onRefetch }: VocabDetail
       <div className="flex items-center justify-between border-b border-border/50 pb-3">
         <div className="flex items-center gap-2">
           <BrainCircuit className="w-4 h-4 text-brand" />
-          <span className="text-sm font-bold text-white">Trí nhớ FSRS</span>
+          <span className="text-sm font-bold text-white">Trí nhớ</span>
         </div>
         <div className="flex items-center gap-1.5">
           {userCard?.is_leech && (

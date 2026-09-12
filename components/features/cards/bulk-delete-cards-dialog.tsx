@@ -54,7 +54,7 @@ export function BulkDeleteCardsDialog({
 
         <div className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-xs text-text-secondary leading-relaxed">
           <strong className="text-danger font-semibold">Lưu ý quan trọng:</strong> Hành động này
-          sẽ xóa toàn bộ tiến trình học FSRS, độ ổn định (stability), độ khó và lịch sử ôn tập của các thẻ này. Thao tác không thể hoàn tác!
+          sẽ xóa toàn bộ tiến trình học, độ ổn định (stability), độ khó và lịch sử ôn tập của các thẻ này. Thao tác không thể hoàn tác!
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">

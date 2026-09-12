@@ -258,7 +258,7 @@ export function CardDetailModal({
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
               <span className="text-xs font-semibold text-text-secondary flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-brand" />
-                <span>Tiến độ ghi nhớ FSRS</span>
+                <span>Tiến độ ghi nhớ</span>
               </span>
               <div className="flex items-center gap-1.5">
                 {userCard.is_leech && (

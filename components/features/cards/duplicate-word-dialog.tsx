@@ -65,7 +65,7 @@ export function DuplicateWordDialog({
         <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-text-secondary leading-relaxed flex items-start gap-2">
           <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
           <div>
-            Hệ thống phát hiện từ bạn đang thêm rất giống với một từ đã có trong kho cá nhân. Để tối ưu thuật toán FSRS và tránh loãng từ, bạn có thể xem lại từ cũ hoặc tiếp tục thêm thẻ mới này.
+            Hệ thống phát hiện từ bạn đang thêm rất giống với một từ đã có trong kho cá nhân. Để tối ưu thuật toán và tránh loãng từ, bạn có thể xem lại từ cũ hoặc tiếp tục thêm thẻ mới này.
           </div>
         </div>
 

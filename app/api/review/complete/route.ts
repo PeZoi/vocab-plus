@@ -16,17 +16,17 @@ export async function POST(request: Request) {
     }
 
     const body: CompleteReviewSessionDto = await request.json();
-    const { total_xp, cards_reviewed, is_preview_only } = body;
+    const { total_xp, cards_reviewed } = body;
 
     const parsedXp = Math.max(0, Number(total_xp) || 0);
 
     let actualXpAwarded = 0;
     if (parsedXp > 0) {
+      // Học flashcard chỉ thưởng nhẹ XP, TUYỆT ĐỐI KHÔNG cập nhật streak
       actualXpAwarded = await awardXp(
         user.id,
         parsedXp,
-        is_preview_only ? 'preview' : 'review',
-        { skipStreak: !!is_preview_only }
+        'preview'
       );
     }
 
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
       success: true,
       cards_reviewed: cards_reviewed || 0,
       actual_xp_awarded: actualXpAwarded,
+      streak_activated: false,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';

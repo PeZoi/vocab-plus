@@ -51,6 +51,7 @@ export interface SentenceGradeResponse {
   vocabulary_score: number; // 0 - 100
   feedback_vi: string;
   improved_sentence: string;
+  native_suggestion?: string;
   explanation_vi?: string;
   errors?: SentenceGradeErrorItem[];
 }

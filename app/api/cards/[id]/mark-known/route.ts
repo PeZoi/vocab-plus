@@ -84,8 +84,8 @@ export async function POST(request: Request, { params }: RouteParams) {
       review_mode: 'flashcard',
     });
 
-    // 3. Thưởng XP khích lệ và cập nhật nhiệm vụ
-    const xpAwarded = await awardXp(user.id, 15, 'review');
+    // 3. Thưởng XP khích lệ và cập nhật nhiệm vụ (không kích hoạt streak khi chỉ đánh dấu thẻ)
+    const xpAwarded = await awardXp(user.id, 15, 'preview');
     await incrementQuestProgress(user.id, 'review_cards', 1);
     await incrementQuestProgress(user.id, 'learn_new', 1);
 

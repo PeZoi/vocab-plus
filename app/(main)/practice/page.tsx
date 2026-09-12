@@ -133,7 +133,7 @@ function PracticeContent() {
         const questions = createRandomMixedQuestions(pickedCards);
         handleStart({
           sourceType: 'all',
-          collectionTitle: 'Từ vựng đến hạn FSRS',
+          collectionTitle: 'Từ vựng đến hạn',
           selectedCards: pickedCards,
           questions,
           questionCount: questions.length,

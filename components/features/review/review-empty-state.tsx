@@ -30,7 +30,7 @@ export function ReviewEmptyState({
         description={
           isCustomSession
             ? 'Bộ sưu tập hoặc bộ lọc này chưa có thẻ từ vựng nào.'
-            : 'Bạn đã hoàn thành xuất sắc toàn bộ lịch học FSRS ngày hôm nay. Hãy tiếp tục duy trì chuỗi học tập nhé!'
+            : 'Bạn đã hoàn thành xuất sắc toàn bộ lịch học ngày hôm nay. Hãy tiếp tục duy trì chuỗi học tập nhé!'
         }
         actionText={
           isCustomSession

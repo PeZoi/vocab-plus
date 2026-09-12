@@ -163,7 +163,7 @@ function ReviewSessionContent() {
           </div>
           <Link href={ROUTES.APP.REVIEW}>
             <Button size="sm" variant="ghost" className="h-7 text-xs text-text-secondary hover:text-text-primary">
-              Về FSRS mặc định
+              Về mặc định
             </Button>
           </Link>
         </div>

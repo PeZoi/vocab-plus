@@ -29,7 +29,7 @@ function LoginForm() {
       <div className="space-y-3 mb-8 p-4 rounded-xl bg-base/60 border border-border/50 text-xs text-text-secondary">
         <div className="flex items-center gap-2.5">
           <Brain className="w-4 h-4 text-brand shrink-0" />
-          <span>Thuật toán lặp lại ngắt quãng FSRS tối ưu trí nhớ</span>
+          <span>Thuật toán lặp lại ngắt quãng tối ưu trí nhớ</span>
         </div>
         <div className="flex items-center gap-2.5">
           <Sparkles className="w-4 h-4 text-info shrink-0" />

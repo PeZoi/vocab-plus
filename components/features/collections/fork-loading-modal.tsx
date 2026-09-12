@@ -274,7 +274,7 @@ function ForkLoadingModalContent({
       <div className="p-3 rounded-xl bg-base/60 border border-border/60 text-[11px] text-text-secondary flex items-center gap-2 text-left leading-relaxed">
         <Zap className="w-4 h-4 text-amber-400 shrink-0" />
         <span>
-          Bộ từ sẽ được sao chép nguyên bản vào kho cá nhân của bạn và áp dụng thuật toán ghi nhớ FSRS.
+          Bộ từ sẽ được sao chép nguyên bản vào kho cá nhân của bạn và áp dụng thuật toán ghi nhớ.
         </span>
       </div>
     </motion.div>

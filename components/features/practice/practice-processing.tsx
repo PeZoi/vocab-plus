@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 const PROCESSING_STEPS = [
   { id: 1, label: 'Ghi nhận kết quả bài kiểm tra', icon: CheckCircle2 },
-  { id: 2, label: 'Tưới nước & Cập nhật thuật toán FSRS', icon: Sprout },
+  { id: 2, label: 'Tưới nước & Cập nhật thuật toán', icon: Sprout },
   { id: 3, label: 'Đánh giá Cây Sinh Trưởng & Cấp độ', icon: Sparkles },
   { id: 4, label: 'Ghi nhận chuỗi học Streak 🔥 & XP thưởng', icon: Flame },
 ];
@@ -54,7 +54,7 @@ export function PracticeProcessing() {
           Hệ thống đang tính toán kết quả...
         </h2>
         <p className="text-xs text-text-secondary max-w-sm mx-auto">
-          Đồng bộ lịch ôn tập FSRS, đánh giá cấp độ cây sinh trưởng và ghi nhận điểm thưởng.
+          Đồng bộ lịch ôn tập, đánh giá cấp độ cây sinh trưởng và ghi nhận điểm thưởng.
         </p>
       </div>
 

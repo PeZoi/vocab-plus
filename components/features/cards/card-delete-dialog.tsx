@@ -51,7 +51,7 @@ export function CardDeleteDialog({
           <strong className="text-text-primary font-semibold font-mono">
             &ldquo;{card.word}&rdquo;
           </strong>{' '}
-          khỏi kho thẻ? Thao tác này cũng sẽ xóa toàn bộ tiến trình học FSRS và lịch sử ôn tập của thẻ này.
+          khỏi kho thẻ? Thao tác này cũng sẽ xóa toàn bộ tiến trình học và lịch sử ôn tập của thẻ này.
         </p>
 
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
