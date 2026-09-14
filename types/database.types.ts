@@ -262,6 +262,7 @@ export type Database = {
           quest_type: Database["public"]["Enums"]["quest_type"]
           reward_xp: number
           target: number
+          title: string | null
           updated_at: string
           user_id: string
         }
@@ -274,6 +275,7 @@ export type Database = {
           quest_type: Database["public"]["Enums"]["quest_type"]
           reward_xp?: number
           target: number
+          title?: string | null
           updated_at?: string
           user_id: string
         }
@@ -286,6 +288,7 @@ export type Database = {
           quest_type?: Database["public"]["Enums"]["quest_type"]
           reward_xp?: number
           target?: number
+          title?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -336,6 +339,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      league_seasons: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          reset_at: string
+          reset_by: string | null
+          season_number: number
+          start_date: string
+          title: string
+          top_podium: Json
+          total_participants: number
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          reset_at?: string
+          reset_by?: string | null
+          season_number?: number
+          start_date: string
+          title: string
+          top_podium?: Json
+          total_participants?: number
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          reset_at?: string
+          reset_by?: string | null
+          season_number?: number
+          start_date?: string
+          title?: string
+          top_podium?: Json
+          total_participants?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -602,6 +644,54 @@ export type Database = {
           },
         ]
       }
+      user_season_history: {
+        Row: {
+          created_at: string
+          id: string
+          league_tier: Database["public"]["Enums"]["league_tier"]
+          rank_position: number
+          season_id: string
+          user_id: string
+          weekly_xp: number
+          zone: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          league_tier?: Database["public"]["Enums"]["league_tier"]
+          rank_position: number
+          season_id: string
+          user_id: string
+          weekly_xp?: number
+          zone?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          league_tier?: Database["public"]["Enums"]["league_tier"]
+          rank_position?: number
+          season_id?: string
+          user_id?: string
+          weekly_xp?: number
+          zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_season_history_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "league_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_season_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_streaks: {
         Row: {
           created_at: string
@@ -645,11 +735,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_reset_all_leagues: { Args: { p_admin_id?: string }; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       is_card_in_public_collection: {
         Args: { card_id_param: string }
         Returns: boolean
       }
+      settle_weekly_leagues: { Args: never; Returns: Json }
     }
     Enums: {
       league_tier:

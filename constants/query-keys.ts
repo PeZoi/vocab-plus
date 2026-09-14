@@ -62,4 +62,9 @@ export const questKeys = {
   daily: () => [...questKeys.all, 'daily'] as const,
 };
 
-
+export const leaderboardKeys = {
+  all: ['leaderboard'] as const,
+  live: (timeframe: string, tier?: string) => [...leaderboardKeys.all, 'live', timeframe, tier] as const,
+  seasons: () => [...leaderboardKeys.all, 'seasons'] as const,
+  seasonDetail: (seasonId: string) => [...leaderboardKeys.all, 'season', seasonId] as const,
+};

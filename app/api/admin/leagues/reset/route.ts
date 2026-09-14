@@ -36,18 +36,24 @@ export async function POST() {
       );
     }
 
-    // Thực thi Database Function Atomic RPC
-    const { data, error } = await supabase.rpc('admin_reset_all_leagues');
+    // Thực thi Database Function Atomic RPC (có lưu snapshot mùa giải & lịch sử)
+    const { data, error } = await supabase.rpc('admin_reset_all_leagues', {
+      p_admin_id: user.id,
+    });
 
     if (error) {
       console.error('[ADMIN_RESET_LEAGUES] RPC Error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const result = (data || {}) as Record<string, unknown>;
+
     return NextResponse.json({
       success: true,
-      message: 'Đã reset rank toàn bộ học viên thành công! Tổng XP vẫn được giữ nguyên vẹn.',
-      result: data,
+      message:
+        (result.message as string) ||
+        'Đã lưu trữ mùa giải và reset rank toàn bộ học viên thành công! Tổng XP vẫn được giữ nguyên vẹn.',
+      result,
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Lỗi hệ thống không xác định';

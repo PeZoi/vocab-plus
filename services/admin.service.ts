@@ -38,6 +38,23 @@ export interface SystemSetting {
   updated_at: string;
 }
 
+export interface ResetLeaguesResult {
+  success: boolean;
+  message: string;
+  season_id?: string;
+  season_number?: number;
+  season_title?: string;
+  total_participants?: number;
+  reset_users_count?: number;
+  reset_at?: string;
+}
+
+export interface ResetLeaguesResponse {
+  success: boolean;
+  message: string;
+  result?: ResetLeaguesResult;
+}
+
 export const adminService = {
   /**
    * Lấy danh sách cấu hình các nhà cung cấp AI toàn hệ thống
@@ -106,9 +123,10 @@ export const adminService = {
   },
 
   /**
-   * Reset toàn bộ rank về 'unranked', làm mới điểm tuần, BẢO TOÀN 100% Tổng XP
+   * Reset toàn bộ rank về 'unranked', làm mới điểm tuần, BẢO TOÀN 100% Tổng XP và lưu trữ lịch sử mùa giải
    */
-  resetAllLeagues: (): Promise<{ success: boolean; message: string; result?: unknown }> => {
+  resetAllLeagues: (): Promise<ResetLeaguesResponse> => {
     return apiClient.post('/admin/leagues/reset');
   },
 };
+

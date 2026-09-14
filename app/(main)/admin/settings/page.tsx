@@ -37,6 +37,7 @@ import { QuestSettingsCard } from '@/components/features/admin/quest-settings-ca
 import { XpSettingsCard } from '@/components/features/admin/xp-settings-card';
 import { VocabLevelSettingsCard } from '@/components/features/admin/vocab-level-settings-card';
 import { LeagueRankSettingsCard } from '@/components/features/admin/league-rank-settings-card';
+import { SeasonHistoryAdminCard } from '@/components/features/admin/season-history-admin-card';
 import type { LeagueTier } from '@/constants/leagues';
 import type { TierConfigItem } from '@/services/leaderboard.service';
 import type { QuestTemplate } from '@/types/quest.types';
@@ -845,6 +846,9 @@ export default function AdminSettingsPage() {
               isSaving={updateMutation.isPending}
               onResetRank={handleResetRank}
             />
+
+            {/* Card: Nhật ký lưu trữ các lần Reset Rank & Mùa giải */}
+            <SeasonHistoryAdminCard />
           </motion.div>
         )}
 

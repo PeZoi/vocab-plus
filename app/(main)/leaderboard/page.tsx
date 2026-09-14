@@ -24,12 +24,14 @@ import { LeaderboardPodium } from '@/components/features/leaderboard/leaderboard
 import { LeagueBadge } from '@/components/features/leaderboard/league-badge';
 import { RankLottieIcon } from '@/components/features/leaderboard/rank-lottie-icon';
 import { Button } from '@/components/ui/button';
+import { SeasonHistoryTab } from '@/components/features/leaderboard/season-history-tab';
 import type { LeagueTier, ZoneType } from '@/constants/leagues';
 import { LEAGUE_TIERS_CONFIG, LEAGUE_TIER_ORDER } from '@/constants/leagues';
 
 type Timeframe = 'daily' | 'weekly' | 'all_time';
 
 export default function LeaderboardPage() {
+  const [activeTab, setActiveTab] = useState<'current' | 'history'>('current');
   const [timeframe, setTimeframe] = useState<Timeframe>('weekly');
   const [selectedTier, setSelectedTier] = useState<LeagueTier | undefined>(undefined);
   const [isTierDropdownOpen, setIsTierDropdownOpen] = useState(false);
@@ -141,8 +143,40 @@ export default function LeaderboardPage() {
         </p>
       </div>
 
-      {/* Timeframe Filter Tabs */}
-      <div className="flex items-center justify-center bg-surface/50 p-1.5 rounded-2xl border border-border/80 w-fit mx-auto">
+      {/* Main Mode Tabs: Bảng Tuần Này vs Lịch Sử Mùa Giải */}
+      <div className="flex items-center justify-center p-1 rounded-2xl bg-surface/70 border border-border/80 w-fit mx-auto shadow-sm">
+        <button
+          type="button"
+          onClick={() => setActiveTab('current')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
+            activeTab === 'current'
+              ? 'bg-brand text-white shadow-md shadow-brand/20'
+              : 'text-text-secondary hover:text-text-primary hover:bg-base/40'
+          }`}
+        >
+          <Zap className="w-4 h-4" />
+          <span>Bảng Tuần Này</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('history')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
+            activeTab === 'history'
+              ? 'bg-brand text-white shadow-md shadow-brand/20'
+              : 'text-text-secondary hover:text-text-primary hover:bg-base/40'
+          }`}
+        >
+          <Trophy className="w-4 h-4" />
+          <span>Lịch Sử Mùa Giải</span>
+        </button>
+      </div>
+
+      {activeTab === 'history' ? (
+        <SeasonHistoryTab />
+      ) : (
+        <>
+          {/* Timeframe Filter Tabs */}
+          <div className="flex items-center justify-center bg-surface/50 p-1.5 rounded-2xl border border-border/80 w-fit mx-auto">
         {(['daily', 'weekly', 'all_time'] as Timeframe[]).map((tf) => (
           <button
             key={tf}
@@ -473,6 +507,9 @@ export default function LeaderboardPage() {
           </div>
         )}
       </div>
+        </>
+      )}
     </motion.div>
   );
 }
+
