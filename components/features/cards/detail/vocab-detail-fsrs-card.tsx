@@ -6,7 +6,6 @@ import { ROUTES } from '@/constants/routes';
 import type { UserCard } from '@/types/card.types';
 import { formatDateTime, formatRelativeTime } from '@/utils/datetime';
 import {
-  AlertTriangle,
   BrainCircuit,
   Clock,
   Zap,
@@ -50,12 +49,6 @@ export function VocabDetailFsrsCard({ cardId, userCard, onRefetch }: VocabDetail
           <span className="text-sm font-bold text-white">Trí nhớ</span>
         </div>
         <div className="flex items-center gap-1.5">
-          {userCard?.is_leech && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" />
-              Leech
-            </span>
-          )}
           <Badge variant={isDue ? 'danger' : 'default'} className="text-[10px] font-medium">
             {!userCard
               ? 'Chưa học'

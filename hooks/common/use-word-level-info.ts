@@ -45,7 +45,6 @@ export function useWordLevelInfo({ userCard, directLevel }: UseWordLevelInfoPara
         due_at: new Date().toISOString(),
         review_count: targetLvl?.minConsecutiveCorrect || directLevel * 2,
         lapse_count: 0,
-        is_leech: false,
         state: directLevel === 0 ? 'new' : 'review',
       };
     }

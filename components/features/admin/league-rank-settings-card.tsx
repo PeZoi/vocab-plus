@@ -12,11 +12,25 @@ import {
   ShieldCheck,
   RefreshCw,
   AlertTriangle,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  Zap,
 } from 'lucide-react';
 import type { LeagueTier } from '@/constants/leagues';
 import { LEAGUE_TIERS_CONFIG, LEAGUE_TIER_ORDER } from '@/constants/leagues';
 import { RankLottieIcon } from '@/components/features/leaderboard/rank-lottie-icon';
 import type { TierConfigItem } from '@/services/leaderboard.service';
+import { adminService } from '@/services/admin.service';
+import { getNextResetDate } from '@/utils/datetime';
+import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface LeagueRankSettingsCardProps {
   initialConfigs?: Record<LeagueTier, TierConfigItem>;
@@ -51,6 +65,68 @@ export function LeagueRankSettingsCard({
   const [isDirty, setIsDirty] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+
+  // --- Tự động Reset Rank qua Supabase pg_cron ---
+  const [scheduleEnabled, setScheduleEnabled] = useState(true);
+  const [scheduleDay, setScheduleDay] = useState(1); // 1 = Thứ Hai
+  const [scheduleTime, setScheduleTime] = useState('00:00');
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false);
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
+  const [scheduleDirty, setScheduleDirty] = useState(false);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    adminService
+      .getRankResetSchedule()
+      .then((res) => {
+        if (isMounted && res.success && res.schedule) {
+          setScheduleEnabled(res.schedule.enabled);
+          setScheduleDay(res.schedule.dayOfWeek ?? 1);
+          setScheduleTime(res.schedule.time || '00:00');
+          setScheduleDirty(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Không thể tải cấu hình lịch reset rank:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingSchedule(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSaveSchedule = async () => {
+    try {
+      setIsSavingSchedule(true);
+      const res = await adminService.updateRankResetSchedule({
+        enabled: scheduleEnabled,
+        dayOfWeek: scheduleDay,
+        time: scheduleTime,
+        timezone: 'Asia/Ho_Chi_Minh',
+      });
+      if (res.success) {
+        toast.success('Đã cập nhật lịch tự động reset rank bằng pg_cron thành công!');
+        setScheduleDirty(false);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu lịch reset';
+      toast.error(msg);
+    } finally {
+      setIsSavingSchedule(false);
+    }
+  };
+
+  const nextResetDate = getNextResetDate(scheduleDay, scheduleTime);
+  const nextResetStr = nextResetDate.toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   if (initialConfigs !== prevInitialConfigs) {
     setPrevInitialConfigs(initialConfigs);
@@ -156,8 +232,143 @@ export function LeagueRankSettingsCard({
       <div className="p-3 rounded-xl bg-base/60 border border-border/80 text-xs text-text-secondary flex items-start gap-2.5">
         <Trophy className="w-4 h-4 text-brand shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong>Quy tắc xét duyệt tuần:</strong> Vào thời điểm chốt sổ tuần (23:59 Chủ Nhật), học viên chỉ cần kiếm đủ số <strong>XP trong tuần đó</strong> đạt hoặc vượt ngưỡng Thăng hạng sẽ được thăng hạng; nếu không đạt ngưỡng Trụ hạng sẽ bị giáng hạng. Hệ thống hoàn toàn không dùng Tổng XP tích lũy toàn thời gian.
+          <strong>Quy tắc xét duyệt tuần:</strong> Vào thời điểm chốt sổ tuần, học viên chỉ cần kiếm đủ số <strong>XP trong tuần đó</strong> đạt hoặc vượt ngưỡng Thăng hạng sẽ được thăng hạng; nếu không đạt ngưỡng Trụ hạng sẽ bị giáng hạng. Hệ thống hoàn toàn không dùng Tổng XP tích lũy toàn thời gian.
         </p>
+      </div>
+
+      {/* Cấu Hình Lịch Tự Động Reset Rank */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-base/60 border border-border/90 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <Zap className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-text-primary">
+                  Tự Động Hóa Chốt Sổ Tuần 
+                </h4>
+                {scheduleEnabled ? (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Chạy ngầm 24/7
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-500/15 text-slate-400 border border-slate-500/30">
+                    Đã tắt tự động
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-text-secondary mt-0.5">
+                Chạy hoàn toàn trong Postgres Database, tự động lưu lịch sử mùa giải và giữ Supabase Online 24/7.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleSaveSchedule}
+              disabled={isSavingSchedule || !scheduleDirty || isLoadingSchedule}
+              className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs"
+            >
+              {isSavingSchedule ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              <span>Lưu Lịch Reset</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1 border-t border-border/50">
+          {/* 1. Trạng thái tự động */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-text-secondary flex items-center gap-1.5">
+              <span>Trạng thái tự động:</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setScheduleEnabled(!scheduleEnabled);
+                  setScheduleDirty(true);
+                }}
+                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                  scheduleEnabled ? 'bg-emerald-500' : 'bg-surface border border-border'
+                }`}
+              >
+                <div
+                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                    scheduleEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+              <span className="text-xs font-semibold text-text-primary">
+                {scheduleEnabled ? 'Bật tự động' : 'Tắt tự động'}
+              </span>
+            </div>
+          </div>
+
+          {/* 2. Ngày trong tuần */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-text-secondary flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-brand" />
+              <span>Ngày chốt sổ:</span>
+            </label>
+            <Select
+              value={String(scheduleDay)}
+              onValueChange={(val) => {
+                setScheduleDay(Number(val));
+                setScheduleDirty(true);
+              }}
+            >
+              <SelectTrigger className="h-9 rounded-xl text-xs bg-surface border-border">
+                <SelectValue placeholder="Chọn ngày chốt sổ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Thứ Hai (Khuyên dùng)</SelectItem>
+                <SelectItem value="2">Thứ Ba</SelectItem>
+                <SelectItem value="3">Thứ Tư</SelectItem>
+                <SelectItem value="4">Thứ Năm</SelectItem>
+                <SelectItem value="5">Thứ Sáu</SelectItem>
+                <SelectItem value="6">Thứ Bảy</SelectItem>
+                <SelectItem value="0">Chủ Nhật</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 3. Giờ chốt sổ */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-text-secondary flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-sky-400" />
+              <span>Giờ chốt sổ (Giờ VN):</span>
+            </label>
+            <Input
+              type="time"
+              value={scheduleTime}
+              onChange={(e) => {
+                setScheduleTime(e.target.value);
+                setScheduleDirty(true);
+              }}
+              className="h-9 text-xs font-medium bg-surface border-border"
+            />
+          </div>
+        </div>
+
+        {/* Thời điểm reset tiếp theo */}
+        {scheduleEnabled && (
+          <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              Lần reset tự động kế tiếp dự kiến:{' '}
+              <strong className="text-white capitalize">{nextResetStr}</strong>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* 10 Tiers Configuration Grid/List */}

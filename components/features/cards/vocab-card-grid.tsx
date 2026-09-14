@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import type { CardWithProgress } from '@/types/card.types';
 import { formatDateTime, formatRemainingTime } from '@/utils/datetime';
 import { formatIPA } from '@/utils/formatters';
-import { AlertTriangle, Check, Clock, Edit2, FolderPlus, Trash2 } from 'lucide-react';
+import { Check, Clock, Edit2, FolderPlus, Trash2 } from 'lucide-react';
 
 interface VocabCardGridProps {
   cards: CardWithProgress[];
@@ -116,12 +116,6 @@ export function VocabCardGrid({
                   )}
                 <div className='flex items-center gap-1'>
                   <WordLevelBadge userCard={userCard} mode="compact" />
-                  {userCard?.is_leech && (
-                    <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-0.5">
-                      <AlertTriangle className="w-2.5 h-2.5" />
-                      Leech
-                    </span>
-                  )}
                 </div>
               </div>
 

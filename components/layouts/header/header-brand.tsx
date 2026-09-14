@@ -28,7 +28,7 @@ export function HeaderBrand() {
           <BookOpen className="w-4 h-4" />
         </motion.div>
         <span className="font-semibold text-base tracking-tight text-text-primary group-hover:text-brand transition-colors">
-          Vocab<span className="text-brand">App</span>
+          Vocab Plus <span className="text-brand">App</span>
         </span>
       </Link>
     </div>

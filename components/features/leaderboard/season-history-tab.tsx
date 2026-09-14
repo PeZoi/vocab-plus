@@ -9,9 +9,15 @@ import {
   Users,
   Award,
   Sparkles,
-  ChevronDown,
   Info,
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useSeasonsQuery, useSeasonDetailQuery } from '@/hooks/features/leaderboard/use-seasons';
 import { LeaderboardPodium } from '@/components/features/leaderboard/leaderboard-podium';
 import { LeagueBadge } from '@/components/features/leaderboard/league-badge';
@@ -90,20 +96,22 @@ export function SeasonHistoryTab() {
             <label htmlFor="season-select" className="text-xs text-text-secondary font-medium block">
               Chọn mùa giải để xem vinh danh:
             </label>
-            <div className="relative inline-block mt-0.5">
-              <select
-                id="season-select"
+            <div className="mt-1 min-w-[200px] sm:min-w-[240px]">
+              <Select
                 value={activeSeasonId || ''}
-                onChange={(e) => setUserSelectedSeasonId(e.target.value)}
-                className="appearance-none bg-base/80 border border-border hover:border-border-hover focus:border-brand text-text-primary text-sm font-bold py-1.5 pl-3 pr-8 rounded-xl outline-hidden cursor-pointer transition-colors"
+                onValueChange={(val) => setUserSelectedSeasonId(val)}
               >
-                {seasons.map((s) => (
-                  <option key={s.id} value={s.id} className="bg-surface text-text-primary">
-                    Mùa #{s.season_number}: {s.title}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-text-secondary absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <SelectTrigger className="h-9 rounded-xl text-xs sm:text-sm font-bold bg-base/80 border-border hover:border-border-hover">
+                  <SelectValue placeholder="Chọn mùa giải" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasons.map((s) => (
+                    <SelectItem key={s.id} value={s.id} className="text-xs sm:text-sm font-medium">
+                      Mùa #{s.season_number}: {s.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

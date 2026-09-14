@@ -18,7 +18,7 @@ function LoginForm() {
           <BookOpen className="w-7 h-7" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold font-heading text-text-primary tracking-tight">
-          Chào mừng đến với <span className="text-brand">VocabApp</span>
+          Chào mừng đến với <span className="text-brand">Vocab Plus App</span>
         </h1>
         <p className="text-sm text-text-secondary mt-2 max-w-xs">
           Học từ vựng thông minh theo phương pháp Spaced Repetition và AI

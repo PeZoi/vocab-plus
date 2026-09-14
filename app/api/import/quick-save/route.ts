@@ -120,7 +120,6 @@ export async function POST(request: Request) {
         state: 'new',
         review_count: 0,
         lapse_count: 0,
-        is_leech: false,
       })
       .select()
       .single();

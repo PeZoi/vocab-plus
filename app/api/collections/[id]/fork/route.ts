@@ -137,7 +137,6 @@ export async function POST(
         difficulty: initialFsrsCard.difficulty,
         review_count: 0,
         lapse_count: 0,
-        is_leech: false,
       });
 
       // Link into the new user collection

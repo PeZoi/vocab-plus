@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Send, Clock, LogOut } from 'lucide-react';
+import { Clock, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGoogleAuth } from '@/hooks/features/auth/use-google-auth';
 import { pageVariants } from '@/constants/animations';
+import { TelegramSettingsCard } from '@/components/features/settings/telegram-settings-card';
 
 export default function SettingsPage() {
   const { signOut, isLoading } = useGoogleAuth();
@@ -28,22 +29,7 @@ export default function SettingsPage() {
 
       <div className="space-y-3.5">
         {/* Telegram Integration Card */}
-        <div className="p-4 sm:p-5 rounded-xl bg-surface/80 border border-border/70 space-y-2.5 shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-info/10 text-info flex items-center justify-center">
-              <Send className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-text-primary">Kết nối Telegram Bot</h3>
-              <p className="text-xs text-text-secondary">
-                Nhận thông báo nhắc nhở giờ vàng và báo cáo tiến độ tuần
-              </p>
-            </div>
-          </div>
-          <p className="text-xs text-text-secondary bg-base/50 p-2.5 rounded-lg border border-border/60">
-            Tính năng liên kết bot Telegram sẽ được kích hoạt toàn diện ở Phase 4 theo tài liệu đặc tả.
-          </p>
-        </div>
+        <TelegramSettingsCard />
 
         {/* Golden Hours Card */}
         <div className="p-4 sm:p-5 rounded-xl bg-surface/80 border border-border/70 space-y-2.5 shadow-xs">

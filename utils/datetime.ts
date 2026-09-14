@@ -1,4 +1,4 @@
-import { formatDistanceToNow, parseISO, endOfWeek } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 
@@ -17,11 +17,51 @@ export interface RankResetCountdown {
 }
 
 /**
- * Tính thời gian còn lại đến thời điểm chốt sổ & reset rank tuần (23:59:59 Chủ Nhật)
+ * Tính toán thời điểm reset tiếp theo theo ngày trong tuần (0-6) và giờ (HH:mm)
  */
-export function getRankResetCountdown(now: Date = new Date()): RankResetCountdown {
-  const sundayEnd = endOfWeek(now, { weekStartsOn: 1 });
-  const diffMs = sundayEnd.getTime() - now.getTime();
+export function getNextResetDate(
+  dayOfWeek: number = 1,
+  timeStr: string = '00:00',
+  now: Date = new Date()
+): Date {
+  const [hourStr, minStr] = (timeStr || '00:00').split(':');
+  const targetHour = parseInt(hourStr || '0', 10);
+  const targetMinute = parseInt(minStr || '0', 10);
+
+  const result = new Date(now);
+  result.setSeconds(0, 0);
+  result.setHours(targetHour, targetMinute, 0, 0);
+
+  const currentDay = now.getDay();
+  let daysUntil = (dayOfWeek - currentDay + 7) % 7;
+
+  // Nếu rơi vào chính ngày hôm nay nhưng giờ đã qua thì cộng 7 ngày
+  if (daysUntil === 0 && now.getTime() >= result.getTime()) {
+    daysUntil = 7;
+  }
+
+  result.setDate(result.getDate() + daysUntil);
+  return result;
+}
+
+/**
+ * Tính thời gian còn lại đến thời điểm chốt sổ & reset rank tuần
+ */
+export function getRankResetCountdown(
+  now: Date = new Date(),
+  target?: { dayOfWeek: number; time: string } | Date
+): RankResetCountdown {
+  let targetDate: Date;
+  if (target instanceof Date) {
+    targetDate = target;
+  } else if (target && typeof target.dayOfWeek === 'number') {
+    targetDate = getNextResetDate(target.dayOfWeek, target.time, now);
+  } else {
+    // Mặc định: Thứ Hai 00:00:00 VN
+    targetDate = getNextResetDate(1, '00:00', now);
+  }
+
+  const diffMs = targetDate.getTime() - now.getTime();
 
   if (diffMs <= 0) {
     return {

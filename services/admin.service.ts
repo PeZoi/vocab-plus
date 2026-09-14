@@ -55,6 +55,24 @@ export interface ResetLeaguesResponse {
   result?: ResetLeaguesResult;
 }
 
+export interface RankResetSchedulePayload {
+  enabled: boolean;
+  dayOfWeek: number;
+  time: string;
+  timezone?: string;
+}
+
+export interface RankResetScheduleResponse {
+  success: boolean;
+  schedule: {
+    enabled: boolean;
+    dayOfWeek: number;
+    time: string;
+    timezone: string;
+    cronExpr?: string;
+  };
+}
+
 export const adminService = {
   /**
    * Lấy danh sách cấu hình các nhà cung cấp AI toàn hệ thống
@@ -127,6 +145,22 @@ export const adminService = {
    */
   resetAllLeagues: (): Promise<ResetLeaguesResponse> => {
     return apiClient.post('/admin/leagues/reset');
+  },
+
+  /**
+   * Lấy cấu hình lịch tự động Reset Rank bằng pg_cron
+   */
+  getRankResetSchedule: (): Promise<RankResetScheduleResponse> => {
+    return apiClient.get('/admin/leagues/schedule');
+  },
+
+  /**
+   * Cập nhật cấu hình lịch tự động Reset Rank và tái lập lịch trên Supabase pg_cron
+   */
+  updateRankResetSchedule: (
+    payload: RankResetSchedulePayload
+  ): Promise<{ success: boolean; result: unknown }> => {
+    return apiClient.post('/admin/leagues/schedule', payload);
   },
 };
 

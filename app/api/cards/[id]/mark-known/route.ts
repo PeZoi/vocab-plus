@@ -42,7 +42,6 @@ export async function POST(request: Request, { params }: RouteParams) {
           due_at: futureDue.toISOString(),
           review_count: Math.max(existingUserCard.review_count || 0, 5),
           lapse_count: 0,
-          is_leech: false,
         })
         .eq('id', existingUserCard.id)
         .select()
@@ -64,7 +63,6 @@ export async function POST(request: Request, { params }: RouteParams) {
           due_at: futureDue.toISOString(),
           review_count: 5,
           lapse_count: 0,
-          is_leech: false,
         })
         .select()
         .single();

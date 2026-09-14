@@ -168,7 +168,6 @@ export function MixedPracticeRunner({
               stability: 1,
               lapse_count: 0,
               review_count: 0,
-              is_leech: false,
               created_at: '',
               updated_at: '',
             }),

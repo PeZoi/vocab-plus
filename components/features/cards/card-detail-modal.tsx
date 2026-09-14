@@ -10,7 +10,6 @@ import type { CardWithProgress, CollocationItem, WordFamilyItem } from '@/types/
 import { formatDateTime } from '@/utils/datetime';
 import { formatIPA } from '@/utils/formatters';
 import {
-  AlertTriangle,
   Calendar,
   Edit2,
   FolderPlus,
@@ -261,12 +260,6 @@ export function CardDetailModal({
                 <span>Tiến độ ghi nhớ</span>
               </span>
               <div className="flex items-center gap-1.5">
-                {userCard.is_leech && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    Từ khó (Leech)
-                  </span>
-                )}
                 <Badge variant="default" className="capitalize text-[10px]">
                   {userCard.state === 'review'
                     ? 'Đang ôn tập'

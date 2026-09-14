@@ -175,7 +175,6 @@ export function useQuizRunner({
             due_at: new Date(Date.now() + 86400000 * 3).toISOString(),
             review_count: (Number(userCard?.review_count) || 0) + 1,
             lapse_count: Number(userCard?.lapse_count) || 0,
-            is_leech: false,
             state: 'review',
           };
           const newLevelInfo = calculateWordLevel(simulatedUserCard, levelConfig);

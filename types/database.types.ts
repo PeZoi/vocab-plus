@@ -388,6 +388,7 @@ export type Database = {
           id: string
           role: string | null
           telegram_chat_id: number | null
+          telegram_notifications_enabled: boolean | null
           timezone: string | null
           xp: number | null
         }
@@ -399,6 +400,7 @@ export type Database = {
           id: string
           role?: string | null
           telegram_chat_id?: number | null
+          telegram_notifications_enabled?: boolean | null
           timezone?: string | null
           xp?: number | null
         }
@@ -410,6 +412,7 @@ export type Database = {
           id?: string
           role?: string | null
           telegram_chat_id?: number | null
+          telegram_notifications_enabled?: boolean | null
           timezone?: string | null
           xp?: number | null
         }
@@ -481,13 +484,44 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_link_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_link_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_cards: {
         Row: {
           card_id: string | null
           difficulty: number | null
           due_at: string | null
           id: string
-          is_leech: boolean | null
           lapse_count: number | null
           review_count: number | null
           stability: number | null
@@ -499,7 +533,6 @@ export type Database = {
           difficulty?: number | null
           due_at?: string | null
           id?: string
-          is_leech?: boolean | null
           lapse_count?: number | null
           review_count?: number | null
           stability?: number | null
@@ -511,7 +544,6 @@ export type Database = {
           difficulty?: number | null
           due_at?: string | null
           id?: string
-          is_leech?: boolean | null
           lapse_count?: number | null
           review_count?: number | null
           stability?: number | null
@@ -736,6 +768,15 @@ export type Database = {
     }
     Functions: {
       admin_reset_all_leagues: { Args: { p_admin_id?: string }; Returns: Json }
+      admin_update_rank_reset_schedule: {
+        Args: {
+          p_day_of_week: number
+          p_enabled: boolean
+          p_time: string
+          p_timezone?: string
+        }
+        Returns: Json
+      }
       is_admin: { Args: never; Returns: boolean }
       is_card_in_public_collection: {
         Args: { card_id_param: string }

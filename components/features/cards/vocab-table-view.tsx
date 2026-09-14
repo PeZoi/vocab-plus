@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { CardWithProgress } from '@/types/card.types';
 import { formatIPA } from '@/utils/formatters';
-import { AlertTriangle, Check, Edit2, Eye, FolderPlus, Trash2 } from 'lucide-react';
+import { Check, Edit2, Eye, FolderPlus, Trash2 } from 'lucide-react';
 
 interface VocabTableViewProps {
   cards: CardWithProgress[];
@@ -185,12 +185,7 @@ export function VocabTableView({
 
                 {/* FSRS Status */}
                 <td className="py-3 px-3 whitespace-nowrap">
-                  {userCard?.is_leech ? (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-fit">
-                      <AlertTriangle className="w-3 h-3" />
-                      Leech
-                    </span>
-                  ) : isDue ? (
+                  {isDue ? (
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand/15 text-brand border border-brand/30 inline-flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                       Cần ôn tập

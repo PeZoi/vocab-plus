@@ -53,7 +53,6 @@ export async function POST(request: Request) {
           difficulty: initialEmpty.difficulty,
           review_count: 0,
           lapse_count: 0,
-          is_leech: false,
         })
         .select()
         .single();
@@ -126,8 +125,6 @@ export async function POST(request: Request) {
         : userCard.lapse_count || 0
       : (userCard.lapse_count || 0); // Bảo toàn lapse_count nếu đang học tự do chưa đến hạn
 
-    const isLeech = newLapseCount >= 4;
-
     // 4. Cập nhật bảng user_cards
     // Nếu chưa đến hạn (Not Due), bảo toàn trạng thái FSRS và cấp độ
     const updatePayload = isDue
@@ -138,7 +135,6 @@ export async function POST(request: Request) {
           state: stateRevMap[nextCard.state],
           review_count: newReviewCount,
           lapse_count: newLapseCount,
-          is_leech: isLeech,
         }
       : {
           // Bảo toàn cấp độ: không tăng review_count, không đổi due_at/stability
