@@ -19,7 +19,7 @@ export async function POST() {
 
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('display_name, telegram_chat_id, telegram_notifications_enabled')
+      .select('display_name, telegram_chat_id, telegram_notifications_enabled, timezone')
       .eq('id', user.id)
       .single();
 
@@ -37,15 +37,16 @@ export async function POST() {
     const nowStr = new Date().toLocaleTimeString('vi-VN', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: profile.timezone || 'Asia/Ho_Chi_Minh',
     });
 
     const res = await sendTelegramMessage(
       profile.telegram_chat_id,
       `🔔 <b>Kiểm tra kết nối Vocab Plus App</b>\n\n` +
-        `Xin chào <b>${studentName}</b>! Đây là tin nhắn thử nghiệm gửi lúc <b>${nowStr}</b>.\n\n` +
-        `✅ Kết nối riêng tư 1-on-1 của bạn đang hoạt động hoàn hảo.\n` +
-        `📚 Hệ thống sẽ gửi thông báo vào hộp thoại này mỗi khi bạn có từ vựng đến hạn ôn tập.\n\n` +
-        `<i>Chúc bạn một ngày học tập thật hiệu quả!</i> 🌟`
+      `Xin chào <b>${studentName}</b>! Đây là tin nhắn thử nghiệm gửi lúc <b>${nowStr}</b>.\n\n` +
+      `✅ Kết nối riêng tư của bạn đang hoạt động hoàn hảo.\n` +
+      `📚 Hệ thống sẽ gửi thông báo vào hộp thoại này mỗi khi bạn có từ vựng đến hạn ôn tập.\n\n` +
+      `<i>Chúc bạn một ngày học tập thật hiệu quả!</i> 🌟`
     );
 
     if (!res.ok) {

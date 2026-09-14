@@ -388,6 +388,8 @@ export type Database = {
           id: string
           role: string | null
           telegram_chat_id: number | null
+          telegram_last_notified_at: string | null
+          telegram_last_notified_milestone: number | null
           telegram_notifications_enabled: boolean | null
           timezone: string | null
           xp: number | null
@@ -400,6 +402,8 @@ export type Database = {
           id: string
           role?: string | null
           telegram_chat_id?: number | null
+          telegram_last_notified_at?: string | null
+          telegram_last_notified_milestone?: number | null
           telegram_notifications_enabled?: boolean | null
           timezone?: string | null
           xp?: number | null
@@ -412,6 +416,8 @@ export type Database = {
           id?: string
           role?: string | null
           telegram_chat_id?: number | null
+          telegram_last_notified_at?: string | null
+          telegram_last_notified_milestone?: number | null
           telegram_notifications_enabled?: boolean | null
           timezone?: string | null
           xp?: number | null
@@ -782,7 +788,12 @@ export type Database = {
         Args: { card_id_param: string }
         Returns: boolean
       }
+      link_telegram_chat: {
+        Args: { p_chat_id: number; p_token: string }
+        Returns: Json
+      }
       settle_weekly_leagues: { Args: never; Returns: Json }
+      unlink_telegram_chat: { Args: { p_chat_id: number }; Returns: Json }
     }
     Enums: {
       league_tier:

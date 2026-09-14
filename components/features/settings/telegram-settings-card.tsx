@@ -58,7 +58,7 @@ export function TelegramSettingsCard() {
               )}
             </div>
             <p className="text-xs text-text-secondary mt-0.5">
-              Nhận thông báo ôn tập SRS và khung Giờ Vàng riêng tư qua tin nhắn cá nhân
+              Nhận thông báo ôn tập SRS thông minh theo mốc (5, 10, 15, 20... từ) qua tin nhắn cá nhân
             </p>
           </div>
         </div>

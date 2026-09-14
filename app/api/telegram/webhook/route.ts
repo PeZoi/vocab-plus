@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     if (!isPrivate) {
       await sendTelegramMessage(
         chatId,
-        '🔒 <b>Vocab Plus App</b> chỉ hỗ trợ trò chuyện 1-on-1 riêng tư để bảo vệ tiến độ học tập cá nhân của bạn. Vui lòng nhắn tin trực tiếp cho Bot nhé!'
+        '🔒 <b>Vocab Plus App</b> chỉ hỗ trợ trò chuyện riêng tư để bảo vệ tiến độ học tập cá nhân của bạn. Vui lòng nhắn tin trực tiếp cho Bot nhé!'
       );
       return NextResponse.json({ ok: true });
     }
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
           await sendTelegramMessage(
             chatId,
             '⚠️ <b>Mã liên kết không hợp lệ hoặc đã hết hạn</b>\n\n' +
-              'Vui lòng truy cập <b>Vocab Plus App &gt; Cài đặt &gt; Telegram</b> và nhấn <b>"Lấy mã kết nối mới"</b> để thử lại nhé.'
+            'Vui lòng truy cập <b>Vocab Plus App &gt; Cài đặt &gt; Telegram</b> và nhấn <b>"Lấy mã kết nối mới"</b> để thử lại nhé.'
           );
           return NextResponse.json({ ok: true });
         }
@@ -88,12 +88,12 @@ export async function POST(request: Request) {
         await sendTelegramMessage(
           chatId,
           `🎉 <b>Chúc mừng ${studentName} đã kết nối thành công!</b>\n\n` +
-            `Tài khoản <b>Vocab Plus App</b> của bạn đã được kích hoạt nhận thông báo 1-on-1 riêng tư.\n\n` +
-            `✨ <b>Bạn sẽ nhận được:</b>\n` +
-            `• ⏰ Nhắc nhở từ vựng đến hạn ôn tập hàng ngày (SRS)\n` +
-            `• ⚡ Thông báo khung <b>Giờ Vàng x2 XP</b>\n` +
-            `• 🏆 Cập nhật thứ hạng giải đấu tuần\n\n` +
-            `Chúc bạn học tập thật bứt phá và giữ chuỗi Streak rực rỡ! 🔥`
+          `Tài khoản <b>Vocab Plus App</b> của bạn đã được kích hoạt nhận thông báo riêng tư.\n\n` +
+          `✨ <b>Bạn sẽ nhận được:</b>\n` +
+          `• ⏰ Nhắc nhở từ vựng đến hạn ôn tập hàng ngày (SRS)\n` +
+          `• ⚡ Thông báo khung <b>Giờ Vàng x2 XP</b>\n` +
+          `• 🏆 Cập nhật thứ hạng giải đấu tuần\n\n` +
+          `Chúc bạn học tập thật bứt phá và giữ chuỗi Streak rực rỡ! 🔥`
         );
         return NextResponse.json({ ok: true });
       }
@@ -109,20 +109,20 @@ export async function POST(request: Request) {
         await sendTelegramMessage(
           chatId,
           `👋 <b>Chào bạn, ${profile.display_name || 'Học viên'}!</b>\n\n` +
-            `Tài khoản Vocab Plus App của bạn đang được kết nối với Bot này. Bạn sẽ nhận thông báo riêng tư khi có bài ôn tập.\n\n` +
-            `• Gõ <b>/status</b> để kiểm tra trạng thái\n` +
-            `• Gõ <b>/unlink</b> nếu muốn ngắt kết nối`
+          `Tài khoản Vocab Plus App của bạn đang được kết nối với Bot này. Bạn sẽ nhận thông báo riêng tư khi có bài ôn tập.\n\n` +
+          `• Gõ <b>/status</b> để kiểm tra trạng thái\n` +
+          `• Gõ <b>/unlink</b> nếu muốn ngắt kết nối`
         );
       } else {
         await sendTelegramMessage(
           chatId,
           `👋 <b>Chào mừng bạn đến với Vocab Plus App Bot!</b>\n\n` +
-            `Để nhận thông báo riêng tư khi đến hạn ôn tập từ vựng, bạn hãy liên kết Bot với tài khoản học của mình.\n\n` +
-            `👉 <b>Cách làm:</b>\n` +
-            `1. Mở trang web <b>Vocab Plus App</b>\n` +
-            `2. Vào mục <b>Cài đặt &gt; Telegram</b>\n` +
-            `3. Bấm <b>"Kết nối 1-chạm"</b> để tự động kích hoạt.\n\n` +
-            `Hẹn gặp lại bạn trong những phiên ôn luyện!`
+          `Để nhận thông báo riêng tư khi đến hạn ôn tập từ vựng, bạn hãy liên kết Bot với tài khoản học của mình.\n\n` +
+          `👉 <b>Cách làm:</b>\n` +
+          `1. Mở trang web <b>Vocab Plus App</b>\n` +
+          `2. Vào mục <b>Cài đặt &gt; Telegram</b>\n` +
+          `3. Bấm <b>"Kết nối 1-chạm"</b> để tự động kích hoạt.\n\n` +
+          `Hẹn gặp lại bạn trong những phiên ôn luyện!`
         );
       }
       return NextResponse.json({ ok: true });
@@ -140,12 +140,11 @@ export async function POST(request: Request) {
         await sendTelegramMessage(
           chatId,
           `📊 <b>Trạng thái kết nối: Đang hoạt động</b>\n\n` +
-            `👤 Học viên: <b>${profile.display_name || 'Học viên'}</b>\n` +
-            `✨ Tổng XP tích lũy: <b>${profile.xp ?? 0} XP</b>\n` +
-            `🔔 Trạng thái thông báo: <b>${
-              profile.telegram_notifications_enabled ? 'Bật ✅' : 'Tắt ⏸️'
-            }</b>\n\n` +
-            `Mọi thông báo nhắc học sẽ gửi riêng tư vào hộp thoại này!`
+          `👤 Học viên: <b>${profile.display_name || 'Học viên'}</b>\n` +
+          `✨ Tổng XP tích lũy: <b>${profile.xp ?? 0} XP</b>\n` +
+          `🔔 Trạng thái thông báo: <b>${profile.telegram_notifications_enabled ? 'Bật ✅' : 'Tắt ⏸️'
+          }</b>\n\n` +
+          `Mọi thông báo nhắc học sẽ gửi riêng tư vào hộp thoại này!`
         );
       } else {
         await sendTelegramMessage(
@@ -176,9 +175,9 @@ export async function POST(request: Request) {
     await sendTelegramMessage(
       chatId,
       `🤖 Xin chào! Đây là bot thông báo tự động của <b>Vocab Plus App</b>.\n\n` +
-        `• Gõ <b>/status</b> để kiểm tra kết nối\n` +
-        `• Gõ <b>/unlink</b> để hủy liên kết\n` +
-        `• Mở Vocab Plus App trên trình duyệt để ôn tập từ vựng ngay nhé!`
+      `• Gõ <b>/status</b> để kiểm tra kết nối\n` +
+      `• Gõ <b>/unlink</b> để hủy liên kết\n` +
+      `• Mở Vocab Plus App trên trình duyệt để ôn tập từ vựng ngay nhé!`
     );
 
     return NextResponse.json({ ok: true });
