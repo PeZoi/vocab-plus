@@ -58,4 +58,13 @@ export const cardsService = {
   markKnown: (id: string): Promise<{ success: boolean; message: string; user_card: unknown; xp_awarded: number }> => {
     return apiClient.post(`/cards/${id}/mark-known`);
   },
+
+  /**
+   * Lưu hàng loạt thẻ từ vựng vào kho
+   */
+  bulkCreateCards: (
+    cards: CreateCardDto[]
+  ): Promise<import('@/types/ai-topic.types').BulkCreateCardsResponse> => {
+    return apiClient.post('/cards/bulk', { cards });
+  },
 };

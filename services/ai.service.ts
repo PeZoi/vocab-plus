@@ -2,6 +2,10 @@ import { apiClient } from '@/lib/axios';
 import type { AIWordAnalysisResponse } from '@/types/card.types';
 import type { GenerateStoryRequest, GenerateStoryResponse } from '@/types/imported-text.types';
 import type { SentenceGradeRequest, SentenceGradeResponse } from '@/types/practice.types';
+import type {
+  GenerateTopicWordsRequest,
+  GenerateTopicWordsResponse,
+} from '@/types/ai-topic.types';
 
 export const aiService = {
   /**
@@ -15,6 +19,17 @@ export const aiService = {
         timeout: 90000, // 90 giây để đáp ứng tối đa 10 lần thử lại khi gặp 429 từ Groq
       }
     );
+  },
+
+  /**
+   * Gọi AI sinh danh sách 10 - 15 từ vựng theo chủ đề hoặc mô tả
+   */
+  generateTopicWords: (
+    payload: GenerateTopicWordsRequest
+  ): Promise<GenerateTopicWordsResponse> => {
+    return apiClient.post('/ai/generate-topic-words', payload, {
+      timeout: 90000,
+    });
   },
 
   /**
