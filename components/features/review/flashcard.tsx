@@ -99,7 +99,7 @@ export function Flashcard({ card, userCard, isFlipped, onFlip, onMarkKnown }: Fl
 
           {/* Card Footer Hint */}
           <div className="text-center text-xs text-text-secondary/70">
-            Nhấn phím [Space] hoặc chạm vào thẻ để lật xem đáp án
+            Nhấn phím [Space] để lật đáp án • [Ctrl] để nghe phát âm
           </div>
         </div>
 

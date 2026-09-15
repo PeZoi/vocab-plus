@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, RotateCw, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw, CheckCircle2, Volume2 } from 'lucide-react';
 
 interface ReviewPreviewControlsProps {
   currentIndex: number;
@@ -12,6 +12,7 @@ interface ReviewPreviewControlsProps {
   onPrev: () => void;
   onNext: () => void;
   onFinishPreview: () => void;
+  onPronounce?: () => void;
 }
 
 export function ReviewPreviewControls({
@@ -22,6 +23,7 @@ export function ReviewPreviewControls({
   onPrev,
   onNext,
   onFinishPreview,
+  onPronounce,
 }: ReviewPreviewControlsProps) {
   const isFirst = currentIndex === 0;
   const isLast = currentIndex >= totalCards - 1;
@@ -49,12 +51,17 @@ export function ReviewPreviewControls({
       } else if (e.code === 'Enter') {
         e.preventDefault();
         onFinishPreview();
+      } else if (
+        (e.key === 'Control' || e.code === 'ControlLeft' || e.code === 'ControlRight') &&
+        !e.repeat
+      ) {
+        onPronounce?.();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onFlip, onPrev, onNext, onFinishPreview, isFirst, isLast]);
+  }, [onFlip, onPrev, onNext, onFinishPreview, onPronounce, isFirst, isLast]);
 
   return (
     <div className="space-y-4 pt-2">
@@ -67,7 +74,7 @@ export function ReviewPreviewControls({
           size="default"
           onClick={onPrev}
           disabled={isFirst}
-          className="flex-1 max-w-[130px] gap-1.5 text-xs text-text-secondary hover:text-text-primary border-border/80"
+          className="flex-1 max-w-[110px] gap-1 text-xs text-text-secondary hover:text-text-primary border-border/80"
           title="Thẻ trước [Phím ←]"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -81,11 +88,25 @@ export function ReviewPreviewControls({
           variant={isFlipped ? 'surface' : 'primary'}
           size="default"
           onClick={onFlip}
-          className="flex-1 max-w-[180px] gap-1.5 text-xs font-semibold shadow-xs"
+          className="flex-1 max-w-[150px] gap-1.5 text-xs font-semibold shadow-xs"
           title="Lật thẻ xem đáp án [Phím Space]"
         >
           <RotateCw className="w-3.5 h-3.5" />
           <span>{isFlipped ? 'Mặt trước' : 'Lật thẻ [Space]'}</span>
+        </Button>
+
+        {/* Pronounce Button with Hotkey */}
+        <Button
+          type="button"
+          variant="outline"
+          size="default"
+          onClick={onPronounce}
+          className="flex-1 max-w-[140px] gap-1.5 text-xs text-text-secondary hover:text-brand hover:border-brand/40 border-border/80 transition-colors"
+          title="Phát âm từ vựng này [Phím Ctrl]"
+        >
+          <Volume2 className="w-3.5 h-3.5 text-brand" />
+          <span className="hidden sm:inline">Phát âm [Ctrl]</span>
+          <span className="sm:hidden">Đọc [Ctrl]</span>
         </Button>
 
         {/* Next Button */}
@@ -95,7 +116,7 @@ export function ReviewPreviewControls({
           size="default"
           onClick={onNext}
           disabled={isLast}
-          className="flex-1 max-w-[130px] gap-1.5 text-xs text-text-secondary hover:text-text-primary border-border/80"
+          className="flex-1 max-w-[110px] gap-1 text-xs text-text-secondary hover:text-text-primary border-border/80"
           title="Thẻ tiếp theo [Phím →]"
         >
           <span className="hidden sm:inline">Sau [→]</span>
@@ -121,7 +142,7 @@ export function ReviewPreviewControls({
           </span>
         </Button>
         <p className="text-[11px] text-text-secondary mt-1.5">
-          💡 Sau khi xem xong thẻ, bạn sẽ chuyển sang làm bài kiểm tra tổng hợp để kích hoạt thăng cấp Level!
+          💡 Phím tắt: [Space] Lật thẻ • [Ctrl] Phát âm • [← / →] Chuyển thẻ • [Enter] Vào kiểm tra
         </p>
       </div>
     </div>

@@ -45,44 +45,56 @@ export async function requestAISentenceGrading({
     );
   }
 
-  const prompt = `You are a friendly, expert English teacher evaluating a sentence written by a Vietnamese student in a vocabulary learning application.
+  const prompt = `You are a friendly, encouraging English teacher evaluating a sentence written by a Vietnamese student in a vocabulary learning application.
 
 TARGET VOCABULARY WORD TO PRACTICE: "${safeWord}"
 ${safeMeaning ? `TARGET DEFINITION / SENSE: "${safeMeaning}"` : ''}
 STUDENT'S SUBMITTED SENTENCE: "${safeSentence}"
 
-CONTEXT & CORE RULES:
-1. GRAMMATICAL INFLECTIONS / TENSES ALLOWED:
-   - The student IS FULLY ALLOWED to conjugate "${safeWord}" into any appropriate tense or grammatical form (e.g., past simple: -ed, 3rd person singular: -s/-es, continuous: -ing, perfect: has/have + V3, passive voice, plurals, etc.) matching their sentence context.
-   - Any correct grammatical form/tense of "${safeWord}" is 100% valid and welcomed.
+CRITICAL EVALUATION GUIDELINES (PLEASE READ VERY CAREFULLY):
 
-2. TWO-STEP EVALUATION METHODOLOGY:
-   When evaluating the student's sentence, ALWAYS follow these 2 DISTINCT STEPS:
+1. ABSOLUTE RULE: DO NOT CARE ABOUT PUNCTUATION OR CAPITALIZATION (HOÀN TOÀN BỎ QUA DẤU CÂU & VIẾT HOA):
+   - DO NOT deduct ANY points for missing periods (.), commas (,), question marks (?), or quotation marks at the end of the sentence.
+   - DO NOT deduct ANY points if the sentence starts with a lowercase letter (e.g., "my company has a league" vs "My company has a league").
+   - DO NOT list missing punctuation or capitalization as an error in "errors".
+   - DO NOT complain about or mention "thiếu dấu chấm câu", "dấu chấm ở cuối câu", or "viết hoa đầu câu" in "feedback_vi". Punctuation and capitalization are completely optional for the student.
 
-   - BƯỚC 1: ĐÁNH GIÁ NGỮ PHÁP & CHÍNH TẢ CỦA CÂU HỌC VIÊN
-     * Check if the student's sentence has correct grammar, proper tense conjugation of "${safeWord}", correct spelling (e.g. "collegue" -> "colleague"), and correct punctuation (e.g. no unnecessary commas).
-     * Even if a native speaker might phrase the thought differently in daily conversation, if the student's sentence is grammatically sound and correctly spelled, score it fairly based on grammatical accuracy and effort!
-     * In "improved_sentence": Provide the corrected version of THE STUDENT'S OWN SENTENCE, STRICTLY KEEPING "${safeWord}" (conjugated appropriately), fixing only grammar, spelling, and punctuation errors.
+2. THREE CORE EVALUATION CRITERIA (3 TIÊU CHÍ CHÍNH DUY NHẤT ĐỂ CHẤM ĐIỂM):
+   Your evaluation MUST focus ONLY on these 3 aspects:
+   a. NGỮ PHÁP (Grammar):
+      - Is the sentence grammatically well-formed (subject, verb, agreement)?
+      - The student IS FULLY ALLOWED to conjugate "${safeWord}" into any appropriate grammatical form or tense (e.g., past simple: -ed, continuous: -ing, 3rd person singular: -s/-es, perfect, passive voice, plural nouns, etc.). Any valid tense/inflection of "${safeWord}" is 100% accepted.
+   b. NGỮ NGHĨA (Semantics & Vocabulary Usage):
+      - Is "${safeWord}" used with an appropriate meaning in this sentence context?
+      - Does the sentence make logical sense?
+   c. CHÍNH TẢ (Spelling):
+      - Are words spelled correctly (e.g., "colleague" not "collegue")?
 
-   - BƯỚC 2: LỜI KHUYÊN CÁCH DÙNG TỰ NHIÊN CỦA NGƯỜI BẢN XỨ
-     * In "feedback_vi": Structure your Vietnamese feedback with two clear labeled parts:
-       "1. Ngữ pháp & Chính tả: [Nhận xét câu bạn viết: từ '${safeWord}' đã chia thì đúng chưa, có lỗi chính tả hoặc dấu câu nào cần sửa không]"
-       "2. Lời khuyên người bản xứ: [Giải thích trong ngữ cảnh thực tế này, người bản xứ thường diễn đạt thế nào, sắc thái văn cảnh của từ '${safeWord}' ra sao]"
-     * In "native_suggestion": Provide the most authentic, natural sentence that a native English speaker would actually say in this real-life situation (for example, if the student wrote "I present myself every time I meet a new colleague", the native suggestion would be "I introduce myself every time I meet a new colleague." because "present oneself" is overly formal for daily peer greetings). If the student's sentence using "${safeWord}" is already the most natural native way, set "native_suggestion" to the same as "improved_sentence".
+3. FAIR & ENCOURAGING SCORING PHILOSOPHY (KHÔNG TRỪ ĐIỂM VÌ CÂU ĐƠN GIẢN HOẶC CHƯA BẢN XỨ):
+   - If the student's sentence has correct grammar, understandable meaning, and correct spelling (such as "My company has a league" or "I like this idea"):
+     => It MUST receive a HIGH score (85 - 100) and "is_correct": true!
+     => NEVER give a low score (< 70) or fail a student just because their sentence is short, simple, or could be phrased more idiomatically by a native speaker!
+   - Native speaker suggestions belong SOLELY in "native_suggestion" and part 2 of "feedback_vi" as helpful, friendly tips for self-improvement. They must NEVER be used to lower the student's score or fail them!
 
-SCORING GUIDELINE (0 - 100):
-- Score >= 80: "${safeWord}" is used in a good context with proper tense, and the sentence has correct grammar and spelling.
-- Score 65 - 79: The target word is used with good intent, but has minor spelling errors (e.g., "collegue"), comma splices, or awkward phrasing.
-- Score < 60: "${safeWord}" is severely ungrammatical, contradicts the target meaning, or is incomprehensible.
+SCORING TIERS (0 - 100):
+- Score 85 - 100 ("is_correct": true): Target word "${safeWord}" is used correctly in meaning, grammar is sound, and spelling is correct. Punctuation/capitalization ignored.
+- Score 70 - 84 ("is_correct": true): Meaning is clear and target word is used properly, but has minor grammatical slips (e.g., slight article a/an/the misuse or minor typo) that do not hinder understanding.
+- Score 50 - 69 ("is_correct": false): Has noticeable grammar mistake or misspelling that weakens clarity, or confused word form.
+- Score < 50 ("is_correct": false): Incomprehensible, severe broken grammar, or "${safeWord}" is used with completely wrong meaning.
+
+FEEDBACK FORMAT (in Vietnamese):
+In "feedback_vi", format strictly as:
+"1. Ngữ pháp & Ngữ nghĩa: [Nhận xét câu bạn viết: từ '${safeWord}' đã dùng đúng nghĩa và chia đúng ngữ pháp chưa, có lỗi ngữ pháp hoặc chính tả nào cần lưu ý không. Tuyệt đối không nhắc về dấu chấm câu hay viết hoa]"
+"2. Gợi ý tự nhiên hơn: [Gợi ý thân thiện cách người bản xứ hay diễn đạt tự nhiên hơn trong ngữ cảnh này để học viên tham khảo thêm]"
 
 CRITICAL INSTRUCTION:
 Return ONLY valid JSON matching this schema with NO markdown code blocks or reasoning:
 {
-  "score": 80,
+  "score": 90,
   "is_correct": true,
-  "grammar_score": 85,
-  "vocabulary_score": 75,
-  "feedback_vi": "1. Ngữ pháp & Chính tả: Câu của bạn đã chia thì cho '${safeWord}' đúng...\\n2. Lời khuyên người bản xứ: Trong ngữ cảnh này, người bản xứ thường dùng...",
+  "grammar_score": 90,
+  "vocabulary_score": 90,
+  "feedback_vi": "1. Ngữ pháp & Ngữ nghĩa: ...\\n2. Gợi ý tự nhiên hơn: ...",
   "improved_sentence": "Corrected student sentence strictly keeping \\"${safeWord}\\"",
   "native_suggestion": "Natural native sentence (e.g. how natives naturally say it in this context)",
   "explanation_vi": "Giải thích ngắn gọn cấu trúc sử dụng của từ vựng...",
@@ -90,7 +102,7 @@ Return ONLY valid JSON matching this schema with NO markdown code blocks or reas
     {
       "original_part": "part with error",
       "correction": "corrected part",
-      "reason": "lý do sửa lỗi bằng tiếng Việt"
+      "reason": "lý do sửa lỗi bằng tiếng Việt (chỉ về ngữ pháp, từ vựng hoặc chính tả, tuyệt đối không nhắc dấu câu)"
     }
   ]
 }`;
@@ -157,7 +169,7 @@ Return ONLY valid JSON matching this schema with NO markdown code blocks or reas
   const parsed = extractAndParseJson<SentenceGradeResponse>(rawContent);
   return {
     score: typeof parsed.score === 'number' ? parsed.score : 70,
-    is_correct: Boolean(parsed.is_correct ?? parsed.score >= 70),
+    is_correct: Boolean(parsed.is_correct !== undefined ? parsed.is_correct : (parsed.score ?? 70) >= 60),
     grammar_score: typeof parsed.grammar_score === 'number' ? parsed.grammar_score : 70,
     vocabulary_score: typeof parsed.vocabulary_score === 'number' ? parsed.vocabulary_score : 70,
     feedback_vi: parsed.feedback_vi || 'Đã hoàn thành chấm điểm câu.',

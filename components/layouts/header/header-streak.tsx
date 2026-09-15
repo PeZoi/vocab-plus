@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Flame } from 'lucide-react';
+import { playFlameSound } from '@/utils/sound';
 
 interface HeaderStreakProps {
   streak: number;
@@ -15,7 +16,8 @@ export function HeaderStreak({ streak, isStreakActive }: HeaderStreakProps) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors cursor-default ${
+      onClick={() => playFlameSound()}
+      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors cursor-pointer select-none ${
         isStreakActive
           ? 'bg-amber-500/15 border border-amber-500/40 text-amber-400 shadow-xs shadow-amber-500/20'
           : 'bg-surface/80 border border-border/70 text-text-secondary'

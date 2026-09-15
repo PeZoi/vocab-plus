@@ -10,11 +10,12 @@ import { ReviewEmptyState } from '@/components/features/review/review-empty-stat
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { useReviewSession } from '@/hooks/features/review/use-review-session';
+import { useTextToSpeech } from '@/hooks/common/use-text-to-speech';
 import { cardsService } from '@/services/cards.service';
 import { ArrowLeft, Target, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import ReviewLoading from './loading';
@@ -72,6 +73,14 @@ function ReviewSessionContent() {
       window.speechSynthesis.speak(utterance);
     }
   }, [autoPronounceEnabled, currentItem?.card.word, phase, isFlipped]);
+
+  const { speak } = useTextToSpeech();
+
+  const handlePronounce = useCallback(() => {
+    if (currentItem?.card.word) {
+      speak(currentItem.card.word);
+    }
+  }, [currentItem?.card.word, speak]);
 
   const handleMarkKnown = async (cardId: string) => {
     try {
@@ -242,6 +251,7 @@ function ReviewSessionContent() {
         onPrev={prevCard}
         onNext={nextCard}
         onFinishPreview={finishPreview}
+        onPronounce={handlePronounce}
       />
 
       <CustomStudyModal

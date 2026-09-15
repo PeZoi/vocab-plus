@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { playStreakCelebrationSound } from '@/utils/sound';
 
 interface StreakActivatedPopupProps {
   isOpen: boolean;
@@ -10,69 +11,6 @@ interface StreakActivatedPopupProps {
   onClose: () => void;
   /** Tùy chọn tự động đóng sau số giây (mặc định 7s, 0 là không tự đóng) */
   autoCloseDuration?: number;
-}
-
-/**
- * Âm thanh chúc mừng dạng Web Audio API tổng hợp (Không cần file mp3 ngoài)
- */
-function playDuolingoCelebrationSound(muted: boolean) {
-  if (muted || typeof window === 'undefined') return;
-
-  try {
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-
-    const ctx = new AudioContextClass();
-    const now = ctx.currentTime;
-
-    // 1. Âm thanh bùng lửa (Whoosh / Fire burst)
-    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.25, ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < noiseBuffer.length; i++) {
-      output[i] = Math.random() * 2 - 1;
-    }
-    const whiteNoise = ctx.createBufferSource();
-    whiteNoise.buffer = noiseBuffer;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(450, now);
-    filter.frequency.exponentialRampToValueAtTime(140, now + 0.25);
-    filter.Q.setValueAtTime(3, now);
-
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.2, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-
-    whiteNoise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
-    whiteNoise.start(now);
-
-    // 2. Hợp âm ăn mừng kiểu Duolingo (C5, E5, G5, C6)
-    const chordNotes = [523.25, 659.25, 783.99, 1046.5];
-    chordNotes.forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + 0.15 + idx * 0.08);
-
-      gain.gain.setValueAtTime(0, now + 0.15 + idx * 0.08);
-      gain.gain.linearRampToValueAtTime(0.22, now + 0.15 + idx * 0.08 + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15 + idx * 0.08 + 0.55);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now + 0.15 + idx * 0.08);
-      osc.stop(now + 0.15 + idx * 0.08 + 0.6);
-    });
-  } catch {
-    // Tự động bỏ qua nếu trình duyệt chặn autoplay audio
-  }
 }
 
 /**
@@ -511,7 +449,7 @@ function StreakActivatedModalContent({
     // 1. Kích hoạt hiệu ứng bùng nổ và âm thanh sau 350ms
     const igniteTimer = setTimeout(() => {
       setIsIgnited(true);
-      playDuolingoCelebrationSound(isMuted);
+      playStreakCelebrationSound(isMuted);
 
       // Đếm số nhảy từ (streakCount - 1) lên streakCount
       const countTimer = setTimeout(() => {

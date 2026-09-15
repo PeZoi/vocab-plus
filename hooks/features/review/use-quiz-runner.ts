@@ -19,6 +19,7 @@ import {
   mapQuizResultToFSRS,
 } from '@/utils/fsrs-level';
 import { generateQuizQuestions } from '@/utils/quiz-distractors';
+import { playCorrectChime, playIncorrectChime } from '@/utils/sound';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface UseQuizRunnerProps {
@@ -158,6 +159,7 @@ export function useQuizRunner({
       const userCard = currentQuestion.cardItem.user_card;
 
       if (isCorrect) {
+        playCorrectChime();
         // Đúng: Cộng XP
         const earned = isRetestMode ? 2 : 10;
         statsRef.current.correctCount += 1;
@@ -202,6 +204,7 @@ export function useQuizRunner({
           pendingSubmitsRef.current.push(submitPromise);
         }
       } else {
+        playIncorrectChime();
         // Sai: Ghi nhận sai
         statsRef.current.wrongCount += 1;
 

@@ -11,7 +11,8 @@ import type { CardWithProgress, CollocationItem, UserCard } from '@/types/card.t
 import type { PracticeQuestionItem, SentenceGradeResponse } from '@/types/practice.types';
 import type { ReviewRating } from '@/types/review.types';
 import { formatIPA } from '@/utils/formatters';
-import { playCorrectChime } from '@/utils/sound';
+import { playCorrectChime, playIncorrectChime } from '@/utils/sound';
+import { findAndSplitClozeWord } from '@/utils/cloze';
 import {
   ArrowRight,
   CheckCircle2,
@@ -130,8 +131,10 @@ export function MixedPracticeRunner({
 
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
+      playCorrectChime();
     } else {
       setWrongCards((prev) => [...prev, card]);
+      playIncorrectChime();
     }
     setTotalXp((prev) => prev + xp);
 
@@ -689,12 +692,10 @@ function ClozeQuestionCard({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const cleanWord = card.word.trim();
-  const sentence = card.example_sentence || `She uses the word ${card.word} in context.`;
-  const regex = new RegExp(`\\b${cleanWord}\\b`, 'gi');
-  const hasMatch = regex.test(sentence);
-  const parts = hasMatch
-    ? sentence.split(regex)
-    : [sentence.slice(0, 20) + ' ', ' ' + sentence.slice(20)];
+  const cloze = useMemo(
+    () => findAndSplitClozeWord(card.example_sentence, cleanWord),
+    [card.example_sentence, cleanWord]
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -718,7 +719,10 @@ function ClozeQuestionCard({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAnswered, isSubmitting, onNext]);
 
-  const isCorrect = inputVal.trim().toLowerCase() === cleanWord.toLowerCase();
+  const normalizedInput = inputVal.trim().toLowerCase();
+  const isCorrect =
+    normalizedInput === cleanWord.toLowerCase() ||
+    (!!cloze.matchedWord && normalizedInput === cloze.matchedWord.toLowerCase());
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -726,6 +730,8 @@ function ClozeQuestionCard({
     setIsAnswered(true);
     if (isCorrect) {
       playCorrectChime();
+    } else {
+      playIncorrectChime();
     }
     onAnswered(isCorrect, isCorrect ? rates.cloze : 0);
   };
@@ -733,6 +739,7 @@ function ClozeQuestionCard({
   const handleGiveUp = () => {
     if (isAnswered) return;
     setIsAnswered(true);
+    playIncorrectChime();
     onAnswered(false, 0);
   };
 
@@ -757,7 +764,7 @@ function ClozeQuestionCard({
           Điền từ còn thiếu vào câu:
         </span>
         <div className="p-4 rounded-xl bg-base/60 border border-border/70 text-sm sm:text-base leading-relaxed text-text-primary">
-          {parts[0]}
+          {cloze.before}
           <span
             className={cn(
               'px-2 py-0.5 mx-1 rounded-md font-bold transition-colors inline-block border',
@@ -768,9 +775,13 @@ function ClozeQuestionCard({
                 : 'bg-brand/15 text-brand border-brand/40 border-dashed'
             )}
           >
-            {isAnswered ? cleanWord : `[ ${cleanWord[0]}___ (${cleanWord.length}) ]`}
+            {isAnswered
+              ? isCorrect
+                ? cloze.matchedWord || cleanWord
+                : cleanWord
+              : `[ ${cleanWord[0]}___ (${cleanWord.length}) ]`}
           </span>
-          {parts[1] || ''}
+          {cloze.after}
         </div>
 
         {card.example_translation && (
@@ -870,6 +881,12 @@ function ClozeQuestionCard({
             ) : (
               <span className="text-danger font-semibold">
                 Đáp án đúng: <strong className="text-success">{cleanWord}</strong>
+                {cloze.matchedWord &&
+                  cloze.matchedWord.toLowerCase() !== cleanWord.toLowerCase() && (
+                    <span className="text-text-secondary text-[11px] font-normal ml-1">
+                      (dạng trong câu: <em>{cloze.matchedWord}</em>)
+                    </span>
+                  )}
               </span>
             )}
           </div>
@@ -967,9 +984,11 @@ function SentenceWritingQuestionCard({
 
       setGradeResult(res);
       setIsAnswered(true);
-      const isPassed = res.score >= 70;
+      const isPassed = res.is_correct !== undefined ? res.is_correct : res.score >= 60;
       if (isPassed) {
         playCorrectChime();
+      } else {
+        playIncorrectChime();
       }
       const awardedXp = Math.round((res.score / 100) * rates.sentence_writing);
       onAnswered(isPassed, awardedXp);

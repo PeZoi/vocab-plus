@@ -1,6 +1,7 @@
 import type { CardWithProgress } from '@/types/card.types';
 import type { QuizOptionItem, QuizQuestionItem, QuizQuestionType, ReviewCardItem } from '@/types/review.types';
 import { canCardLevelUp } from './fsrs-level';
+import { maskClozeInSentence } from './cloze';
 
 export interface DistractorCandidate {
   word: string;
@@ -187,31 +188,7 @@ export function getDistractors(
  * Ẩn từ mục tiêu trong câu ví dụ dạng [_____]
  */
 function maskWordInSentence(sentence: string, word: string): string {
-  if (!sentence || !word) return sentence || '';
-
-  // Thoát ký tự đặc biệt cho Regex
-  const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // Regex tìm từ độc lập (word boundary) hoặc các biến thể chia thì cơ bản
-  const regex = new RegExp(`\\b${escapedWord}(s|es|ed|d|ing)?\\b`, 'gi');
-
-  if (regex.test(sentence)) {
-    return sentence.replace(regex, '[ _____ ]');
-  }
-
-  // Nếu không khớp regex chính xác, thay thế case-insensitive
-  const lowerSentence = sentence.toLowerCase();
-  const lowerWord = word.toLowerCase();
-  const index = lowerSentence.indexOf(lowerWord);
-
-  if (index !== -1) {
-    return (
-      sentence.substring(0, index) +
-      '[ _____ ]' +
-      sentence.substring(index + word.length)
-    );
-  }
-
-  return sentence;
+  return maskClozeInSentence(sentence, word, '[ _____ ]');
 }
 
 /**
