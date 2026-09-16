@@ -773,7 +773,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_cron_job: { Args: { p_jobname: string }; Returns: Json }
+      admin_get_cron_jobs: { Args: Record<PropertyKey, never>; Returns: Json }
+      admin_get_cron_run_details: {
+        Args: { p_jobid?: number; p_status?: string; p_limit?: number }
+        Returns: Json
+      }
       admin_reset_all_leagues: { Args: { p_admin_id?: string }; Returns: Json }
+      admin_save_cron_job: {
+        Args: {
+          p_jobname: string
+          p_schedule: string
+          p_command: string
+          p_active?: boolean
+        }
+        Returns: Json
+      }
+      admin_toggle_cron_job: {
+        Args: { p_jobid: number; p_active: boolean }
+        Returns: Json
+      }
+      admin_trigger_cron_job: { Args: { p_jobname: string }; Returns: Json }
       admin_update_rank_reset_schedule: {
         Args: {
           p_day_of_week: number
@@ -783,6 +803,28 @@ export type Database = {
         }
         Returns: Json
       }
+      cron_get_telegram_due_reminders: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          display_name: string | null
+          telegram_chat_id: number
+          telegram_last_notified_milestone: number
+          telegram_last_notified_at: string | null
+          total_due: number
+          sample_word: string | null
+          sample_ipa: string | null
+          sample_definition: string | null
+        }[]
+      }
+      cron_update_telegram_last_notified: {
+        Args: {
+          p_user_id: string
+          p_milestone: number
+          p_notified_at?: string
+        }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       is_card_in_public_collection: {
         Args: { card_id_param: string }
@@ -790,6 +832,23 @@ export type Database = {
       }
       link_telegram_chat: {
         Args: { p_chat_id: number; p_token: string }
+        Returns: Json
+      }
+      log_telegram_notification: {
+        Args: {
+          p_user_id: string
+          p_chat_id: number
+          p_title: string
+          p_message: string
+          p_type?: string
+          p_status?: string
+          p_error_message?: string | null
+          p_metadata?: Json
+        }
+        Returns: string
+      }
+      send_telegram_due_reminders: {
+        Args: { p_bot_token?: string }
         Returns: Json
       }
       settle_weekly_leagues: { Args: never; Returns: Json }

@@ -40,14 +40,25 @@ export async function POST() {
       timeZone: profile.timezone || 'Asia/Ho_Chi_Minh',
     });
 
-    const res = await sendTelegramMessage(
-      profile.telegram_chat_id,
+    const messageText =
       `🔔 <b>Kiểm tra kết nối Vocab Plus App</b>\n\n` +
       `Xin chào <b>${studentName}</b>! Đây là tin nhắn thử nghiệm gửi lúc <b>${nowStr}</b>.\n\n` +
       `✅ Kết nối riêng tư của bạn đang hoạt động hoàn hảo.\n` +
       `📚 Hệ thống sẽ gửi thông báo vào hộp thoại này mỗi khi bạn có từ vựng đến hạn ôn tập.\n\n` +
-      `<i>Chúc bạn một ngày học tập thật hiệu quả!</i> 🌟`
-    );
+      `<i>Chúc bạn một ngày học tập thật hiệu quả!</i> 🌟`;
+
+    const res = await sendTelegramMessage(profile.telegram_chat_id, messageText);
+
+    // Ghi nhận lịch sử thông báo
+    await supabase.from('telegram_notification_logs').insert({
+      user_id: user.id,
+      chat_id: profile.telegram_chat_id,
+      title: 'Kiểm tra kết nối Bot',
+      message: messageText,
+      type: 'test',
+      status: res.ok ? 'sent' : 'failed',
+      error_message: res.ok ? null : res.description,
+    });
 
     if (!res.ok) {
       return NextResponse.json(

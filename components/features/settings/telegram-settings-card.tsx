@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Send, CheckCircle2, Bell, BellOff, ExternalLink, Copy, Check, RefreshCw, Unlink, AlertCircle } from 'lucide-react';
+import { Send, CheckCircle2, Bell, BellOff, ExternalLink, Copy, Check, RefreshCw, Unlink, AlertCircle, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTelegramSettings } from '@/hooks/features/settings/use-telegram-settings';
+import { TelegramHistoryModal } from './telegram-history-modal';
 import { toast } from 'sonner';
 
 export function TelegramSettingsCard() {
@@ -25,6 +26,7 @@ export function TelegramSettingsCard() {
   } = useTelegramSettings();
 
   const [copied, setCopied] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const handleCopyLink = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -121,6 +123,16 @@ export function TelegramSettingsCard() {
                 <Send className="w-3.5 h-3.5 text-sky-400" />
               )}
               <span>Gửi thông báo thử</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsHistoryOpen(true)}
+              className="text-xs gap-1.5"
+            >
+              <History className="w-3.5 h-3.5 text-amber-400" />
+              <span>Lịch sử thông báo</span>
             </Button>
 
             <Button
@@ -222,6 +234,12 @@ export function TelegramSettingsCard() {
           )}
         </div>
       )}
+
+      {/* Popup xem lịch sử thông báo */}
+      <TelegramHistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+      />
     </div>
   );
 }

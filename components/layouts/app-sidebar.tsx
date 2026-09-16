@@ -22,6 +22,7 @@ import {
   Trophy,
   Users,
   ChevronRight,
+  CalendarClock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -202,6 +203,29 @@ export function AppSidebar() {
                   )}
                 />
                 <span>Cài đặt hệ thống</span>
+              </div>
+            </Link>
+
+            <Link
+              href={ROUTES.ADMIN.CRON_JOBS}
+              prefetch={true}
+              className={cn(
+                'flex items-center justify-between px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors group outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 active:outline-none select-none',
+                pathname === ROUTES.ADMIN.CRON_JOBS
+                  ? 'bg-brand/12 text-brand font-medium'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface/50'
+              )}
+            >
+              <div className="flex items-center gap-2.5">
+                <CalendarClock
+                  className={cn(
+                    'w-4 h-4 transition-colors',
+                    pathname === ROUTES.ADMIN.CRON_JOBS
+                      ? 'text-brand'
+                      : 'text-text-secondary group-hover:text-text-primary'
+                  )}
+                />
+                <span>Quản lý Cron Jobs</span>
               </div>
             </Link>
           </div>

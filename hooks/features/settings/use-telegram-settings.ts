@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { userKeys } from '@/constants/query-keys';
+import { userKeys, telegramKeys } from '@/constants/query-keys';
 import { useUserProfile } from '@/hooks/features/user/use-user-profile';
 import {
   telegramService,
@@ -49,6 +49,7 @@ export function useTelegramSettings() {
       const res = await telegramService.sendTestMessage();
       if (res.success) {
         toast.success(res.message);
+        queryClient.invalidateQueries({ queryKey: telegramKeys.all });
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể gửi tin nhắn thử';

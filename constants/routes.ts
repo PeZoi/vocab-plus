@@ -28,5 +28,6 @@ export const ROUTES = {
     AI_PROVIDERS: '/admin/ai-providers',
     TELEGRAM: '/admin/telegram',
     SETTINGS: '/admin/settings',
+    CRON_JOBS: '/admin/cron-jobs',
   },
 } as const;

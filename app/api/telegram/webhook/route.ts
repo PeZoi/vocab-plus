@@ -85,16 +85,28 @@ export async function POST(request: Request) {
         }
 
         const studentName = linkResult.display_name || message.from?.first_name || 'bạn';
-        await sendTelegramMessage(
-          chatId,
+        const welcomeText =
           `🎉 <b>Chúc mừng ${studentName} đã kết nối thành công!</b>\n\n` +
           `Tài khoản <b>Vocab Plus App</b> của bạn đã được kích hoạt nhận thông báo riêng tư.\n\n` +
           `✨ <b>Bạn sẽ nhận được:</b>\n` +
           `• ⏰ Nhắc nhở từ vựng đến hạn ôn tập hàng ngày (SRS)\n` +
           `• ⚡ Thông báo khung <b>Giờ Vàng x2 XP</b>\n` +
           `• 🏆 Cập nhật thứ hạng giải đấu tuần\n\n` +
-          `Chúc bạn học tập thật bứt phá và giữ chuỗi Streak rực rỡ! 🔥`
-        );
+          `Chúc bạn học tập thật bứt phá và giữ chuỗi Streak rực rỡ! 🔥`;
+
+        await sendTelegramMessage(chatId, welcomeText);
+
+        if (linkResult.user_id) {
+          await supabase.rpc('log_telegram_notification' as unknown as 'admin_reset_all_leagues', {
+            p_user_id: linkResult.user_id,
+            p_chat_id: chatId,
+            p_title: 'Kết nối Telegram thành công',
+            p_message: welcomeText,
+            p_type: 'welcome',
+            p_status: 'sent',
+          } as unknown as { p_admin_id?: string });
+        }
+
         return NextResponse.json({ ok: true });
       }
 

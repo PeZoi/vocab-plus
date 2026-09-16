@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/axios';
+import type { TelegramHistoryResponse } from '@/types/telegram.types';
 
 export interface TelegramLinkTokenResponse {
   success: boolean;
@@ -42,4 +43,12 @@ export const telegramService = {
   toggleNotifications: (enabled: boolean): Promise<TelegramGeneralResponse> => {
     return apiClient.post('/telegram/toggle-notifications', { enabled });
   },
+
+  /**
+   * Lấy lịch sử thông báo Telegram gần nhất
+   */
+  getNotificationHistory: (limit: number = 5): Promise<TelegramHistoryResponse> => {
+    return apiClient.get(`/telegram/history?limit=${limit}`);
+  },
 };
+

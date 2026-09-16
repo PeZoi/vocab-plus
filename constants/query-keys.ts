@@ -55,6 +55,9 @@ export const adminKeys = {
   settings: () => [...adminKeys.all, 'settings'] as const,
   users: (params?: Record<string, unknown>) => [...adminKeys.all, 'users', params] as const,
   userDetail: (id: string) => [...adminKeys.all, 'users', 'detail', id] as const,
+  cronJobs: () => [...adminKeys.all, 'cron-jobs'] as const,
+  cronRuns: (jobid?: number | null, status?: string) =>
+    [...adminKeys.all, 'cron-runs', { jobid, status }] as const,
 };
 
 export const questKeys = {
@@ -68,3 +71,9 @@ export const leaderboardKeys = {
   seasons: () => [...leaderboardKeys.all, 'seasons'] as const,
   seasonDetail: (seasonId: string) => [...leaderboardKeys.all, 'season', seasonId] as const,
 };
+
+export const telegramKeys = {
+  all: ['telegram'] as const,
+  history: (limit: number = 5) => [...telegramKeys.all, 'history', limit] as const,
+};
+

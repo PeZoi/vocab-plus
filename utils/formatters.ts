@@ -32,3 +32,23 @@ export function formatIPA(ipa?: string | null): string {
   }
   return `/${trimmed}/`;
 }
+
+/**
+ * Chuẩn hóa các ký tự điều khiển (xuống dòng \n, tab \t, carriage return \r)
+ * Tự động chuyển đổi cả ký tự thực tế lẫn chuỗi escaped dạng literal ("\n", "\t")
+ * thành định dạng văn bản hiển thị trực quan chuẩn xác.
+ */
+export function normalizeEscapedText(raw?: string | null): string {
+  if (!raw) return '';
+
+  return raw
+    // 1. Chuẩn hóa chuỗi escaped literal \r\n, \n, \r, \t thành ký tự chuẩn
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\n')
+    .replace(/\\t/g, '\t')
+    // 2. Chuẩn hóa Windows CRLF sang LF
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n');
+}
+
