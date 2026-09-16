@@ -80,7 +80,26 @@ export function PracticeSummary({
   };
 
   const hasLevelUps = Boolean(levelUps && levelUps.length > 0);
-  const hasWateredCards = Boolean(wateredCards && wateredCards.length > 0);
+
+  // Sắp xếp các từ tăng level (isLevelUp === true) lên đầu danh sách
+  const sortedWateredCards = React.useMemo(() => {
+    if (!wateredCards || wateredCards.length === 0) return [];
+    return [...wateredCards].sort((a, b) => {
+      // 1. Ưu tiên các từ thăng cấp (isLevelUp) lên đầu danh sách
+      if (a.isLevelUp && !b.isLevelUp) return -1;
+      if (!a.isLevelUp && b.isLevelUp) return 1;
+
+      // 2. Nếu cùng thăng cấp: ưu tiên cấp độ mới cao hơn lên trước
+      if (a.isLevelUp && b.isLevelUp) {
+        return b.newLevel.level - a.newLevel.level;
+      }
+
+      // 3. Đối với các từ chưa thăng cấp: ưu tiên tiến độ (% hoặc sắp lên cấp) cao hơn
+      return b.newLevel.progressPercent - a.newLevel.progressPercent;
+    });
+  }, [wateredCards]);
+
+  const hasWateredCards = Boolean(sortedWateredCards.length > 0);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -182,7 +201,7 @@ export function PracticeSummary({
                 <h3 className="text-sm sm:text-base font-extrabold text-emerald-400 tracking-tight flex items-center gap-1.5">
                   <span>Khu Vườn Vừa Được Tưới Nước! 💧</span>
                   <span className="text-xs text-emerald-300/80 font-normal">
-                    ({wateredCards?.length} từ)
+                    ({sortedWateredCards.length} từ)
                   </span>
                 </h3>
               </div>
@@ -204,9 +223,9 @@ export function PracticeSummary({
             </div>
           )}
 
-          {/* Danh sách từ vựng được tưới nước: cuộn ngang (scroll ngang) mượt mà, icon size md */}
+          {/* Danh sách từ vựng được tưới nước: sắp xếp từ tăng cấp lên đầu, cuộn ngang mượt mà */}
           <div className="flex items-stretch gap-3 overflow-x-auto custom-scrollbar pb-2.5 pt-1 px-1 -mx-1 snap-x snap-mandatory">
-            {wateredCards?.map(({ card, oldLevel, newLevel, isLevelUp }) => (
+            {sortedWateredCards.map(({ card, oldLevel, newLevel, isLevelUp }) => (
               <div
                 key={card.id}
                 className={cn(

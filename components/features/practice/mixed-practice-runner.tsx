@@ -266,13 +266,21 @@ export function MixedPracticeRunner({
       const isPerfect = correctCount === questions.length;
       const finalTotalXp = totalXp + (isPerfect ? practiceRates.perfect_bonus : 0);
 
+      // Sắp xếp các từ vựng đã tưới nước: ưu tiên từ thăng cấp (isLevelUp) lên đầu danh sách
+      const sortedWateredCards = [...wateredCardsRef.current].sort((a, b) => {
+        if (a.isLevelUp && !b.isLevelUp) return -1;
+        if (!a.isLevelUp && b.isLevelUp) return 1;
+        if (a.isLevelUp && b.isLevelUp) return b.newLevel.level - a.newLevel.level;
+        return b.newLevel.progressPercent - a.newLevel.progressPercent;
+      });
+
       onComplete({
         total: questions.length,
         correct: correctCount,
         wrongCards,
         xpEarned: finalTotalXp,
         levelUps: levelUpsRef.current,
-        wateredCards: wateredCardsRef.current,
+        wateredCards: sortedWateredCards,
       });
     }
   };
