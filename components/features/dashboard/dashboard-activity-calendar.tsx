@@ -49,7 +49,7 @@ export function DashboardActivityCalendar({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-xs sm:text-sm font-semibold text-text-primary tracking-tight">
-                Nhật ký hoạt động (GitHub Streak)
+                Nhật ký hoạt động
               </h3>
               <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
                 52 tuần

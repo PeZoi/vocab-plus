@@ -4,6 +4,7 @@ import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axio
 export const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api',
   timeout: 60000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },

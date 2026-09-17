@@ -32,8 +32,13 @@ export function useStreakCard({
     ? '🔥 Bạn đã thắp lửa thành công hôm nay!'
     : '⚡ Ôn tập hôm nay để thắp sáng ngọn lửa!';
 
+  const completedThisWeek = days.filter((d) => d.is_active).length;
+  const weeklyPercent = Math.round((completedThisWeek / 7) * 100);
+
   return {
     days,
     statusMessage,
+    completedThisWeek,
+    weeklyPercent,
   };
 }

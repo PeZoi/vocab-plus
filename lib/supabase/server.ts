@@ -27,3 +27,34 @@ export async function createClient() {
     },
   });
 }
+
+export async function getAuthenticatedUser(request?: Request) {
+  const supabase = await createClient();
+
+  // 1. Nếu có Authorization Bearer token trong request header, ưu tiên xác thực bằng JWT token
+  if (request) {
+    const authHeader =
+      request.headers.get('authorization') || request.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7).trim();
+      if (token) {
+        try {
+          const { data, error } = await supabase.auth.getUser(token);
+          if (data?.user && !error) {
+            return { user: data.user, supabase, error: null };
+          }
+        } catch {
+          // Fallback xuống cookie session
+        }
+      }
+    }
+  }
+
+  // 2. Fallback: Lấy session người dùng từ cookie trình duyệt
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    return { user: data?.user || null, supabase, error };
+  } catch (err: unknown) {
+    return { user: null, supabase, error: err };
+  }
+}

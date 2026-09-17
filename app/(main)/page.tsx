@@ -70,6 +70,7 @@ export default function DashboardPage() {
             hasReviewedToday={hasReviewedToday}
             weekDays={weekDays}
             freezesAvailable={freezesAvailable}
+            longestStreak={longestStreak}
           />
         </div>
       </div>

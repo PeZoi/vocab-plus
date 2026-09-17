@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthenticatedUser } from '@/lib/supabase/server';
 import {
   calculateNextReviews,
   createEmptyCard,
@@ -12,11 +12,7 @@ import { incrementQuestProgress } from '@/lib/gamification';
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, supabase, error: authError } = await getAuthenticatedUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Chưa xác thực' }, { status: 401 });
