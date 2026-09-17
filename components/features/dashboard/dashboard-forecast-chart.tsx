@@ -18,7 +18,7 @@ export function DashboardForecastChart({ forecast }: DashboardForecastChartProps
   const maxCount = Math.max(...forecast.map((f) => f.count), 1);
 
   return (
-    <div className="lg:col-span-2 p-5 rounded-xl bg-surface/80 border border-border/70 space-y-3 flex flex-col justify-between">
+    <div className="h-full p-5 rounded-2xl bg-surface/80 border border-border/70 space-y-3 flex flex-col justify-between shadow-xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand" />

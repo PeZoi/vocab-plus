@@ -16,16 +16,46 @@ export interface SubmitReviewDto {
   response_ms?: number;
 }
 
+export interface StreakWeekDay {
+  date: string; // YYYY-MM-DD
+  day_label: string; // 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'
+  full_label: string; // 'Thứ Hai', 'Thứ Ba'...
+  day_number: number; // Ngày trong tháng (e.g. 15, 16, 17)
+  is_today: boolean;
+  is_past: boolean;
+  is_future: boolean;
+  is_active: boolean; // Đã ôn tập ngày này
+}
+
+export interface ActivityHistoryItem {
+  date: string; // YYYY-MM-DD
+  count: number; // Số lượt ôn tập
+  xp: number; // XP kiếm được
+  level: number; // 0, 1, 2, 3, 4 (cho màu sắc heatmap)
+}
+
+export interface ActivitySummary {
+  total_reviews_year: number;
+  total_active_days: number;
+  current_streak: number;
+  longest_streak: number;
+}
+
 export interface ReviewStats {
   learning_count: number;
   due_count: number;
   mastered_count: number;
   streak_days: number;
+  longest_streak?: number;
   total_xp: number;
   today_xp?: number;
   daily_xp_cap?: number;
   league_min_threshold?: number;
   has_reviewed_today?: boolean;
+  freezes_available?: number;
+  week_days?: StreakWeekDay[];
+  activity_history?: ActivityHistoryItem[];
+  activity_summary?: ActivitySummary;
 }
 
 export interface ReviewForecastDay {

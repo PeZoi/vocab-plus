@@ -24,6 +24,15 @@ export function useDashboardMetrics() {
   const learningCount = stats?.learning_count || 0;
   const masteredCount = stats?.mastered_count || 0;
   const streakDays = stats?.streak_days || 0;
+  const longestStreak = stats?.longest_streak || streakDays;
+  const totalXp = stats?.total_xp || 0;
+  const todayXp = stats?.today_xp || 0;
+  const dailyXpCap = stats?.daily_xp_cap || 500;
+  const hasReviewedToday = Boolean(stats?.has_reviewed_today);
+  const freezesAvailable = stats?.freezes_available || 0;
+  const weekDays = stats?.week_days || [];
+  const activityHistory = stats?.activity_history || [];
+  const activitySummary = stats?.activity_summary;
 
   return {
     isLoading: statsLoading || cardsLoading,
@@ -34,5 +43,14 @@ export function useDashboardMetrics() {
     learningCount,
     masteredCount,
     streakDays,
+    longestStreak,
+    totalXp,
+    todayXp,
+    dailyXpCap,
+    hasReviewedToday,
+    freezesAvailable,
+    weekDays,
+    activityHistory,
+    activitySummary,
   };
 }
