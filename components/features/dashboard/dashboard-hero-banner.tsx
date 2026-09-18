@@ -49,7 +49,7 @@ export function DashboardHeroBanner({
             </h1>
             <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
               {dueCount > 0
-                ? 'Lặp lại ngắt quãng (FSRS) giúp củng cố trí nhớ dài hạn vào đúng thời điểm vàng.'
+                ? 'Lặp lại ngắt quãng giúp củng cố trí nhớ dài hạn vào đúng thời điểm vàng.'
                 : 'Mục tiêu hoàn thành xuất sắc! Hãy bổ sung thêm từ mới để mở rộng vốn từ.'}
             </p>
           </div>

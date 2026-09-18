@@ -72,83 +72,128 @@ function NotificationTypeBadge({ type }: { type: TelegramNotificationType }) {
 }
 
 /**
- * Phân tích và hiển thị từng dòng tin nhắn Telegram:
- * - Thay thế tab (\t) thành 4 khoảng trắng không ngắt dòng
- * - Phân tích các thẻ <b>, <i>, <code>, <a> an toàn
+ * Giải mã các ký tự HTML entity cơ bản cho các đoạn text thuần
  */
-function renderLineMarkup(line: string, lineIdx: number) {
-  // Thay thế ký tự tab \t bằng 4 khoảng trắng thụt lề chuẩn
-  const lineWithTabs = line.replace(/\t/g, '\u00A0\u00A0\u00A0\u00A0');
+function decodeHtmlEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
 
+/**
+ * Phân tích và hiển thị đệ quy chuỗi chứa các thẻ HTML Telegram:
+ * - Hỗ trợ các thẻ lồng nhau (nested tags) như <b><a href="...">...</a></b> hoặc <i>...<b>...</b>...</i>
+ * - Hỗ trợ các thẻ Telegram chuẩn: b, strong, i, em, code, pre, a, s, strike, del, u
+ */
+function parseTelegramMarkup(text: string, keyPrefix: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
-  const tagRegex = /<(b|i|code|a)(?: [^>]*)?>([\s\S]*?)<\/\1>/gi;
-  let match;
+  const tagRegex = /<(b|strong|i|em|code|pre|a|s|strike|del|u)(?: [^>]*)?>([\s\S]*?)<\/\1>/gi;
+  let match: RegExpExecArray | null;
 
-  while ((match = tagRegex.exec(lineWithTabs)) !== null) {
+  while ((match = tagRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(lineWithTabs.substring(lastIndex, match.index));
+      parts.push(decodeHtmlEntities(text.substring(lastIndex, match.index)));
     }
 
-    const tag = match[1].toLowerCase();
-    const innerText = match[2];
+    const rawTag = match[1].toLowerCase();
+    const innerContent = match[2];
+    const matchIndex = match.index;
+    const currentKey = `${keyPrefix}-${matchIndex}-${rawTag}`;
 
-    if (tag === 'b') {
+    // Đệ quy phân tích nội dung bên trong thẻ nếu không phải code block
+    const isCode = rawTag === 'code' || rawTag === 'pre';
+    const children = isCode ? innerContent : parseTelegramMarkup(innerContent, currentKey);
+
+    if (rawTag === 'b' || rawTag === 'strong') {
       parts.push(
-        <strong key={`${lineIdx}-${match.index}`} className="font-semibold text-text-primary">
-          {innerText}
+        <strong key={currentKey} className="font-semibold text-text-primary">
+          {children}
         </strong>
       );
-    } else if (tag === 'i') {
+    } else if (rawTag === 'i' || rawTag === 'em') {
       parts.push(
-        <em key={`${lineIdx}-${match.index}`} className="italic text-text-secondary">
-          {innerText}
+        <em key={currentKey} className="italic text-text-secondary">
+          {children}
         </em>
       );
-    } else if (tag === 'code') {
+    } else if (rawTag === 'code') {
       parts.push(
         <code
-          key={`${lineIdx}-${match.index}`}
+          key={currentKey}
           className="font-mono bg-surface px-1.5 py-0.5 rounded text-sky-300 border border-border/50 text-[11px]"
         >
-          {innerText}
+          {children}
         </code>
       );
-    } else if (tag === 'a') {
+    } else if (rawTag === 'pre') {
+      parts.push(
+        <pre
+          key={currentKey}
+          className="font-mono bg-surface p-2 rounded text-sky-300 border border-border/50 text-[11px] overflow-x-auto my-1"
+        >
+          {children}
+        </pre>
+      );
+    } else if (rawTag === 'a') {
       const fullTag = match[0];
-      const hrefMatch = fullTag.match(/href=["']([^"']*)["']/i);
-      const href = hrefMatch ? hrefMatch[1] : undefined;
+      const hrefMatch = fullTag.match(/href=(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+      const href = hrefMatch ? (hrefMatch[1] || hrefMatch[2] || hrefMatch[3]) : undefined;
 
       if (href) {
         parts.push(
           <a
-            key={`${lineIdx}-${match.index}`}
+            key={currentKey}
             href={href}
             target="_blank"
             rel="noreferrer"
-            className="text-brand font-medium underline hover:text-brand-hover inline-flex items-center gap-0.5"
+            className="text-brand hover:text-brand-hover font-semibold underline underline-offset-2 inline-flex items-center gap-0.5 transition-colors cursor-pointer"
           >
-            {innerText}
-            <ExternalLink className="w-2.5 h-2.5 inline-block ml-0.5" />
+            {children}
+            <ExternalLink className="w-2.5 h-2.5 inline-block ml-0.5 shrink-0" />
           </a>
         );
       } else {
         parts.push(
-          <span key={`${lineIdx}-${match.index}`} className="text-brand font-medium underline">
-            {innerText}
+          <span key={currentKey} className="text-brand font-medium underline">
+            {children}
           </span>
         );
       }
+    } else if (rawTag === 's' || rawTag === 'strike' || rawTag === 'del') {
+      parts.push(
+        <s key={currentKey} className="line-through text-text-secondary">
+          {children}
+        </s>
+      );
+    } else if (rawTag === 'u') {
+      parts.push(
+        <u key={currentKey} className="underline underline-offset-2">
+          {children}
+        </u>
+      );
     }
 
     lastIndex = tagRegex.lastIndex;
   }
 
-  if (lastIndex < lineWithTabs.length) {
-    parts.push(lineWithTabs.substring(lastIndex));
+  if (lastIndex < text.length) {
+    parts.push(decodeHtmlEntities(text.substring(lastIndex)));
   }
 
-  return parts.length > 0 ? parts : lineWithTabs;
+  return parts.length > 0 ? parts : [decodeHtmlEntities(text)];
+}
+
+/**
+ * Xử lý hiển thị từng dòng tin nhắn Telegram
+ */
+function renderLineMarkup(line: string, lineIdx: number) {
+  // Thay thế ký tự tab \t bằng 4 khoảng trắng thụt lề chuẩn
+  const lineWithTabs = line.replace(/\t/g, '\u00A0\u00A0\u00A0\u00A0');
+  return parseTelegramMarkup(lineWithTabs, `line-${lineIdx}`);
 }
 
 /**
