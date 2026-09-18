@@ -80,7 +80,7 @@ function ReviewSessionContent() {
     if (currentItem?.card.word) {
       speak(currentItem.card.word);
     }
-  }, [currentItem?.card.word, speak]);
+  }, [currentItem, speak]);
 
   const handleMarkKnown = async (cardId: string) => {
     try {

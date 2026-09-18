@@ -85,61 +85,27 @@ export async function GET() {
       });
     }
 
-    // 4. Lấy và tính toán chuỗi streak chuẩn từ user_streaks
-    const todayStr = format(now, 'yyyy-MM-dd');
-    const yesterdayStr = format(addDays(now, -1), 'yyyy-MM-dd');
-
-    let streak_days = 0;
-    let has_reviewed_today = false;
-
-    if (userStreakRecord) {
-      const lastActive = userStreakRecord.last_active_date;
-      if (lastActive === todayStr) {
-        has_reviewed_today = true;
-        streak_days = userStreakRecord.current_streak;
-      } else if (lastActive === yesterdayStr) {
-        has_reviewed_today = false;
-        streak_days = userStreakRecord.current_streak;
-      } else if (!lastActive) {
-        has_reviewed_today = false;
-        streak_days = userStreakRecord.current_streak;
-      } else {
-        const lastDate = parseISO(lastActive);
-        const diffDays = differenceInDays(startOfDay(now), startOfDay(lastDate));
-        const missedDays = diffDays - 1;
-        const freezes = userStreakRecord.freezes_available || 0;
-        if (freezes >= missedDays && missedDays > 0) {
-          streak_days = userStreakRecord.current_streak;
-        } else {
-          streak_days = 0;
-        }
-        has_reviewed_today = false;
+    // 4. Tập hợp các ngày thực sự ĐÃ HOÀN THÀNH ôn tập
+    // Quy tắc: Chỉ khi người dùng hoàn tất trọn vẹn phiên (có thưởng XP hoặc được ghi nhận streak)
+    // mới được tính là 1 lần ôn tập hoàn thành. Nhấn vào làm dở dang rồi thoát KHÔNG được tính.
+    const completedDatesSet = new Set<string>();
+    (yearlyDailyXp || []).forEach((x) => {
+      if (x.date && (x.xp_earned || 0) > 0) {
+        completedDatesSet.add(x.date);
       }
-    } else {
-      const activeDaysSet = new Set<string>();
-      (yearlyLogs || []).forEach((l) => {
-        if (l.reviewed_at) activeDaysSet.add(format(parseISO(l.reviewed_at), 'yyyy-MM-dd'));
-      });
-
-      if (activeDaysSet.has(todayStr)) {
-        has_reviewed_today = true;
-      }
-
-      if (activeDaysSet.has(todayStr) || activeDaysSet.has(yesterdayStr)) {
-        let checkDate = activeDaysSet.has(todayStr) ? startOfDay(now) : addDays(startOfDay(now), -1);
-        while (activeDaysSet.has(format(checkDate, 'yyyy-MM-dd'))) {
-          streak_days++;
-          checkDate = addDays(checkDate, -1);
-        }
-      }
+    });
+    if (userStreakRecord?.last_active_date) {
+      completedDatesSet.add(userStreakRecord.last_active_date);
     }
 
-    // 5. Tập hợp các ngày đã có hoạt động học tập (từ review_logs và user_daily_xp)
     const reviewCountsByDate = new Map<string, number>();
     (yearlyLogs || []).forEach((l) => {
       if (l.reviewed_at) {
         const d = format(parseISO(l.reviewed_at), 'yyyy-MM-dd');
-        reviewCountsByDate.set(d, (reviewCountsByDate.get(d) || 0) + 1);
+        // Chỉ cộng số câu ôn tập nếu ngày đó thực sự có hoàn thành phiên ôn tập
+        if (completedDatesSet.has(d)) {
+          reviewCountsByDate.set(d, (reviewCountsByDate.get(d) || 0) + 1);
+        }
       }
     });
 
@@ -149,6 +115,62 @@ export async function GET() {
         xpByDate.set(x.date, x.xp_earned || 0);
       }
     });
+
+    // 5. Tính toán chuỗi streak chuẩn xác & đồng bộ theo các phiên đã hoàn thành
+    const todayStr = format(now, 'yyyy-MM-dd');
+    const yesterdayStr = format(subDays(now, 1), 'yyyy-MM-dd');
+
+    const has_reviewed_today = completedDatesSet.has(todayStr);
+
+    // Tính chuỗi ngày học liên tục thực tế từ các ngày ĐÃ HOÀN THÀNH
+    let historyStreak = 0;
+    const streakStartDay = has_reviewed_today
+      ? now
+      : (completedDatesSet.has(yesterdayStr) ? subDays(now, 1) : null);
+
+    if (streakStartDay) {
+      let checkDate = streakStartDay;
+      while (completedDatesSet.has(format(checkDate, 'yyyy-MM-dd'))) {
+        historyStreak++;
+        checkDate = subDays(checkDate, 1);
+      }
+    }
+
+    // Kết hợp với bản ghi user_streaks (bao gồm logic dùng băng bảo vệ freeze nếu có)
+    let streak_days = historyStreak;
+
+    if (userStreakRecord) {
+      const lastActive = userStreakRecord.last_active_date;
+      if (lastActive) {
+        const lastDate = parseISO(lastActive);
+        const diffDays = differenceInDays(startOfDay(now), startOfDay(lastDate));
+        const missedDays = diffDays - 1;
+        const freezes = userStreakRecord.freezes_available || 0;
+
+        // Nếu người dùng có freeze bảo vệ số ngày bỏ lỡ
+        if (freezes >= missedDays && missedDays > 0) {
+          streak_days = Math.max(streak_days, userStreakRecord.current_streak);
+        } else if (diffDays <= 1 && historyStreak > 0) {
+          streak_days = Math.max(streak_days, userStreakRecord.current_streak);
+        } else if (diffDays > 1 && (!freezes || freezes < missedDays)) {
+          streak_days = 0;
+        }
+      }
+
+      // Tự động đồng bộ hóa bản ghi user_streaks nếu trạng thái streak thay đổi
+      if (userStreakRecord.current_streak !== streak_days) {
+        const updatedLongest = Math.max(userStreakRecord.longest_streak || 0, streak_days);
+        supabase
+          .from('user_streaks')
+          .update({
+            current_streak: streak_days,
+            longest_streak: updatedLongest,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id)
+          .then(() => {});
+      }
+    }
 
     // 6. Tính toán 7 ngày trong tuần cho Thẻ Chuỗi Ngày Học (Thứ 2 đến Chủ nhật)
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
@@ -163,24 +185,8 @@ export async function GET() {
       const is_past = dayDateStr < todayStr;
       const is_future = dayDateStr > todayStr;
 
-      // Xác định ngày có hoạt động học tập hay không
-      let is_active = false;
-      if (is_today) {
-        is_active = has_reviewed_today;
-      } else if (is_past) {
-        const count = reviewCountsByDate.get(dayDateStr) || 0;
-        const xp = xpByDate.get(dayDateStr) || 0;
-        is_active = count > 0 || xp > 0;
-
-        // Nếu người dùng đang có streak > 0 và ngày này nằm trong khoảng streak gần nhất
-        if (!is_active && streak_days > 0 && userStreakRecord?.last_active_date) {
-          const lastActiveDate = parseISO(userStreakRecord.last_active_date);
-          const diffFromLast = differenceInDays(startOfDay(lastActiveDate), startOfDay(dayDate));
-          if (diffFromLast >= 0 && diffFromLast < streak_days) {
-            is_active = true;
-          }
-        }
-      }
+      // Một ngày chỉ bật ngọn lửa nếu ngày đó ĐÃ HOÀN THÀNH bài ôn tập
+      const is_active = completedDatesSet.has(dayDateStr);
 
       week_days.push({
         date: dayDateStr,
@@ -203,17 +209,18 @@ export async function GET() {
     for (let i = totalDaysToShow; i >= 0; i--) {
       const d = subDays(now, i);
       const dStr = format(d, 'yyyy-MM-dd');
-      const count = reviewCountsByDate.get(dStr) || 0;
+      const isCompletedDay = completedDatesSet.has(dStr);
+      const count = isCompletedDay ? (reviewCountsByDate.get(dStr) || 0) : 0;
       const xp = xpByDate.get(dStr) || 0;
 
-      if (count > 0 || xp > 0) {
+      if (isCompletedDay) {
         activeDaysCount++;
       }
       totalReviewsYear += count;
 
-      // Xác định level màu cho ô vuông heatmap (0 đến 4)
+      // Xác định level màu cho ô vuông heatmap (chỉ tô màu khi ngày đó đã hoàn thành bài)
       let level = 0;
-      if (count > 0 || xp > 0) {
+      if (isCompletedDay) {
         if (count >= 20 || xp >= 150) level = 4;
         else if (count >= 10 || xp >= 80) level = 3;
         else if (count >= 5 || xp >= 30) level = 2;

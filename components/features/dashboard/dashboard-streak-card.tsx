@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import type { StreakWeekDay } from '@/types/review.types';
 import { useStreakCard } from '@/hooks/features/dashboard/use-streak-card';
-import { CheckCircle2, Flame, Sparkles, Trophy, Zap } from 'lucide-react';
+import { CheckCircle2, Sparkles, Trophy, Zap } from 'lucide-react';
 
 interface DashboardStreakCardProps {
   streakDays: number;

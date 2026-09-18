@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInCalendarDays, parseISO } from 'date-fns';
 import type { QuestTemplate, QuestType } from '@/types/quest.types';
 
 export async function awardXp(
@@ -92,13 +92,13 @@ export async function updateStreak(
     return { streakActivated: false, streakCount: streak.current_streak };
   }
 
-  // Tính số ngày chênh lệch giữa hôm nay và lần học cuối
-  const lastDate = streak.last_active_date ? new Date(streak.last_active_date) : null;
+  // Tính số ngày chênh lệch theo lịch giữa hôm nay và lần học cuối
+  const lastDate = streak.last_active_date ? parseISO(streak.last_active_date) : null;
   let newStreak = streak.current_streak;
   let freezes = streak.freezes_available;
 
   if (lastDate) {
-    const diffDays = differenceInDays(activeDate, lastDate);
+    const diffDays = differenceInCalendarDays(activeDate, lastDate);
     
     if (diffDays === 1) {
       // Học liên tục

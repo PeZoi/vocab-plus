@@ -38,7 +38,6 @@ export function CronRunResponseModal({
   const returnMessage = data.return_message || (isSuccess ? 'Thực thi thành công' : 'Gặp lỗi không xác định');
   const durationMs = data.duration_ms ?? null;
   const startTime = data.start_time ? formatDateTime(data.start_time, 'dd/MM/yyyy HH:mm:ss') : null;
-  const endTime = data.end_time ? formatDateTime(data.end_time, 'dd/MM/yyyy HH:mm:ss') : null;
   const runId = data.runid;
   const errorCode = 'error_code' in data ? data.error_code : null;
 

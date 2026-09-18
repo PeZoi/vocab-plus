@@ -19,7 +19,6 @@ import {
   Layers,
   History,
   Sparkles,
-  Zap,
   Info,
   ChevronRight,
 } from 'lucide-react';
@@ -45,7 +44,6 @@ import type {
   CronJob,
   CronRunDetail,
   TriggerCronResponse,
-  SaveCronJobPayload,
 } from '@/types/admin-cron.types';
 
 export function CronJobsManager() {
