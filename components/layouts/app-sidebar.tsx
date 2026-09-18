@@ -168,8 +168,8 @@ export function AppSidebar() {
                 className={cn(
                   'flex items-center justify-between px-2.5 py-2 rounded-xl text-xs sm:text-[13px] font-medium transition-all group outline-none',
                   isActive
-                    ? 'bg-brand/12 text-brand font-semibold border border-brand/25 shadow-2xs'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-surface/70 hover:translate-x-0.5'
+                    ? 'bg-brand/10 text-brand font-semibold shadow-2xs'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover/70 hover:translate-x-0.5'
                 )}
               >
                 <div className="flex items-center gap-2.5 truncate">
@@ -208,8 +208,8 @@ export function AppSidebar() {
                 className={cn(
                   'flex items-center justify-between px-2.5 py-2 rounded-xl text-xs sm:text-[13px] font-medium transition-all group outline-none',
                   isActive
-                    ? 'bg-brand/12 text-brand font-semibold border border-brand/25 shadow-2xs'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-surface/70 hover:translate-x-0.5'
+                    ? 'bg-brand/10 text-brand font-semibold shadow-2xs'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover/70 hover:translate-x-0.5'
                 )}
               >
                 <div className="flex items-center gap-2.5 truncate">
@@ -248,8 +248,8 @@ export function AppSidebar() {
                 className={cn(
                   'flex items-center justify-between px-2.5 py-2 rounded-xl text-xs sm:text-[13px] font-medium transition-all group outline-none',
                   isActive
-                    ? 'bg-brand/12 text-brand font-semibold border border-brand/25 shadow-2xs'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-surface/70 hover:translate-x-0.5'
+                    ? 'bg-brand/10 text-brand font-semibold shadow-2xs'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover/70 hover:translate-x-0.5'
                 )}
               >
                 <div className="flex items-center gap-2.5 truncate">
@@ -293,8 +293,8 @@ export function AppSidebar() {
                   className={cn(
                     'flex items-center justify-between px-2.5 py-2 rounded-xl text-xs sm:text-[13px] font-medium transition-all group outline-none',
                     isActive
-                      ? 'bg-brand/12 text-brand font-semibold border border-brand/25 shadow-2xs'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-surface/70 hover:translate-x-0.5'
+                      ? 'bg-brand/10 text-brand font-semibold shadow-2xs'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover/70 hover:translate-x-0.5'
                   )}
                 >
                   <div className="flex items-center gap-2.5 truncate">

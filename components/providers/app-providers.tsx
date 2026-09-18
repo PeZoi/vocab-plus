@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { QueryProvider } from './query-provider';
+import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 
 interface AppProvidersProps {
@@ -10,9 +11,16 @@ interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <QueryProvider>
-      {children}
-      <Toaster richColors position="top-right" theme="dark" />
-    </QueryProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem={false}
+      disableTransitionOnChange={false}
+    >
+      <QueryProvider>
+        {children}
+        <Toaster richColors position="top-right" />
+      </QueryProvider>
+    </ThemeProvider>
   );
 }

@@ -7,7 +7,7 @@ export function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('animate-pulse rounded-lg bg-surface-hover/60', className)}
+      className={cn('animate-pulse rounded-lg bg-slate-200/80 dark:bg-surface-hover/80', className)}
       {...props}
     />
   );

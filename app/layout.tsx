@@ -40,9 +40,10 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={cn("h-full", "antialiased", "dark", sora.variable, beVietnamPro.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
+      suppressHydrationWarning
+      className={cn("h-full", "antialiased", sora.variable, beVietnamPro.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
     >
-      <body className="min-h-full flex flex-col bg-base text-text-primary" spellCheck={false}>
+      <body className="min-h-full flex flex-col bg-base text-text-primary transition-colors duration-200" spellCheck={false}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

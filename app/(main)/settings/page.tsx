@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useGoogleAuth } from '@/hooks/features/auth/use-google-auth';
 import { pageVariants } from '@/constants/animations';
 import { TelegramSettingsCard } from '@/components/features/settings/telegram-settings-card';
+import { ThemeToggle } from '@/components/common/theme-toggle';
+import { Palette } from 'lucide-react';
 
 export default function SettingsPage() {
   const { signOut, isLoading } = useGoogleAuth();
@@ -23,11 +25,30 @@ export default function SettingsPage() {
           Cài đặt tài khoản
         </h1>
         <p className="text-xs sm:text-sm text-text-secondary mt-1">
-          Quản lý tài khoản cá nhân, thông báo và lịch học
+          Quản lý tài khoản cá nhân, giao diện, thông báo và lịch học
         </p>
       </div>
 
       <div className="space-y-3.5">
+        {/* Theme Appearance Card */}
+        <div className="p-4 sm:p-5 rounded-xl bg-surface/80 border border-border/70 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+                <Palette className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-text-primary">Giao diện ứng dụng</h3>
+                <p className="text-xs text-text-secondary">
+                  Lựa chọn chế độ hiển thị Sáng hoặc Tối phù hợp với môi trường của bạn
+                </p>
+              </div>
+            </div>
+
+            <ThemeToggle showLabels={true} />
+          </div>
+        </div>
+
         {/* Telegram Integration Card */}
         <TelegramSettingsCard />
 

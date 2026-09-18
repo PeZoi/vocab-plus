@@ -7,6 +7,7 @@ import { HeaderStreak } from '@/components/layouts/header/header-streak';
 import { HeaderXpWidget } from '@/components/layouts/header/header-xp-widget';
 import { HeaderQuestsButton } from '@/components/layouts/header/header-quests-button';
 import { HeaderUserActions } from '@/components/layouts/header/header-user-actions';
+import { ThemeToggle } from '@/components/common/theme-toggle';
 
 export function AppHeader() {
   const { data } = useReviewStats();
@@ -18,13 +19,14 @@ export function AppHeader() {
   const isStreakActive = Boolean(data?.stats.has_reviewed_today);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-base/85 backdrop-blur-md h-16 flex items-center px-4 sm:px-6 justify-between">
+    <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-base/85 backdrop-blur-md h-16 flex items-center px-4 sm:px-6 justify-between transition-colors duration-200">
       <HeaderBrand />
 
       <div className="flex items-center gap-2 sm:gap-3">
         <HeaderStreak streak={streak} isStreakActive={isStreakActive} />
         <HeaderXpWidget totalXp={xp} todayXp={todayXp} xpCap={xpCap} />
         <HeaderQuestsButton />
+        <ThemeToggle />
         <HeaderUserActions />
       </div>
     </header>

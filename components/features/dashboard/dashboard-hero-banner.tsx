@@ -29,7 +29,7 @@ export function DashboardHeroBanner({
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.35 }}
-      className="relative overflow-hidden rounded-3xl bg-surface/95 border border-border/80 p-5 sm:p-6 shadow-sm flex flex-col justify-between"
+      className="relative overflow-hidden rounded-2xl bg-surface border border-border/70 p-5 sm:p-6 shadow-[0_1px_3px_0_rgba(0,0,0,0.02),0_4px_16px_-2px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col justify-between"
     >
       {/* Lớp nền gradient tinh tế */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
@@ -82,16 +82,16 @@ export function DashboardHeroBanner({
         {/* Hàng dưới: Thanh tiến độ XP & 3 Thẻ chỉ số nhanh (Chia 2 cột cân đối) */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-1">
           {/* Cột trái: Tiến độ XP */}
-          <div className="md:col-span-5 p-3 rounded-xl bg-base/80 border border-border/60 flex flex-col justify-center space-y-1.5">
+          <div className="md:col-span-5 p-3.5 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] flex flex-col justify-center space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="text-text-secondary font-medium flex items-center gap-1.5">
                 <span>🎯 Mục tiêu XP hôm nay</span>
               </span>
-              <span className="font-mono text-xs font-bold text-amber-400">
+              <span className="font-mono text-xs font-bold text-amber-500 dark:text-amber-400">
                 {todayXp} / {dailyXpCap} XP ({xpPercent}%)
               </span>
             </div>
-            <div className="h-2 w-full bg-surface rounded-full overflow-hidden border border-border/40">
+            <div className="h-2 w-full bg-slate-200/60 dark:bg-white/[0.08] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${xpPercent}%` }}
@@ -105,7 +105,7 @@ export function DashboardHeroBanner({
           <div className="md:col-span-7 grid grid-cols-3 gap-2">
             <Link
               href={`${ROUTES.APP.VOCAB}?state=review`}
-              className="p-2 sm:p-2.5 rounded-xl bg-base/60 border border-border/50 hover:border-brand/40 transition-colors group flex flex-col justify-center text-center sm:text-left"
+              className="p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] hover:bg-slate-100/80 dark:hover:bg-white/[0.06] hover:border-brand/30 transition-all duration-200 group flex flex-col justify-center text-center sm:text-left"
             >
               <span className="text-[11px] text-text-secondary block group-hover:text-text-primary transition-colors">
                 Cần ôn tập
@@ -115,22 +115,22 @@ export function DashboardHeroBanner({
 
             <Link
               href={`${ROUTES.APP.VOCAB}?state=learning`}
-              className="p-2 sm:p-2.5 rounded-xl bg-base/60 border border-border/50 hover:border-sky-500/40 transition-colors group flex flex-col justify-center text-center sm:text-left"
+              className="p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] hover:bg-slate-100/80 dark:hover:bg-white/[0.06] hover:border-sky-500/30 transition-all duration-200 group flex flex-col justify-center text-center sm:text-left"
             >
               <span className="text-[11px] text-text-secondary block group-hover:text-text-primary transition-colors">
                 Đang học
               </span>
-              <span className="text-base sm:text-lg font-bold text-sky-400">{learningCount}</span>
+              <span className="text-base sm:text-lg font-bold text-sky-500 dark:text-sky-400">{learningCount}</span>
             </Link>
 
             <Link
               href={`${ROUTES.APP.VOCAB}?state=mastered`}
-              className="p-2 sm:p-2.5 rounded-xl bg-base/60 border border-border/50 hover:border-success/40 transition-colors group flex flex-col justify-center text-center sm:text-left"
+              className="p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] hover:bg-slate-100/80 dark:hover:bg-white/[0.06] hover:border-emerald-500/30 transition-all duration-200 group flex flex-col justify-center text-center sm:text-left"
             >
               <span className="text-[11px] text-text-secondary block group-hover:text-text-primary transition-colors">
                 Đã thuộc
               </span>
-              <span className="text-base sm:text-lg font-bold text-success">{masteredCount}</span>
+              <span className="text-base sm:text-lg font-bold text-emerald-500 dark:text-emerald-400">{masteredCount}</span>
             </Link>
           </div>
         </div>

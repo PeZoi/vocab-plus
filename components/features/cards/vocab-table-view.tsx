@@ -167,7 +167,7 @@ export function VocabTableView({
                       card.tags.slice(0, 2).map((tag) => (
                         <span
                           key={tag}
-                          className="text-[10px] text-brand/80 bg-brand/10 px-1.5 py-0.2 rounded border border-brand/20 font-medium"
+                          className="text-[10px] text-orange-700 bg-orange-50 border border-orange-200/80 dark:text-brand/90 dark:bg-brand/10 dark:border-brand/20 px-1.5 py-0.5 rounded font-medium"
                         >
                           {tag}
                         </span>
@@ -186,25 +186,25 @@ export function VocabTableView({
                 {/* FSRS Status */}
                 <td className="py-3 px-3 whitespace-nowrap">
                   {isDue ? (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand/15 text-brand border border-brand/30 inline-flex items-center gap-1">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 dark:bg-brand/15 dark:text-brand dark:border-brand/30 inline-flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                       Cần ôn tập
                     </span>
                   ) : (Number(userCard?.stability) || 0) >= 20 ? (
                     <span
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 inline-flex items-center gap-1"
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/25 inline-flex items-center gap-1"
                       title={`Đã thuộc (Độ bền: ${Math.round(Number(userCard?.stability) || 0)} ngày)`}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
                       Đã thuộc
                     </span>
                   ) : userCard?.state && userCard.state !== 'new' ? (
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/25 inline-flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/25 inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
                       Đang học
                     </span>
                   ) : (
-                    <span className="text-[10px] text-text-secondary/70 px-2 py-0.5 rounded-full bg-surface border border-border/60">
+                    <span className="text-[10px] text-slate-600 dark:text-text-secondary/70 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-surface border border-slate-200 dark:border-border/60">
                       Chưa học
                     </span>
                   )}

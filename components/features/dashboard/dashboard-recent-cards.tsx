@@ -71,7 +71,7 @@ export function DashboardRecentCards({ cards }: DashboardRecentCardsProps) {
   }, [urgentCards, mountedTime]);
 
   return (
-    <div className="p-5 rounded-xl bg-surface/80 border border-border/70 flex flex-col justify-start gap-4 h-full">
+    <div className="p-5 rounded-2xl bg-surface border border-border/70 shadow-[0_1px_3px_0_rgba(0,0,0,0.02),0_4px_16px_-2px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col justify-start gap-4 h-full">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
         <div>
@@ -119,7 +119,7 @@ export function DashboardRecentCards({ cards }: DashboardRecentCardsProps) {
           </Link>
         </div>
       ) : urgentCards.length === 0 ? (
-        <div className="py-8 px-4 rounded-xl bg-base/50 border border-border/50 text-center space-y-3 my-auto">
+        <div className="py-8 px-4 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] text-center space-y-3 my-auto">
           <div className="w-10 h-10 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
             <CheckCircle2 className="w-5 h-5" />
           </div>
@@ -161,7 +161,7 @@ export function DashboardRecentCards({ cards }: DashboardRecentCardsProps) {
                   variants={staggerItem}
                   whileHover={{ x: 2 }}
                   transition={{ duration: 0.15 }}
-                  className="p-3 rounded-xl bg-base/60 border border-border/70 hover:border-brand/40 hover:bg-surface-hover/40 transition-all flex items-center justify-between gap-3 group shadow-xs"
+                  className="p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] hover:border-brand/30 hover:bg-slate-100/70 dark:hover:bg-white/[0.06] transition-all flex items-center justify-between gap-3 group shadow-2xs"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <AudioButton text={item.word} size="sm" />
@@ -191,13 +191,13 @@ export function DashboardRecentCards({ cards }: DashboardRecentCardsProps) {
 
                   <div className="text-right shrink-0 flex flex-col items-end gap-1">
                     {isOverdue ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-red-500/15 text-red-400 border border-red-500/30 shadow-xs">
-                        <Flame className="w-2.5 h-2.5 text-red-400" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30 shadow-xs">
+                        <Flame className="w-2.5 h-2.5 text-red-500 dark:text-red-400" />
                         Đến hạn
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-xs">
-                        <Clock className="w-2.5 h-2.5 text-amber-400" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 shadow-xs">
+                        <Clock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
                         Sắp đến hạn
                       </span>
                     )}

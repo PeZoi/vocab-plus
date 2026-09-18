@@ -18,7 +18,7 @@ export function DashboardForecastChart({ forecast }: DashboardForecastChartProps
   const maxCount = Math.max(...forecast.map((f) => f.count), 1);
 
   return (
-    <div className="h-full p-5 rounded-2xl bg-surface/80 border border-border/70 space-y-3 flex flex-col justify-between shadow-xs">
+    <div className="h-full p-5 rounded-2xl bg-surface border border-border/70 space-y-3 flex flex-col justify-between shadow-[0_1px_3px_0_rgba(0,0,0,0.02),0_4px_16px_-2px_rgba(0,0,0,0.03)] dark:shadow-none">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand" />
@@ -44,16 +44,16 @@ export function DashboardForecastChart({ forecast }: DashboardForecastChartProps
               >
                 {day.count}
               </span>
-              <div className="w-full max-w-[38px] sm:max-w-[44px] bg-base rounded-lg overflow-hidden flex items-end flex-1 min-h-[120px] border border-border/60">
+              <div className="w-full max-w-[36px] sm:max-w-[42px] bg-slate-100/80 dark:bg-white/[0.04] rounded-xl overflow-hidden flex items-end flex-1 min-h-[120px]">
                 <motion.div
                   initial={{ height: 0 }}
                   animate={{ height: `${heightPercent}%` }}
                   transition={{ duration: 0.5, delay: idx * 0.05, ease: 'easeOut' }}
-                  className={`w-full rounded-b-md transition-colors ${
+                  className={`w-full rounded-b-lg transition-all ${
                     isToday
-                      ? 'bg-brand shadow-xs shadow-brand/40'
+                      ? 'bg-gradient-to-t from-brand to-amber-500 shadow-sm shadow-brand/30'
                       : day.count > 0
-                      ? 'bg-brand/50 hover:bg-brand/70'
+                      ? 'bg-brand/40 hover:bg-brand/60'
                       : 'bg-transparent'
                   }`}
                 />

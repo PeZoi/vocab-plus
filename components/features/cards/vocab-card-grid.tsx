@@ -198,7 +198,7 @@ export function VocabCardGrid({
                   card.tags.slice(0, 3).map((tag) => (
                     <span
                       key={tag}
-                      className="text-[10px] text-brand/80 bg-brand/10 px-1.5 py-0.2 rounded border border-brand/20 truncate"
+                      className="text-[10px] text-orange-700 bg-orange-50 border border-orange-200/80 dark:text-brand/90 dark:bg-brand/10 dark:border-brand/20 px-1.5 py-0.5 rounded-md truncate font-medium"
                     >
                       {tag}
                     </span>
@@ -217,33 +217,33 @@ export function VocabCardGrid({
               <div className="flex items-center gap-1 text-[10px] shrink-0">
                 {userCard ? (
                   isDue ? (
-                    <span className="text-brand font-semibold px-2 py-0.5 rounded-md bg-brand/15 border border-brand/30 flex items-center gap-1.5 shadow-xs shadow-brand/10">
+                    <span className="text-orange-700 dark:text-brand font-semibold px-2 py-0.5 rounded-md bg-orange-50 dark:bg-brand/15 border border-orange-200 dark:border-brand/30 flex items-center gap-1.5 shadow-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                       Cần ôn tập
                     </span>
                   ) : (Number(userCard.stability) || 0) >= 20 ? (
                     <span
-                      className="text-emerald-400 font-semibold px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-1.5 shadow-xs shadow-emerald-950/20"
+                      className="text-emerald-700 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1.5 shadow-xs"
                       title={`Đã thuộc vững chắc (Độ bền trí nhớ: ${Math.round(Number(userCard.stability) || 0)} ngày)`}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
                       Đã thuộc
                     </span>
                   ) : userCard.state !== 'new' && userCard.due_at ? (
                     <span
-                      className="text-sky-300 font-semibold px-2 py-0.5 rounded-md bg-gradient-to-r from-sky-500/20 to-blue-600/15 border border-sky-400/35 flex items-center gap-1.5 shadow-xs shadow-sky-950/30"
+                      className="text-sky-700 dark:text-sky-300 font-semibold px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-500/20 border border-sky-200 dark:border-sky-400/35 flex items-center gap-1.5 shadow-xs"
                       title={`Đang học. Hạn ôn kế tiếp: ${formatDateTime(userCard.due_at)}`}
                     >
-                      <Clock className="w-3 h-3 text-sky-400 shrink-0" />
+                      <Clock className="w-3 h-3 text-sky-500 dark:text-sky-400 shrink-0" />
                       <span>{formatRemainingTime(userCard.due_at)}</span>
                     </span>
                   ) : (
-                    <span className="text-text-secondary/70 px-2 py-0.5 rounded-md bg-surface border border-border/60">
+                    <span className="text-slate-600 dark:text-text-secondary/70 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-surface border border-slate-200 dark:border-border/60 font-medium">
                       Chưa học
                     </span>
                   )
                 ) : (
-                  <span className="text-text-secondary/70 px-2 py-0.5 rounded-md bg-surface border border-border/60">
+                  <span className="text-slate-600 dark:text-text-secondary/70 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-surface border border-slate-200 dark:border-border/60 font-medium">
                     Chưa học
                   </span>
                 )}

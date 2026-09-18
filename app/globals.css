@@ -5,66 +5,71 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-surface: #131A26;
-  --color-surface-hover: #1B2333;
-  --color-border: #202736;
-  --color-text-primary: #EEF2F6;
-  --color-text-secondary: #94A3B8;
-  --color-text-muted: #64748B;
-  --color-brand: #EA580C;
-  --color-brand-hover: #C2410C;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --color-info: #0284C7;
+  --color-surface: var(--bg-surface);
+  --color-surface-hover: var(--bg-surface-hover);
+  --color-border: var(--border-color);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand: var(--brand-primary);
+  --color-brand-hover: var(--brand-primary-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
 
   --font-heading: var(--font-be-vietnam-pro);
   --font-sans: var(--font-be-vietnam-pro);
   --font-mono: var(--font-jetbrains-mono);
 }
 
-/* bg-base nền tối chính (#0B0F17), hỗ trợ cả modifier opacity bg-base/80, bg-base/50... */
+/* bg-base nền chính (Light: #F8FAFC, Dark: #0B0F17), hỗ trợ modifier opacity bg-base/80, bg-base/50... */
 @utility bg-base {
-  background-color: #0B0F17;
-  background-color: color-mix(in srgb, #0B0F17 calc(--modifier(percentage, --default(100%))), transparent);
+  background-color: var(--bg-base);
+  background-color: color-mix(in srgb, var(--bg-base) calc(--modifier(percentage, --default(100%))), transparent);
 }
 
 @utility border-base {
-  border-color: #0B0F17;
-  border-color: color-mix(in srgb, #0B0F17 calc(--modifier(percentage, --default(100%))), transparent);
+  border-color: var(--bg-base);
+  border-color: color-mix(in srgb, var(--bg-base) calc(--modifier(percentage, --default(100%))), transparent);
 }
 
 :root {
-  --bg-base: #0B0F17;
-  --bg-surface: #131A26;
-  --bg-surface-hover: #1B2333;
-  --border: #202736;
-  --text-primary: #EEF2F6;
-  --text-secondary: #94A3B8;
+  /* Vocab App Plus Light Palette */
+  --bg-base: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-hover: #F1F5F9;
+  --border-color: #E2E8F0;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
   --brand-primary: #EA580C;
   --brand-primary-hover: #C2410C;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
   --info: #0284C7;
-  --background: oklch(1 0 0);
+
+  /* shadcn/ui & system tokens (Light) */
+  --border: #E2E8F0;
+  --background: oklch(0.985 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.6 0.2 40);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.96 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
+  --muted: oklch(0.96 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: oklch(0.96 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
+  --input: #E2E8F0;
+  --ring: oklch(0.6 0.2 40);
+  --chart-1: oklch(0.6 0.2 40);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
@@ -72,12 +77,62 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.6 0.2 40);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent: oklch(0.96 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-border: #E2E8F0;
+  --sidebar-ring: oklch(0.6 0.2 40);
+}
+
+.dark {
+  /* Vocab App Plus Dark Palette (Giữ nguyên giao diện Dark Focus hiện tại) */
+  --bg-base: #0B0F17;
+  --bg-surface: #131A26;
+  --bg-surface-hover: #1B2333;
+  --border-color: #202736;
+  --text-primary: #EEF2F6;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --brand-primary: #EA580C;
+  --brand-primary-hover: #C2410C;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #0284C7;
+
+  /* shadcn/ui tokens (Dark) */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.65 0.22 40);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.65 0.22 40);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.65 0.22 40);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.65 0.22 40);
 }
 
 html,
@@ -382,46 +437,14 @@ button:focus-visible {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
+
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-base text-text-primary;
   }
   html {
     @apply font-sans;

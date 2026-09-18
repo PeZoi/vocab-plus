@@ -133,20 +133,22 @@ export function useActivityCalendar({
     };
   }, [activityMap, activitySummary]);
 
-  // Màu sắc cấp độ theo phong cách GitHub Emerald Green
+  // Màu sắc cấp độ theo phong cách GitHub Emerald Green (Thích ứng Light & Dark Mode)
   const getCellColorClass = (level: number, isFuture: boolean): string => {
-    if (isFuture) return 'bg-white/[0.02] border-white/[0.04] opacity-40 cursor-default';
+    if (isFuture) {
+      return 'bg-slate-200/50 dark:bg-white/[0.02] border-slate-200/60 dark:border-white/[0.04] opacity-40 cursor-default';
+    }
     switch (level) {
       case 1:
-        return 'bg-emerald-950/80 border-emerald-800/40 text-emerald-400 hover:border-emerald-600 hover:shadow-xs';
+        return 'bg-emerald-200 border-emerald-300/80 text-emerald-800 dark:bg-emerald-950/80 dark:border-emerald-800/40 dark:text-emerald-400 hover:border-emerald-500 hover:shadow-xs';
       case 2:
-        return 'bg-emerald-800 border-emerald-700/60 text-emerald-300 hover:border-emerald-500 hover:shadow-xs';
+        return 'bg-emerald-400 border-emerald-500/80 text-emerald-950 dark:bg-emerald-800 dark:border-emerald-700/60 dark:text-emerald-300 hover:border-emerald-400 hover:shadow-xs';
       case 3:
-        return 'bg-emerald-600 border-emerald-500/80 text-white hover:border-emerald-400 hover:shadow-sm';
+        return 'bg-emerald-500 border-emerald-600 text-white dark:bg-emerald-600 dark:border-emerald-500/80 dark:text-white hover:border-emerald-400 hover:shadow-sm';
       case 4:
-        return 'bg-emerald-400 border-emerald-300 text-white shadow-[0_0_8px_rgba(52,211,153,0.4)] hover:scale-125';
+        return 'bg-emerald-600 border-emerald-700 text-white shadow-[0_0_8px_rgba(16,185,129,0.3)] dark:bg-emerald-400 dark:border-emerald-300 dark:shadow-[0_0_8px_rgba(52,211,153,0.4)] hover:scale-125';
       default:
-        return 'bg-white/[0.04] border-white/[0.05] hover:border-white/20';
+        return 'bg-slate-100 border-slate-200/80 hover:border-slate-300 dark:bg-white/[0.04] dark:border-white/[0.05] dark:hover:border-white/20';
     }
   };
 

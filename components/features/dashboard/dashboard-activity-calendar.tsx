@@ -38,10 +38,10 @@ export function DashboardActivityCalendar({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="relative rounded-2xl bg-surface/90 border border-border/80 p-4 sm:p-5 shadow-sm overflow-hidden h-full flex flex-col justify-between"
+      className="relative rounded-2xl bg-surface border border-border/70 p-4 sm:p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02),0_4px_16px_-2px_rgba(0,0,0,0.03)] dark:shadow-none overflow-hidden h-full flex flex-col justify-between"
     >
       {/* Header Heatmap */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/50">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
             <GitCommitHorizontal className="w-3.5 h-3.5" />
@@ -65,22 +65,22 @@ export function DashboardActivityCalendar({
 
         {/* Các huy hiệu thống kê tóm tắt */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-base border border-border/60 text-[11px]">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-[11px]">
             <Flame className="w-3 h-3 text-amber-400" />
             <span className="text-text-secondary">Hiện tại:</span>
-            <span className="font-bold text-amber-400">{streakDays}d</span>
+            <span className="font-bold text-amber-500 dark:text-amber-400">{streakDays}d</span>
           </div>
 
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-base border border-border/60 text-[11px]">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-[11px]">
             <Trophy className="w-3 h-3 text-yellow-400" />
             <span className="text-text-secondary">Kỷ lục:</span>
-            <span className="font-bold text-yellow-400">{longestStreak}d</span>
+            <span className="font-bold text-yellow-500 dark:text-yellow-400">{longestStreak}d</span>
           </div>
 
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-base border border-border/60 text-[11px]">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-[11px]">
             <CalendarCheck className="w-3 h-3 text-emerald-400" />
             <span className="text-text-secondary">Tổng ngày:</span>
-            <span className="font-bold text-emerald-400">{activeDays}d</span>
+            <span className="font-bold text-emerald-500 dark:text-emerald-400">{activeDays}d</span>
           </div>
         </div>
       </div>
@@ -151,11 +151,11 @@ export function DashboardActivityCalendar({
         <div className="flex items-center gap-1.5 text-[11px]">
           <span>Ít</span>
           <div className="flex items-center gap-1">
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-white/[0.04] border border-white/[0.05]" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-950/80 border border-emerald-800/40" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-800 border border-emerald-700/60" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-600 border border-emerald-500/80" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-400 border border-emerald-300" />
+            <div className="w-[10px] h-[10px] rounded-[2px] bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.05]" />
+            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-200 dark:bg-emerald-950/80 border border-emerald-300/80 dark:border-emerald-800/40" />
+            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-400 dark:bg-emerald-800 border border-emerald-500/80 dark:border-emerald-700/60" />
+            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-500 dark:bg-emerald-600 border border-emerald-600 dark:border-emerald-500/80" />
+            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-600 dark:bg-emerald-400 border border-emerald-700 dark:border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.3)] dark:shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
           </div>
           <span>Nhiều</span>
         </div>

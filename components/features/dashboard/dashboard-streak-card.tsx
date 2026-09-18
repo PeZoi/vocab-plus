@@ -152,25 +152,17 @@ export function DashboardStreakCard({
                 {/* Vòng tròn trạng thái */}
                 <div className="relative flex items-center justify-center">
                   {isToday ? (
-                    // NGÀY HIỆN TẠI
+                    // NGÀY HIỆN TẠI (Tĩnh, không animation)
                     isCompleted ? (
-                      // Đã học hôm nay: Lên lửa + vòng tròn trắng phát sáng hào quang
-                      <motion.div
-                        animate={{ scale: [1, 1.08, 1] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.95)] flex items-center justify-center cursor-pointer select-none"
-                      >
+                      // Đã học hôm nay: Lên lửa + nền tròn trắng tĩnh nổi bật
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white shadow-md flex items-center justify-center cursor-pointer select-none">
                         <span className="text-sm sm:text-base leading-none">🔥</span>
-                      </motion.div>
+                      </div>
                     ) : (
-                      // Chưa học hôm nay: Active sáng lên viền trắng phát sáng
-                      <motion.div
-                        animate={{ scale: [1, 1.08, 1] }}
-                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/25 border-2 border-white shadow-[0_0_12px_rgba(255,255,255,0.9)] flex items-center justify-center cursor-pointer"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-white animate-ping" />
-                      </motion.div>
+                      // Chưa học hôm nay: Vòng tròn viền trắng tĩnh rõ nét
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 border-2 border-white flex items-center justify-center cursor-pointer">
+                        <div className="w-2 h-2 rounded-full bg-white/90" />
+                      </div>
                     )
                   ) : isCompleted ? (
                     // NGÀY CÓ STREAK TRONG QUÁ KHỨ: LÊN LỬA 🔥

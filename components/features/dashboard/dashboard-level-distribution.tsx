@@ -22,7 +22,7 @@ export function DashboardLevelDistribution({ cards }: DashboardLevelDistribution
   } = useLevelDistribution(cards);
 
   return (
-    <div className="p-5 rounded-2xl bg-surface/80 border border-border/70 space-y-4 shadow-xs">
+    <div className="p-5 rounded-2xl bg-surface border border-border/70 space-y-4 shadow-[0_1px_3px_0_rgba(0,0,0,0.02),0_4px_16px_-2px_rgba(0,0,0,0.03)] dark:shadow-none">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export function DashboardLevelDistribution({ cards }: DashboardLevelDistribution
               </div>
 
               {/* Progress Bar */}
-              <div className="h-1.5 w-full bg-base rounded-full overflow-hidden border border-border/50">
+              <div className="h-1.5 w-full bg-slate-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${barWidthPct}%` }}
