@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -92,10 +92,15 @@ export function CollectionDetailWordList({
                     )}
                   </div>
                   <div
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1.5"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <AudioButton text={card.word} size="sm" />
+                    <DualAudioButtons
+                      word={card.word}
+                      cardId={card.id}
+                      initialAudio={card.audio_url}
+                      size="xs"
+                    />
                     {isOwner && (
                       <button
                         type="button"

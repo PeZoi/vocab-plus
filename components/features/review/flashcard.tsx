@@ -1,6 +1,7 @@
 'use client';
 
 import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { LottieIcon } from '@/components/common/lottie-icon';
 import { WordLevelBadge } from '@/components/common/word-level-badge';
@@ -70,7 +71,12 @@ export function Flashcard({ card, userCard, isFlipped, onFlip, onMarkKnown }: Fl
                   {formatIPA(card.ipa)}
                 </span>
               )}
-              <AudioButton text={card.word} size="sm" />
+              <DualAudioButtons
+                word={card.word}
+                cardId={card.id}
+                initialAudio={card.audio_url}
+                size="sm"
+              />
             </div>
 
             {/* Word Level Icon centered */}

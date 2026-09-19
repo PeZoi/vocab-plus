@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
@@ -132,8 +132,14 @@ export function VocabCardGrid({
                     </Badge>
                   )}
                 </div>
-                <div className='flex items-center'>
-                  <AudioButton text={card.word} size="sm" />
+                <div className='flex items-center gap-1.5'>
+                  <DualAudioButtons
+                    word={card.word}
+                    cardId={card.id}
+                    initialAudio={card.audio_url}
+                    size="xs"
+                    className="mr-0.5"
+                  />
                   {onAddToCollection && (
                     <button
                       type="button"

@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { TagInput } from '@/components/common/tag-input';
 import { AiAnalysisLoading } from '@/components/features/cards/ai-analysis-loading';
@@ -274,7 +274,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                   <h3 className="text-xl font-semibold text-text-primary tracking-tight">
                     {currentWord}
                   </h3>
-                  <AudioButton text={currentWord} size="sm" />
+                  <DualAudioButtons word={currentWord} size="xs" />
                   {analysisResult.ipa && (
                     <span className="font-mono text-xs text-text-secondary bg-base/60 px-2 py-0.5 rounded-md border border-border/70">
                       {analysisResult.ipa}
@@ -530,7 +530,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                               <span className="text-text-secondary text-xs">: {meaning}</span>
                             )}
                           </div>
-                          {example && <AudioButton text={example} size="sm" />}
+                          {example && <DualAudioButtons word={example} size="xs" />}
                         </div>
                         {example && (
                           <p className="text-text-secondary italic text-[11.5px] leading-relaxed">
@@ -571,7 +571,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                                 </Badge>
                               )}
                             </div>
-                            {example && <AudioButton text={example} size="sm" />}
+                            {example && <DualAudioButtons word={example} size="xs" />}
                           </div>
                           {meaning && (
                             <p className="text-text-secondary text-[11.5px] mt-0.5">{meaning}</p>

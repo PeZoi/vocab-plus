@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Button } from '@/components/ui/button';
@@ -164,7 +164,12 @@ export function DashboardRecentCards({ cards }: DashboardRecentCardsProps) {
                   className="p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06] hover:border-brand/30 hover:bg-slate-100/70 dark:hover:bg-white/[0.06] transition-all flex items-center justify-between gap-3 group shadow-2xs"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <AudioButton text={item.word} size="sm" />
+                    <DualAudioButtons
+                      word={item.word}
+                      cardId={item.id}
+                      initialAudio={item.audio_url}
+                      size="xs"
+                    />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Link

@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { DuplicateWordDialog } from '@/components/features/cards/duplicate-word-dialog';
 import { ImageSelector } from '@/components/features/cards/image-selector';
@@ -211,7 +211,12 @@ export function WordQuickPopover({
                       từ trong bài: <strong className="text-text-primary font-medium">{token.clean}</strong>
                     </span>
                   )}
-                  <AudioButton text={activeCard?.word || effectiveWord} className="w-8 h-8 shrink-0" />
+                  <DualAudioButtons
+                    word={activeCard?.word || effectiveWord}
+                    cardId={activeCard?.id}
+                    initialAudio={activeCard?.audio_url}
+                    size="xs"
+                  />
                   {activeCard?.cefr_level && (
                     <CEFRBadge level={activeCard.cefr_level as CEFRLevel} />
                   )}

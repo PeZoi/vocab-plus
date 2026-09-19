@@ -1,6 +1,7 @@
 'use client';
 
 import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { WordLevelBadge } from '@/components/common/word-level-badge';
 import type { CardWithProgress } from '@/types/card.types';
@@ -49,7 +50,12 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
                 ) : (
                   <span className="text-xs text-slate-500 italic">Chưa có phiên âm IPA</span>
                 )}
-                <AudioButton text={card.word} size="md" />
+                <DualAudioButtons
+                  word={card.word}
+                  cardId={card.id}
+                  initialAudio={card.audio_url}
+                  size="md"
+                />
               </div>
             </div>
 

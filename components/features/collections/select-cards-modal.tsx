@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -292,7 +292,12 @@ export function SelectCardsModal({
                       className="flex items-center gap-2 shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <AudioButton text={card.word} size="sm" />
+                      <DualAudioButtons
+                        word={card.word}
+                        cardId={card.id}
+                        initialAudio={card.audio_url}
+                        size="xs"
+                      />
                       {isAlreadyIn && (
                         <span className="text-[10px] text-text-secondary bg-surface px-1.5 py-0.5 rounded border border-border/60">
                           Đã có

@@ -537,7 +537,12 @@ function MultipleChoiceQuestionCard({
               <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary tracking-tight">
                 {card.word}
               </h2>
-              <AudioButton text={card.word} size="sm" />
+              <AudioButton
+                text={card.word}
+                cardId={card.id}
+                initialAudio={card.audio_url}
+                size="sm"
+              />
             </div>
             {card.ipa && (
               <p className="font-mono text-xs text-text-secondary">{formatIPA(card.ipa)}</p>
@@ -1025,7 +1030,12 @@ function SentenceWritingQuestionCard({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-text-primary">{card.word}</h2>
-              <AudioButton text={card.word} size="sm" />
+              <AudioButton
+                text={card.word}
+                cardId={card.id}
+                initialAudio={card.audio_url}
+                size="sm"
+              />
             </div>
             {card.ipa && (
               <p className="font-mono text-xs text-text-secondary">{formatIPA(card.ipa)}</p>

@@ -57,30 +57,24 @@ function ReviewSessionContent() {
     card_ids: cardIds,
   });
 
+  const { speakWord } = useTextToSpeech();
+
   // Tự động phát âm khi lướt thẻ nếu bật auto-pronounce
   useEffect(() => {
     if (
       autoPronounceEnabled &&
       phase === 'preview' &&
-      currentItem?.card.word &&
-      typeof window !== 'undefined' &&
-      'speechSynthesis' in window
+      currentItem?.card.word
     ) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(currentItem.card.word);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
+      speakWord(currentItem.card.word, 'us');
     }
-  }, [autoPronounceEnabled, currentItem?.card.word, phase, isFlipped]);
-
-  const { speak } = useTextToSpeech();
+  }, [autoPronounceEnabled, currentItem?.card.word, phase, isFlipped, speakWord]);
 
   const handlePronounce = useCallback(() => {
     if (currentItem?.card.word) {
-      speak(currentItem.card.word);
+      speakWord(currentItem.card.word, 'us');
     }
-  }, [currentItem, speak]);
+  }, [currentItem, speakWord]);
 
   const handleMarkKnown = async (cardId: string) => {
     try {

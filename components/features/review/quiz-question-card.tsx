@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2, Volume2, XCircle } from 'lucide-react';
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { cn } from '@/lib/utils';
@@ -42,7 +42,12 @@ export function QuizQuestionCard({
         </div>
 
         <div className="flex items-center gap-1">
-          <AudioButton text={card.word} size="sm" />
+          <DualAudioButtons
+            word={card.word}
+            cardId={card.id}
+            initialAudio={card.audio_url}
+            size="xs"
+          />
         </div>
       </div>
 

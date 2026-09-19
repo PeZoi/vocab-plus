@@ -169,6 +169,8 @@ export async function POST(request: Request) {
       }
     }
 
+    const finalAudioUrl: string | null = body.audio_url || null;
+
     // 1. Tạo bản ghi trong bảng cards
     const { data: card, error: cardError } = await supabase
       .from('cards')
@@ -187,7 +189,7 @@ export async function POST(request: Request) {
         cefr_level: normalizeCEFRLevel(body.cefr_level),
         tags: body.tags && Array.isArray(body.tags) ? body.tags : [],
         image_url: body.image_url || null,
-        audio_url: body.audio_url || null,
+        audio_url: finalAudioUrl,
         mnemonic: body.mnemonic || null,
         collocations: body.collocations && Array.isArray(body.collocations) ? (body.collocations as unknown as import('@/types/database.types').Json) : [],
         word_family: body.word_family && Array.isArray(body.word_family) ? (body.word_family as unknown as import('@/types/database.types').Json) : [],

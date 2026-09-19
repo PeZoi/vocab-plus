@@ -39,6 +39,8 @@ export async function POST(request: Request) {
       const trimmedWord = item.word?.trim();
       if (!trimmedWord) continue;
 
+      const finalAudioUrl: string | null = item.audio_url || null;
+
       const { data: card, error: cardError } = await supabase
         .from('cards')
         .insert({
@@ -56,7 +58,7 @@ export async function POST(request: Request) {
           cefr_level: normalizeCEFRLevel(item.cefr_level),
           tags: Array.isArray(item.tags) ? item.tags : [],
           image_url: item.image_url || null,
-          audio_url: item.audio_url || null,
+          audio_url: finalAudioUrl,
           mnemonic: item.mnemonic || null,
           collocations: Array.isArray(item.collocations)
             ? (item.collocations as unknown as Json)

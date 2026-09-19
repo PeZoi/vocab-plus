@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
@@ -109,7 +109,12 @@ export function VocabTableView({
                 {/* Word & IPA */}
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
-                    <AudioButton text={card.word} size="sm" />
+                    <DualAudioButtons
+                      word={card.word}
+                      cardId={card.id}
+                      initialAudio={card.audio_url}
+                      size="xs"
+                    />
                     <div>
                       <span className="font-semibold text-text-primary group-hover:text-brand transition-colors text-sm">
                         {card.word}

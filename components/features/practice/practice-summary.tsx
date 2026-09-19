@@ -11,7 +11,7 @@ import {
   Sprout,
   Trophy,
 } from 'lucide-react';
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { LottieIcon } from '@/components/common/lottie-icon';
 import { Button } from '@/components/ui/button';
@@ -332,7 +332,12 @@ export function PracticeSummary({
                   </div>
                   <p className="text-xs text-text-secondary truncate">{card.definition}</p>
                 </div>
-                <AudioButton text={card.word} size="sm" />
+                <DualAudioButtons
+                  word={card.word}
+                  cardId={card.id}
+                  initialAudio={card.audio_url}
+                  size="xs"
+                />
               </div>
             ))}
           </div>

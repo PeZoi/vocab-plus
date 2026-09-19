@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { pageVariants, alertVariants } from '@/constants/animations';
 import { ROUTES } from '@/constants/routes';
+import { leaderboardKeys } from '@/constants/query-keys';
 import {
   useSystemSettingsQuery,
   useUpdateSystemSettingMutation,
@@ -243,7 +244,7 @@ export default function AdminSettingsPage() {
     try {
       setNotification(null);
       const res = await adminService.resetAllLeagues();
-      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
+      queryClient.invalidateQueries({ queryKey: leaderboardKeys.all });
       setNotification({
         type: 'success',
         message:

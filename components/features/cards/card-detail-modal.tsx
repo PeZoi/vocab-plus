@@ -1,6 +1,7 @@
 'use client';
 
 import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { WordLevelBadge } from '@/components/common/word-level-badge';
 import { Badge } from '@/components/ui/badge';
@@ -73,7 +74,12 @@ export function CardDetailModal({
                 {formatIPA(card.ipa)}
               </span>
             )}
-            <AudioButton text={card.word} size="sm" />
+            <DualAudioButtons
+              word={card.word}
+              cardId={card.id}
+              initialAudio={card.audio_url}
+              size="sm"
+            />
           </div>
 
           {/* Tags */}

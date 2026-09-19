@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { useTopicWordsGenerator } from '@/hooks/features/ai/use-topic-words';
 import type { CEFRLevel } from '@/types/card.types';
@@ -348,7 +348,7 @@ export function CardFormTopic({ onSuccess }: { onSuccess?: () => void }) {
                             {item.word}
                           </span>
 
-                          <AudioButton text={item.word} size="sm" />
+                          <DualAudioButtons word={item.word} size="xs" />
 
                           {item.ipa && (
                             <span className="text-xs font-mono text-text-secondary bg-base/60 px-1.5 py-0.5 rounded border border-border/50">

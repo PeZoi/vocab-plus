@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioButton } from '@/components/common/audio-button';
+import { DualAudioButtons } from '@/components/common/dual-audio-buttons';
 import { CEFRBadge } from '@/components/common/cefr-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -128,7 +128,12 @@ export function AddToCollectionModal({
                 </div>
               )}
             </div>
-            <AudioButton text={activeCards[0].word} size="sm" />
+            <DualAudioButtons
+              word={activeCards[0].word}
+              cardId={activeCards[0].id}
+              initialAudio={activeCards[0].audio_url}
+              size="xs"
+            />
           </div>
         ) : (
           <div className="p-3.5 rounded-xl bg-base/60 border border-border/70 space-y-1.5">

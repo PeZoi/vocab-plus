@@ -2,21 +2,14 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { userKeys } from '@/constants/query-keys';
-import type { Tables } from '@/types/database.types';
-import type { LeagueTier } from '@/constants/leagues';
+import { userService, type UserProfile } from '@/services/user.service';
 
-export type UserProfile = Tables<'profiles'> & {
-  league?: LeagueTier;
-};
+export type { UserProfile };
 
 export function useUserProfile() {
   const query = useQuery<UserProfile>({
     queryKey: userKeys.profile(),
-    queryFn: async () => {
-      const res = await fetch('/api/user/profile');
-      if (!res.ok) throw new Error('Không thể tải thông tin tài khoản');
-      return res.json();
-    },
+    queryFn: () => userService.getProfile(),
   });
 
   return {
