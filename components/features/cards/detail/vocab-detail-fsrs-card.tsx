@@ -46,7 +46,7 @@ export function VocabDetailFsrsCard({ cardId, userCard, onRefetch }: VocabDetail
       <div className="flex items-center justify-between border-b border-border/50 pb-3">
         <div className="flex items-center gap-2">
           <BrainCircuit className="w-4 h-4 text-brand" />
-          <span className="text-sm font-bold text-white">Trí nhớ</span>
+          <span className="text-sm font-bold text-text-primary">Trí nhớ</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Badge variant={isDue ? 'danger' : 'default'} className="text-[10px] font-medium">
@@ -70,7 +70,7 @@ export function VocabDetailFsrsCard({ cardId, userCard, onRefetch }: VocabDetail
           {/* 4 Stats Grid */}
           <div className="grid grid-cols-2 gap-2.5">
             <div className="p-3 rounded-xl bg-base/50 border border-border/60 text-center space-y-0.5">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">
+              <span className="text-[10px] text-text-secondary uppercase tracking-wider block font-semibold">
                 Độ ổn định
               </span>
               <span className="text-[16px] sm:text-lg font-bold text-brand block">
@@ -79,28 +79,28 @@ export function VocabDetailFsrsCard({ cardId, userCard, onRefetch }: VocabDetail
             </div>
 
             <div className="p-3 rounded-xl bg-base/50 border border-border/60 text-center space-y-0.5">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">
+              <span className="text-[10px] text-text-secondary uppercase tracking-wider block font-semibold">
                 Độ khó (1-10)
               </span>
-              <span className="text-[16px] sm:text-lg font-bold text-white block">
+              <span className="text-[16px] sm:text-lg font-bold text-text-primary block">
                 {userCard.difficulty ? userCard.difficulty.toFixed(1) : '—'}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-base/50 border border-border/60 text-center space-y-0.5">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">
+              <span className="text-[10px] text-text-secondary uppercase tracking-wider block font-semibold">
                 Số lần ôn
               </span>
-              <span className="text-[16px] sm:text-lg font-bold text-white block">
+              <span className="text-[16px] sm:text-lg font-bold text-text-primary block">
                 {userCard.review_count ?? 0}
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-base/50 border border-border/60 text-center space-y-0.5">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">
+              <span className="text-[10px] text-text-secondary uppercase tracking-wider block font-semibold">
                 Số lần quên
               </span>
-              <span className={`text-[16px] sm:text-lg font-bold block ${userCard.lapse_count ? 'text-amber-400' : 'text-white'}`}>
+              <span className={`text-[16px] sm:text-lg font-bold block ${userCard.lapse_count ? 'text-amber-500 dark:text-amber-400' : 'text-text-primary'}`}>
                 {userCard.lapse_count ?? 0}
               </span>
             </div>
@@ -108,17 +108,17 @@ export function VocabDetailFsrsCard({ cardId, userCard, onRefetch }: VocabDetail
 
           {/* Due Date Indicator */}
           <div className="p-3.5 rounded-xl bg-base/40 border border-border/60 space-y-1 text-xs">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-text-secondary">
               <span className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
                 Lần ôn kế tiếp:
               </span>
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-text-primary">
                 {userCard.due_at ? formatRelativeTime(userCard.due_at) : 'Chưa xếp lịch'}
               </span>
             </div>
             {userCard.due_at && (
-              <div className="text-[11px] text-slate-400 text-right">
+              <div className="text-[11px] text-text-muted text-right">
                 {formatDateTime(userCard.due_at)}
               </div>
             )}

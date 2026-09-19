@@ -49,10 +49,10 @@ export default function VocabDetailPage({ params }: PageProps) {
           <BookOpen className="w-8 h-8" />
         </div>
         <div className="space-y-1.5">
-          <h2 className="text-xl font-bold text-white">
+          <h2 className="text-xl font-bold text-text-primary">
             Không tìm thấy từ vựng
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-text-secondary">
             Từ vựng này có thể đã bị xóa hoặc bạn không có quyền truy cập.
           </p>
         </div>

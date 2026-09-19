@@ -27,7 +27,7 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
           <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-3">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary tracking-tight">
                   {card.word}
                 </h1>
                 {card.cefr_level && (
@@ -35,7 +35,7 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
                 )}
                 <WordLevelBadge userCard={card.user_card} mode="compact" />
                 {card.part_of_speech && (
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-surface-hover text-slate-300 border border-border/70 capitalize">
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-surface-hover text-text-secondary border border-border/70 capitalize">
                     {card.part_of_speech}
                   </span>
                 )}
@@ -44,11 +44,11 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
               {/* IPA & Pronunciation Audio */}
               <div className="flex items-center gap-3">
                 {card.ipa ? (
-                  <span className="font-mono text-sm sm:text-[15px] text-slate-300 bg-base/70 px-3 py-1 rounded-lg border border-border/70 inline-flex items-center gap-1.5 shadow-2xs">
+                  <span className="font-mono text-sm sm:text-[15px] text-text-secondary bg-base/70 px-3 py-1 rounded-lg border border-border/70 inline-flex items-center gap-1.5 shadow-2xs">
                     {formatIPA(card.ipa)}
                   </span>
                 ) : (
-                  <span className="text-xs text-slate-500 italic">Chưa có phiên âm IPA</span>
+                  <span className="text-xs text-text-muted italic">Chưa có phiên âm IPA</span>
                 )}
                 <DualAudioButtons
                   word={card.word}
@@ -104,7 +104,7 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
         {/* Core Definition Section (Bilingual - English Primary) */}
         <div className="p-6 sm:p-7 space-y-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-brand" />
               <span>Định nghĩa</span>
             </span>
@@ -112,29 +112,29 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
 
           {card.definition_en ? (
             <div className=" space-y-2">
-              {/* Primary English Definition (Bold, Large, White) */}
+              {/* Primary English Definition (Bold, Large, Primary Text) */}
               <div className='flex items-start gap-2'>
-                <span className="text-[11px] font-bold text-slate-400 bg-surface px-1.5 py-0.5 rounded border border-border/60 shrink-0 mt-0.5">
+                <span className="text-[11px] font-bold text-text-secondary bg-surface-hover px-1.5 py-0.5 rounded border border-border/60 shrink-0 mt-0.5">
                   EN
                 </span>
-                <p className="text-md sm:text-lg font-bold text-white leading-relaxed tracking-tight">
+                <p className="text-md sm:text-lg font-bold text-text-primary leading-relaxed tracking-tight">
                   {card.definition_en}
                 </p>
               </div>
 
-              {/* Secondary Vietnamese Definition (Subtle, Slate-300) */}
+              {/* Secondary Vietnamese Definition (Subtle, Text Secondary) */}
               <div className="flex items-start gap-2 pt-1.5 border-t border-border/40">
-                <span className="text-[11px] font-bold text-slate-400 bg-surface px-1.5 py-0.5 rounded border border-border/60 shrink-0 mt-0.5">
+                <span className="text-[11px] font-bold text-text-secondary bg-surface-hover px-1.5 py-0.5 rounded border border-border/60 shrink-0 mt-0.5">
                   VI
                 </span>
-                <p className="text-[14px] text-slate-300 font-medium leading-relaxed">
+                <p className="text-[14px] text-text-secondary font-medium leading-relaxed">
                   {card.definition}
                 </p>
               </div>
             </div>
           ) : (
             /* Fallback for cards without English definition */
-            <p className="text-lg sm:text-xl font-medium text-white leading-relaxed">
+            <p className="text-lg sm:text-xl font-medium text-text-primary leading-relaxed">
               {card.definition}
             </p>
           )}
@@ -152,11 +152,11 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
             </div>
 
             <div className="border-l-2 border-brand/80 pl-4 py-1 space-y-1.5">
-              <p className="text-[15px] sm:text-[16.5px] text-slate-100 font-serif leading-relaxed">
+              <p className="text-[15px] sm:text-[16.5px] text-text-primary font-serif leading-relaxed">
                 &ldquo;{card.example_sentence}&rdquo;
               </p>
               {card.example_translation && (
-                <p className="text-[13.5px] sm:text-[14px] text-slate-400 font-normal leading-relaxed">
+                <p className="text-[13.5px] sm:text-[14px] text-text-secondary font-normal leading-relaxed">
                   {card.example_translation}
                 </p>
               )}
@@ -169,14 +169,14 @@ export function VocabDetailHero({ card }: VocabDetailHeroProps) {
       {card.mnemonic && (
         <div className="rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-amber-500/10 via-amber-500/[0.04] to-transparent border border-amber-500/25 shadow-xs space-y-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
               <Lightbulb className="w-4 h-4" />
             </div>
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
               Mẹo liên tưởng ghi nhớ (Mnemonic)
             </span>
           </div>
-          <p className="text-[14.5px] sm:text-[15.5px] text-amber-100/95 leading-relaxed font-normal pl-9">
+          <p className="text-[14.5px] sm:text-[15.5px] text-amber-950 dark:text-amber-100/95 leading-relaxed font-normal pl-9">
             {card.mnemonic}
           </p>
         </div>

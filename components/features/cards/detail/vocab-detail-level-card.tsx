@@ -40,7 +40,7 @@ export function VocabDetailLevelCard({ userCard }: VocabDetailLevelCardProps) {
       <div className="flex items-center justify-between border-b border-border/50 pb-3.5">
         <div className="flex items-center gap-2">
           <Trophy className={cn('w-4 h-4', colorClasses.text)} />
-          <span className="text-sm font-bold text-white">Cấp độ sinh trưởng</span>
+          <span className="text-sm font-bold text-text-primary">Cấp độ sinh trưởng</span>
         </div>
 
         <span
@@ -66,9 +66,9 @@ export function VocabDetailLevelCard({ userCard }: VocabDetailLevelCardProps) {
             <h3 className={cn('text-base font-bold tracking-tight', colorClasses.text)}>
               {name}
             </h3>
-            <span className="text-xs text-slate-400 font-medium">({nameEn})</span>
+            <span className="text-xs text-text-secondary font-medium">({nameEn})</span>
           </div>
-          <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
             {description}
           </p>
         </div>
@@ -77,26 +77,26 @@ export function VocabDetailLevelCard({ userCard }: VocabDetailLevelCardProps) {
       {/* 2 Stats Mini Grid */}
       <div className="grid grid-cols-2 gap-2.5 pt-0.5">
         <div className="p-3 rounded-xl bg-base/50 border border-border/60 text-center space-y-0.5">
-          <span className="text-[8.5px] text-slate-400 uppercase tracking-wider font-semibold flex items-center justify-center gap-1">
+          <span className="text-[8.5px] text-text-secondary uppercase tracking-wider font-semibold flex items-center justify-center gap-1">
             <Flame className="w-3 h-3 text-brand" />
             <span>Đúng liên tiếp</span>
           </span>
-          <span className="text-[16px] sm:text-lg font-bold text-white block font-mono">
+          <span className="text-[16px] sm:text-lg font-bold text-text-primary block font-mono">
             {currentCount}{' '}
-            <span className="text-xs text-slate-400 font-normal">
+            <span className="text-xs text-text-secondary font-normal">
               / {isMaxLevel ? currentCount : nextTargetCount} lần
             </span>
           </span>
         </div>
 
         <div className="p-3 rounded-xl bg-base/50 border border-border/60 text-center space-y-0.5">
-          <span className="text-[8.5px] text-slate-400 uppercase tracking-wider block font-semibold flex items-center justify-center gap-1">
-            <ShieldAlert className="w-3 h-3 text-emerald-400" />
+          <span className="text-[8.5px] text-text-secondary uppercase tracking-wider block font-semibold flex items-center justify-center gap-1">
+            <ShieldAlert className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
             <span>Độ bền trí nhớ</span>
           </span>
-          <span className="text-[16px] sm:text-lg font-bold text-emerald-400 block font-mono">
+          <span className="text-[16px] sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 block font-mono">
             {stabilityDays}{' '}
-            <span className="text-xs text-slate-400 font-normal">ngày</span>
+            <span className="text-xs text-text-secondary font-normal">ngày</span>
           </span>
         </div>
       </div>
@@ -104,7 +104,7 @@ export function VocabDetailLevelCard({ userCard }: VocabDetailLevelCardProps) {
       {/* 5-Step Evolution Bar & Next Target */}
       <div className="space-y-2 pt-1 border-t border-border/50">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+          <span className="text-[11px] font-medium text-text-secondary flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-brand" />
             <span>Tiến trình tiến hóa</span>
           </span>
@@ -137,7 +137,7 @@ export function VocabDetailLevelCard({ userCard }: VocabDetailLevelCardProps) {
                     />
                   )}
                 </div>
-                <div className="text-[9px] text-center font-mono text-slate-400/80">
+                <div className="text-[9px] text-center font-mono text-text-muted">
                   Lv.{step}
                 </div>
               </div>
@@ -146,16 +146,16 @@ export function VocabDetailLevelCard({ userCard }: VocabDetailLevelCardProps) {
         </div>
 
         {!isMaxLevel ? (
-          <p className="text-[11px] text-slate-400 text-center italic pt-1 leading-relaxed">
+          <p className="text-[11px] text-text-secondary text-center italic pt-1 leading-relaxed">
             Cần thêm{' '}
-            <strong className="text-white font-semibold">
+            <strong className="text-text-primary font-semibold">
               {Math.max(1, nextTargetCount - currentCount)}
             </strong>{' '}
             lần kiểm tra đúng để thăng cấp lên{' '}
             <strong className="text-brand font-semibold">Lv.{level + 1}</strong>
           </p>
         ) : (
-          <div className="flex items-center justify-center gap-1 text-[11px] text-amber-300 font-semibold pt-1">
+          <div className="flex items-center justify-center gap-1 text-[11px] text-amber-600 dark:text-amber-300 font-semibold pt-1">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Đã đạt cấp độ tối cao — Cổ thụ hoàng kim</span>
           </div>

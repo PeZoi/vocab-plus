@@ -111,7 +111,7 @@ export function LeaderboardPodium({
               >
                 {second.display_name || 'Học viên'}
               </p>
-              <span className="text-[11px] font-bold text-slate-300 flex items-center gap-0.5 mt-0.5">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-0.5 mt-0.5">
                 <Zap className="w-3 h-3 text-slate-400 fill-slate-400" />
                 {formatXP(second.xp)}
               </span>
@@ -131,7 +131,7 @@ export function LeaderboardPodium({
             <div className="w-8 h-8 rounded-full bg-slate-300/20 border border-slate-300/40 flex items-center justify-center text-slate-200 font-extrabold text-sm shadow-inner">
               🥈
             </div>
-            <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-2">
+            <span className="text-[10px] uppercase font-black tracking-widest text-slate-700 dark:text-slate-200 mt-2 px-2 py-0.5 rounded-full bg-slate-300/30 dark:bg-slate-400/15 border border-slate-400/30 shadow-2xs">
               HẠNG 2
             </span>
           </div>
@@ -155,8 +155,8 @@ export function LeaderboardPodium({
                 <Crown className="w-8 h-8 fill-amber-400 text-yellow-300 filter drop-shadow-[0_0_12px_rgba(251,191,36,0.85)]" />
               </motion.div>
 
-              {/* Avatar with Golden Aura */}
-              <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-200 to-amber-600 shadow-lg shadow-amber-500/40 animate-pulse">
+              {/* Avatar with Golden Aura (không nhấp nháy) */}
+              <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-200 to-amber-600 shadow-lg shadow-amber-500/30">
                 <UserAvatar src={first.avatar_url} name={first.display_name} size="lg" />
                 <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-yellow-300 to-amber-500 text-amber-950 text-xs font-black flex items-center justify-center border-2 border-white shadow-md">
                   1
@@ -174,8 +174,8 @@ export function LeaderboardPodium({
                 </p>
               </div>
 
-              <span className="text-xs font-extrabold text-amber-400 flex items-center gap-1 mt-0.5 bg-amber-500/15 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1 mt-0.5 bg-amber-500/15 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                <Zap className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
                 {formatXP(first.xp)}
               </span>
             </div>
@@ -185,7 +185,7 @@ export function LeaderboardPodium({
               <div className="w-10 h-10 rounded-full bg-amber-400/25 border border-amber-400/50 flex items-center justify-center text-amber-300 font-black text-lg shadow-lg">
                 🥇
               </div>
-              <span className="text-[11px] uppercase font-black tracking-widest text-amber-300 mt-2 drop-shadow-xs">
+              <span className="text-[11px] sm:text-xs uppercase font-black tracking-widest text-amber-900 dark:text-amber-200 mt-2 drop-shadow-xs px-2.5 py-0.5 rounded-full bg-amber-400/25 dark:bg-amber-400/15 border border-amber-500/40 dark:border-amber-400/30 shadow-2xs">
                 QUÁN QUÂN
               </span>
             </div>
@@ -214,7 +214,7 @@ export function LeaderboardPodium({
               >
                 {third.display_name || 'Học viên'}
               </p>
-              <span className="text-[11px] font-bold text-amber-500 flex items-center gap-0.5 mt-0.5">
+              <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5 mt-0.5">
                 <Zap className="w-3 h-3 text-amber-600 fill-amber-600" />
                 {formatXP(third.xp)}
               </span>
@@ -234,7 +234,7 @@ export function LeaderboardPodium({
             <div className="w-7 h-7 rounded-full bg-amber-700/20 border border-amber-700/40 flex items-center justify-center text-amber-400 font-extrabold text-xs shadow-inner">
               🥉
             </div>
-            <span className="text-[10px] uppercase font-black tracking-widest text-amber-600 mt-1.5">
+            <span className="text-[10px] uppercase font-black tracking-widest text-amber-900 dark:text-amber-300 mt-1.5 px-2 py-0.5 rounded-full bg-amber-700/20 dark:bg-amber-700/25 border border-amber-700/35 shadow-2xs">
               HẠNG 3
             </span>
           </div>

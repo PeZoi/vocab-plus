@@ -23,7 +23,7 @@ export function VocabDetailExpansion({ collocations, wordFamily }: VocabDetailEx
     <div className="rounded-2xl bg-surface/90 border border-border/70 p-6 sm:p-7 space-y-6 shadow-xs">
       <div className="flex items-center gap-2 border-b border-border/50 pb-3">
         <Layers className="w-4 h-4 text-brand" />
-        <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+        <h3 className="text-sm font-bold text-text-primary uppercase tracking-wider">
           Mở rộng từ vựng & Ngữ cảnh
         </h3>
       </div>
@@ -31,10 +31,10 @@ export function VocabDetailExpansion({ collocations, wordFamily }: VocabDetailEx
       {/* Collocations Section */}
       {hasCollocations && (
         <div className="space-y-3">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
             <Link2 className="w-3.5 h-3.5 text-brand" />
             <span>Cụm từ hay đi kèm (Collocations)</span>
-            <span className="text-slate-500 font-normal">({collocations.length})</span>
+            <span className="text-text-muted font-normal">({collocations.length})</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -56,13 +56,13 @@ export function VocabDetailExpansion({ collocations, wordFamily }: VocabDetailEx
                       {example && <AudioButton text={example} size="sm" />}
                     </div>
                     {meaning && (
-                      <p className="text-xs text-slate-200 mt-1.5 font-medium leading-normal">
+                      <p className="text-xs text-text-secondary mt-1.5 font-medium leading-normal">
                         {meaning}
                       </p>
                     )}
                   </div>
                   {example && (
-                    <p className="text-xs text-slate-400 italic pt-2 border-t border-border/40 leading-relaxed">
+                    <p className="text-xs text-text-muted italic pt-2 border-t border-border/40 leading-relaxed">
                       &ldquo;{example}&rdquo;
                     </p>
                   )}
@@ -76,10 +76,10 @@ export function VocabDetailExpansion({ collocations, wordFamily }: VocabDetailEx
       {/* Word Family Section */}
       {hasWordFamily && (
         <div className="space-y-3 pt-2">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
             <GitFork className="w-3.5 h-3.5 text-purple-400" />
             <span>Từ vựng liên quan</span>
-            <span className="text-slate-500 font-normal">({wordFamily.length})</span>
+            <span className="text-text-muted font-normal">({wordFamily.length})</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -100,11 +100,11 @@ export function VocabDetailExpansion({ collocations, wordFamily }: VocabDetailEx
                   <div>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-white text-[15px] sm:text-[16px]">
+                        <span className="font-bold text-text-primary text-[15px] sm:text-[16px]">
                           {formWord}
                         </span>
                         {pos && (
-                          <Badge variant="secondary" className="text-[10px] py-0 px-1.5 text-slate-300 bg-surface border-border">
+                          <Badge variant="secondary" className="text-[10px] py-0 px-1.5 text-text-secondary bg-surface border-border">
                             {pos}
                           </Badge>
                         )}
@@ -112,13 +112,13 @@ export function VocabDetailExpansion({ collocations, wordFamily }: VocabDetailEx
                       {example && <AudioButton text={example} size="sm" />}
                     </div>
                     {meaning && (
-                      <p className="text-xs text-slate-200 mt-1.5 font-medium leading-normal">
+                      <p className="text-xs text-text-secondary mt-1.5 font-medium leading-normal">
                         {meaning}
                       </p>
                     )}
                   </div>
                   {example && (
-                    <p className="text-xs text-slate-400 italic pt-2 border-t border-border/40 leading-relaxed">
+                    <p className="text-xs text-text-muted italic pt-2 border-t border-border/40 leading-relaxed">
                       &ldquo;{example}&rdquo;
                     </p>
                   )}

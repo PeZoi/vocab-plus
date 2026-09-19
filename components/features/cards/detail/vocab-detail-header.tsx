@@ -38,13 +38,13 @@ export function VocabDetailHeader({
           variant="ghost"
           size="sm"
           onClick={() => router.push(ROUTES.APP.VOCAB)}
-          className="gap-1.5 text-slate-400 hover:text-white px-2.5"
+          className="gap-1.5 text-text-secondary hover:text-text-primary px-2.5"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Kho từ vựng</span>
         </Button>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-        <span className="text-sm font-semibold text-white truncate max-w-[200px] sm:max-w-xs">
+        <ChevronRight className="w-3.5 h-3.5 text-text-muted shrink-0" />
+        <span className="text-sm font-semibold text-text-primary truncate max-w-[200px] sm:max-w-xs">
           {card.word}
         </span>
         {card.card_type && card.card_type !== 'word' && (
@@ -61,7 +61,7 @@ export function VocabDetailHeader({
           variant="outline"
           size="sm"
           onClick={onOpenAddToCollection}
-          className="gap-1.5 text-xs text-slate-300 border-border/70 hover:text-white hover:border-brand/40"
+          className="gap-1.5 text-xs text-text-secondary border-border/70 hover:text-text-primary hover:border-brand/40"
         >
           <FolderPlus className="w-3.5 h-3.5 text-brand" />
           <span className="hidden sm:inline">Bộ sưu tập</span>
@@ -74,7 +74,7 @@ export function VocabDetailHeader({
               variant="outline"
               size="sm"
               onClick={onOpenEdit}
-              className="gap-1.5 text-xs text-slate-300 border-border/70 hover:text-white hover:border-brand/40"
+              className="gap-1.5 text-xs text-text-secondary border-border/70 hover:text-text-primary hover:border-brand/40"
             >
               <Edit2 className="w-3.5 h-3.5 text-blue-400" />
               <span>Chỉnh sửa</span>
@@ -85,7 +85,7 @@ export function VocabDetailHeader({
               variant="ghost"
               size="sm"
               onClick={onOpenDelete}
-              className="p-2 text-slate-400 hover:bg-danger/10 hover:text-danger rounded-lg transition-colors"
+              className="p-2 text-text-secondary hover:bg-danger/10 hover:text-danger rounded-lg transition-colors"
               title="Xóa thẻ từ vựng"
             >
               <Trash2 className="w-4 h-4" />
