@@ -22,9 +22,9 @@ export function LeagueBadge({
   const config = LEAGUE_TIERS_CONFIG[tier] || LEAGUE_TIERS_CONFIG.unranked;
 
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-[11px] gap-1.5',
-    md: 'px-2.5 py-1 text-xs gap-2',
-    lg: 'px-3.5 py-1.5 text-sm gap-2.5 font-bold',
+    sm: 'px-2.5 py-0.5 text-[11px] gap-1.5',
+    md: 'px-3 py-1 text-xs gap-2',
+    lg: 'px-4 py-1.5 text-sm gap-2.5 font-bold',
   };
 
   const lottieSizes: Record<'sm' | 'md' | 'lg', 'xs' | 'sm' | 'md'> = {
@@ -36,7 +36,7 @@ export function LeagueBadge({
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-full font-semibold border transition-all duration-300 shadow-2xs',
+        'inline-flex items-center rounded-full font-semibold border transition-all duration-300 backdrop-blur-xs',
         config.badgeBg,
         config.badgeBorder,
         config.badgeText,
@@ -44,13 +44,16 @@ export function LeagueBadge({
         className
       )}
       style={{
-        boxShadow: `0 0 14px ${config.glowColor}`,
+        boxShadow: `0 0 12px ${config.glowColor}`,
       }}
     >
       {showLottie ? (
-        <RankLottieIcon tier={tier} size={lottieSizes[size]} />
+        <RankLottieIcon tier={tier} size={lottieSizes[size]} showGlow={false} />
       ) : (
-        <span className="text-sm">{config.icon}</span>
+        <span
+          className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+          style={{ backgroundColor: 'currentColor' }}
+        />
       )}
       <span className="font-heading tracking-wide uppercase">{config.nameVi}</span>
     </div>

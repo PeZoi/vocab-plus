@@ -211,8 +211,8 @@ export default function LeaderboardPage() {
             </div>
 
             <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap relative z-10">
-              <div className="flex items-center gap-3">
-                <RankLottieIcon tier={activeTier} size="md" />
+              <div className="flex items-center gap-3.5">
+                <RankLottieIcon tier={activeTier} size="lg" />
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-text-secondary font-medium">Đang xem:</span>
@@ -269,7 +269,7 @@ export default function LeaderboardPage() {
                             }`}
                           >
                             <div className="flex items-center gap-2.5">
-                              <RankLottieIcon tier={tierKey} size="xs" />
+                              <RankLottieIcon tier={tierKey} size="sm" />
                               <span>{meta.nameVi}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
