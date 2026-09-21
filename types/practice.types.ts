@@ -30,6 +30,7 @@ export interface PracticeSessionConfig {
   collectionTitle?: string;
   questionCount: number;
   questions: PracticeQuestionItem[];
+  exerciseTypes?: PracticeExerciseType[];
 }
 
 export interface SentenceGradeRequest {

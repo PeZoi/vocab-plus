@@ -19,11 +19,19 @@ function shuffleArray<T>(array: T[]): T[] {
  * Tạo danh sách câu hỏi kiểm tra tổng hợp ngẫu nhiên từ danh sách thẻ được chọn
  * - Xáo trộn ngẫu nhiên thứ tự các từ vựng bằng Fisher-Yates shuffle
  * - Các hình thức kiểm tra (Trắc nghiệm, Điền khuyết Cloze, Đặt câu AI) xuất hiện hoàn toàn ngẫu nhiên và bất ngờ
+ * - Cho phép người dùng tùy chọn 1 hoặc kết hợp nhiều hình thức (mặc định chọn cả 3)
  */
 export function createRandomMixedQuestions(
-  selectedCards: CardWithProgress[]
+  selectedCards: CardWithProgress[],
+  allowedModes: PracticeExerciseType[] = ['multiple_choice', 'cloze', 'sentence_writing']
 ): PracticeQuestionItem[] {
   if (!selectedCards || selectedCards.length === 0) return [];
+
+  // Đảm bảo luôn có ít nhất 1 hình thức hợp lệ
+  const validAllowedModes: PracticeExerciseType[] =
+    allowedModes && allowedModes.length > 0
+      ? allowedModes
+      : ['multiple_choice', 'cloze', 'sentence_writing'];
 
   // 1. Trộn ngẫu nhiên danh sách thẻ bằng Fisher-Yates shuffle
   const shuffledCards = shuffleArray(selectedCards);
@@ -37,12 +45,23 @@ export function createRandomMixedQuestions(
     const hasExampleSentence =
       !!card.example_sentence && card.example_sentence.trim().length > 0;
 
-    // Tập hợp các hình thức hợp lệ cho từ này
-    const availableModes: PracticeExerciseType[] = hasExampleSentence
-      ? ['multiple_choice', 'cloze', 'sentence_writing']
-      : ['multiple_choice', 'sentence_writing'];
+    // Lọc các hình thức hợp lệ cho từ này dựa trên cấu hình người dùng
+    let availableModes = validAllowedModes.filter((mode) => {
+      // Hình thức điền khuyết Cloze bắt buộc phải có câu ví dụ thực tế
+      if (mode === 'cloze') return hasExampleSentence;
+      return true;
+    });
 
-    // Lọc bỏ hình thức nếu nó đã xuất hiện 2 lần liên tiếp trước đó (để tăng tính đa dạng)
+    // Nếu từ này không có câu ví dụ mà người dùng chỉ chọn duy nhất 'cloze',
+    // fallback sang các hình thức hợp lệ khác hoặc multiple_choice
+    if (availableModes.length === 0) {
+      availableModes = validAllowedModes.filter((m) => m !== 'cloze');
+      if (availableModes.length === 0) {
+        availableModes = ['multiple_choice'];
+      }
+    }
+
+    // Lọc bỏ hình thức nếu nó đã xuất hiện 2 lần liên tiếp trước đó (chỉ khi có >= 2 hình thức khả dụng)
     let candidateModes = availableModes;
     if (
       lastMode &&

@@ -147,10 +147,10 @@ export function PracticeSummary({
               className={cn(
                 'text-xl sm:text-3xl font-black tracking-tight',
                 accuracy >= 80
-                  ? 'text-emerald-400'
+                  ? 'text-emerald-600 dark:text-emerald-400'
                   : accuracy >= 50
-                  ? 'text-amber-400'
-                  : 'text-rose-400'
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-rose-600 dark:text-rose-400'
               )}
             >
               {accuracy}%
@@ -176,7 +176,7 @@ export function PracticeSummary({
               Điểm thưởng XP
             </span>
             <span className="text-xl sm:text-3xl font-black text-brand flex items-center justify-center gap-1 tracking-tight">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 dark:text-amber-300" />
               +{xpEarned}
             </span>
           </div>
@@ -189,18 +189,19 @@ export function PracticeSummary({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="rounded-3xl p-5 sm:p-6 bg-surface/90 border border-emerald-500/30 shadow-lg shadow-emerald-500/5 space-y-4"
+          className="rounded-3xl p-5 sm:p-6 bg-surface border border-border/80 shadow-md space-y-4"
         >
           {/* Section Header */}
           <div className="flex items-center justify-between flex-wrap gap-2 border-b border-border/50 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/25 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <Sprout className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-extrabold text-emerald-400 tracking-tight flex items-center gap-1.5">
-                  <span>Khu Vườn Vừa Được Tưới Nước! 💧</span>
-                  <span className="text-xs text-emerald-300/80 font-normal">
+                <h3 className="text-sm sm:text-base font-extrabold text-text-primary tracking-tight flex items-center gap-1.5">
+                  <span>Khu Vườn Vừa Được Tưới Nước!</span>
+                  <span className="text-base">💧</span>
+                  <span className="text-xs text-text-secondary font-medium ml-1">
                     ({sortedWateredCards.length} từ)
                   </span>
                 </h3>
@@ -210,13 +211,15 @@ export function PracticeSummary({
 
           {/* Banner Thông Báo Thăng Cấp (nếu có từ vựng lên level) */}
           {hasLevelUps && (
-            <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-transparent border border-emerald-500/40 flex items-center gap-2.5">
-              <span className="text-xl">🎉</span>
+            <div className="p-3.5 rounded-2xl bg-emerald-500/[0.06] dark:bg-emerald-500/15 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0 text-base">
+                🎉
+              </div>
               <div className="text-xs">
-                <span className="font-extrabold text-emerald-300 block">
+                <span className="font-bold text-xs sm:text-sm text-emerald-700 dark:text-emerald-300 block">
                   Cây Sinh Trưởng Thăng Cấp! ({levelUps?.length} từ vựng)
                 </span>
-                <span className="text-text-secondary text-[11px]">
+                <span className="text-text-secondary text-[11px] leading-relaxed block mt-0.5">
                   Các từ vựng đã tích lũy đủ độ bền và lần làm đúng để tiến hóa lên cấp độ mới.
                 </span>
               </div>
@@ -224,15 +227,15 @@ export function PracticeSummary({
           )}
 
           {/* Danh sách từ vựng được tưới nước: sắp xếp từ tăng cấp lên đầu, cuộn ngang mượt mà */}
-          <div className="flex items-stretch gap-3 overflow-x-auto custom-scrollbar pb-2.5 pt-1 px-1 -mx-1 snap-x snap-mandatory">
+          <div className="flex items-stretch gap-3 overflow-x-auto no-scrollbar pb-1.5 pt-1 px-1 -mx-1 snap-x snap-mandatory">
             {sortedWateredCards.map(({ card, oldLevel, newLevel, isLevelUp }) => (
               <div
                 key={card.id}
                 className={cn(
-                  'flex flex-col items-center justify-between p-3.5 rounded-2xl bg-base/70 border transition-all text-center gap-2 w-[115px] sm:w-[125px] shrink-0 snap-start select-none group',
+                  'flex flex-col items-center justify-between p-3.5 rounded-2xl border transition-all text-center gap-2 w-[115px] sm:w-[125px] shrink-0 snap-start select-none group',
                   isLevelUp
-                    ? 'border-emerald-500/50 bg-emerald-500/10 shadow-xs shadow-emerald-500/15'
-                    : 'border-border/70 hover:border-border'
+                    ? 'border-emerald-500/40 dark:border-emerald-500/40 bg-emerald-500/[0.04] dark:bg-emerald-500/[0.08] shadow-xs shadow-emerald-500/10 hover:border-emerald-500/60'
+                    : 'border-border/80 bg-base/50 dark:bg-base/60 hover:border-border hover:bg-surface'
                 )}
               >
                 {/* Icon hạt mầm / cây sinh trưởng size md */}
@@ -253,20 +256,20 @@ export function PracticeSummary({
 
                 {/* Cấp độ */}
                 {isLevelUp ? (
-                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[10px] font-black text-emerald-300 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full bg-emerald-500/15 dark:bg-emerald-500/25 border border-emerald-500/30 dark:border-emerald-500/40">
                       Lv.{oldLevel.level} → Lv.{newLevel.level}
                     </span>
-                    <span className="text-[10px] font-medium text-emerald-400">
+                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
                       {newLevel.name}
                     </span>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-0.5">
+                  <div className="flex flex-col items-center gap-1">
                     <span className="text-[11px] font-mono font-bold text-text-secondary">
                       Lv.{newLevel.level}
                     </span>
-                    <span className="text-[10px] text-text-secondary/70 font-medium">
+                    <span className="text-[10px] text-text-secondary/80 font-medium">
                       {newLevel.name}
                     </span>
                   </div>
@@ -279,7 +282,7 @@ export function PracticeSummary({
                       className={cn(
                         'h-full rounded-full transition-all duration-300',
                         isLevelUp
-                          ? 'bg-emerald-400'
+                          ? 'bg-emerald-500 dark:bg-emerald-400'
                           : newLevel.progressPercent >= 50
                           ? 'bg-amber-400'
                           : 'bg-brand'
@@ -291,12 +294,18 @@ export function PracticeSummary({
                       }}
                     />
                   </div>
-                  <span className="text-[9px] text-text-secondary/90 font-medium leading-none">
-                    {newLevel.isMaxLevel
-                      ? 'Tối đa ⭐'
-                      : isLevelUp
-                      ? 'Lên cấp! 🎉'
-                      : `Còn ${Math.max(1, newLevel.nextTargetCount - newLevel.currentCount)} lần đúng`}
+                  <span className="text-[9px] font-medium leading-none">
+                    {newLevel.isMaxLevel ? (
+                      <span className="text-text-secondary">Tối đa ⭐</span>
+                    ) : isLevelUp ? (
+                      <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">
+                        Lên cấp! 🎉
+                      </span>
+                    ) : (
+                      <span className="text-text-secondary">
+                        Còn {Math.max(1, newLevel.nextTargetCount - newLevel.currentCount)} lần đúng
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>

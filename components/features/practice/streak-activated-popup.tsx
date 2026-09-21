@@ -345,7 +345,7 @@ function DuolingoWeekTrack({
 
   return (
     <div className="w-full pt-1 pb-2">
-      <div className="flex items-center justify-between gap-1.5 px-2 py-3 rounded-2xl bg-base/80 border border-border/80">
+      <div className="flex items-center justify-between gap-1.5 px-2 py-3 rounded-2xl bg-base/60 dark:bg-base/80 border border-border/80">
         {WEEK_DAYS.map((dayLabel, index) => {
           const isPast = index < todayIndex;
           const isToday = index === todayIndex;
@@ -359,10 +359,10 @@ function DuolingoWeekTrack({
               <span
                 className={`text-[10px] font-black uppercase ${
                   isToday
-                    ? 'text-amber-400 font-bold'
+                    ? 'text-amber-600 dark:text-amber-400 font-extrabold'
                     : wasActiveInStreak
-                    ? 'text-text-primary'
-                    : 'text-text-secondary/60'
+                    ? 'text-text-primary font-bold'
+                    : 'text-text-secondary/70 font-semibold'
                 }`}
               >
                 {dayLabel}
@@ -380,7 +380,7 @@ function DuolingoWeekTrack({
                         opacity: [0.6, 1, 0.6],
                       }}
                       transition={{ repeat: Infinity, duration: 1.6 }}
-                      className="absolute inset-0 rounded-full border-2 border-amber-400/80 bg-amber-500/10 shadow-xs shadow-amber-500/40"
+                      className="absolute inset-0 rounded-full border-2 border-amber-500 dark:border-amber-400 bg-amber-500/10 shadow-xs shadow-amber-500/30"
                     />
 
                     {isTodayIgnited ? (
@@ -393,17 +393,17 @@ function DuolingoWeekTrack({
                           ease: 'easeOut',
                           delay: 0.1,
                         }}
-                        className="w-7 h-7 rounded-full bg-gradient-to-tr from-brand to-amber-400 flex items-center justify-center shadow-md shadow-brand/50"
+                        className="w-7 h-7 rounded-full bg-gradient-to-tr from-brand to-amber-400 flex items-center justify-center shadow-md shadow-brand/40"
                       >
                         <span className="text-xs">🔥</span>
                       </motion.div>
                     ) : (
-                      <span className="w-2.5 h-2.5 rounded-full bg-border/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-text-muted/40" />
                     )}
                   </div>
                 ) : wasActiveInStreak ? (
                   // Ngày đã hoàn thành trước đó trong tuần
-                  <div className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/50 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
                     <span className="text-[10px]">🔥</span>
                   </div>
                 ) : (
@@ -411,11 +411,11 @@ function DuolingoWeekTrack({
                   <div
                     className={`w-6 h-6 rounded-full border ${
                       isFuture
-                        ? 'border-border/40 bg-surface/50 text-text-secondary/40'
-                        : 'border-border/60 bg-base text-text-secondary/50'
+                        ? 'border-border/60 bg-surface/50 text-text-secondary/40'
+                        : 'border-border/80 bg-surface text-text-secondary/50'
                     } flex items-center justify-center`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-border/80" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-text-muted/40" />
                   </div>
                 )}
               </div>
@@ -494,7 +494,7 @@ function StreakActivatedModalContent({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
       onClick={onClose}
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md select-none cursor-pointer overflow-hidden"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 dark:bg-black/85 backdrop-blur-md select-none cursor-pointer overflow-hidden"
     >
       {/* Card Container Duolingo */}
       <motion.div
@@ -503,7 +503,7 @@ function StreakActivatedModalContent({
         exit={{ scale: 0.8, opacity: 0, y: 25 }}
         transition={{ type: 'spring', damping: 18, stiffness: 320, bounce: 0.4 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative max-w-sm w-full rounded-3xl p-6 sm:p-7 bg-gradient-to-b from-surface via-surface/95 to-base border border-amber-500/40 shadow-2xl shadow-brand/30 text-center overflow-hidden space-y-4 cursor-default"
+        className="relative max-w-sm w-full rounded-3xl p-6 sm:p-7 bg-surface border border-amber-500/30 dark:border-amber-500/40 shadow-2xl shadow-amber-500/10 dark:shadow-brand/30 text-center overflow-hidden space-y-4 cursor-default"
       >
         {/* Thanh màu gradient cam - vàng trên đỉnh card */}
         <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-amber-400 via-brand to-rose-500" />
@@ -512,7 +512,7 @@ function StreakActivatedModalContent({
         <button
           type="button"
           onClick={() => setIsMuted((prev) => !prev)}
-          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-base/80 border border-border/80 text-text-secondary hover:text-text-primary flex items-center justify-center transition-colors z-20"
+          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-surface/90 hover:bg-surface border border-border text-text-secondary hover:text-text-primary flex items-center justify-center transition-colors shadow-xs z-20 cursor-pointer"
           title={isMuted ? 'Bật âm thanh chúc mừng' : 'Tắt âm thanh'}
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -560,8 +560,8 @@ function StreakActivatedModalContent({
 
         {/* Nội dung tiêu đề & đếm số bùng nổ */}
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-wider shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-wider shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>STREAK ACTIVATED!</span>
           </div>
 
@@ -575,15 +575,15 @@ function StreakActivatedModalContent({
               times: [0, 0.6, 1],
               ease: 'easeOut',
             }}
-            className="text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center justify-center gap-2"
+            className="text-3xl sm:text-4xl font-black tracking-tight flex items-center justify-center gap-2"
           >
-            <span className="bg-gradient-to-r from-yellow-300 via-amber-400 to-brand bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(245,158,11,0.6)]">
+            <span className="bg-gradient-to-r from-amber-500 via-brand to-rose-500 bg-clip-text text-transparent drop-shadow-xs dark:drop-shadow-[0_0_15px_rgba(245,158,11,0.6)]">
               {displayNumber} NGÀY
             </span>
-            <span>LIÊN TIẾP!</span>
+            <span className="text-text-primary">LIÊN TIẾP!</span>
           </motion.div>
 
-          <p className="text-xs text-text-secondary max-w-xs mx-auto leading-relaxed px-1">
+          <p className="text-xs text-text-secondary max-w-xs mx-auto leading-relaxed px-1 font-medium">
             {motivationalMessage}
           </p>
         </div>

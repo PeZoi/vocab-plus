@@ -14,13 +14,16 @@ import { collectionsService } from '@/services/collections.service';
 import type { CardWithProgress } from '@/types/card.types';
 import type { Collection } from '@/types/collection.types';
 import type {
+  PracticeExerciseType,
   PracticeQuestionItem,
   PracticeSourceType,
 } from '@/types/practice.types';
 import {
   BookOpen,
+  Check,
   CheckCircle2,
   FileQuestion,
+  Flame,
   FolderKanban,
   GraduationCap,
   Loader2,
@@ -32,7 +35,7 @@ import {
 } from 'lucide-react';
 import { createRandomMixedQuestions } from '@/utils/practice-generator';
 import { useEffect, useMemo, useState } from 'react';
-import { Flame } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PracticeSetupProps {
   cards: CardWithProgress[];
@@ -42,15 +45,63 @@ interface PracticeSetupProps {
     selectedCards: CardWithProgress[];
     questions: PracticeQuestionItem[];
     questionCount: number;
+    exerciseTypes?: PracticeExerciseType[];
   }) => void;
 }
 
 const QUESTION_COUNTS = [5, 10, 15, 20];
 
+const EXERCISE_OPTIONS: {
+  type: PracticeExerciseType;
+  title: string;
+  subtitle: string;
+  desc: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
+  activeBorder: string;
+  activeBadge: string;
+}[] = [
+  {
+    type: 'multiple_choice',
+    title: 'Trắc nghiệm',
+    subtitle: '4 đáp án',
+    desc: 'Luyện phản xạ nhận diện từ & chọn nghĩa đúng / ngược lại',
+    icon: FileQuestion,
+    iconColor: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    activeBorder: 'border-blue-500 ring-1 ring-blue-500/40 bg-blue-500/[0.04] dark:bg-blue-500/[0.08]',
+    activeBadge: 'bg-blue-500 text-white',
+  },
+  {
+    type: 'cloze',
+    title: 'Điền khuyết',
+    subtitle: 'Ngữ cảnh',
+    desc: 'Gõ từ vựng vào chỗ trống trong câu có gợi ý nghĩa',
+    icon: PenTool,
+    iconColor: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20',
+    activeBorder: 'border-amber-500 ring-1 ring-amber-500/40 bg-amber-500/[0.04] dark:bg-amber-500/[0.08]',
+    activeBadge: 'bg-amber-500 text-white',
+  },
+  {
+    type: 'sentence_writing',
+    title: 'Tự đặt câu',
+    subtitle: 'AI chấm điểm',
+    desc: 'Tự viết câu thực tế theo ngữ cảnh & nhận AI chấm điểm',
+    icon: Sparkles,
+    iconColor: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20',
+    activeBorder: 'border-purple-500 ring-1 ring-purple-500/40 bg-purple-500/[0.04] dark:bg-purple-500/[0.08]',
+    activeBadge: 'bg-purple-500 text-white',
+  },
+];
+
 export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
   const [sourceType, setSourceType] = useState<PracticeSourceType>('all');
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>('');
   const [selectedCount, setSelectedCount] = useState<number>(10);
+  const [selectedExerciseTypes, setSelectedExerciseTypes] = useState<PracticeExerciseType[]>([
+    'multiple_choice',
+    'cloze',
+    'sentence_writing',
+  ]);
   const [isLoadingCollection, setIsLoadingCollection] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [mountedTime, setMountedTime] = useState<number>(0);
@@ -74,13 +125,32 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
     });
   }, [cards, mountedTime]);
 
+  const toggleExerciseType = (type: PracticeExerciseType) => {
+    if (selectedExerciseTypes.includes(type)) {
+      if (selectedExerciseTypes.length <= 1) {
+        toast.info('Bạn cần chọn tối thiểu ít nhất 1 hình thức kiểm tra!');
+        return;
+      }
+      setErrorMessage(null);
+      setSelectedExerciseTypes(selectedExerciseTypes.filter((t) => t !== type));
+    } else {
+      setErrorMessage(null);
+      setSelectedExerciseTypes([...selectedExerciseTypes, type]);
+    }
+  };
+
+  const handleSelectAllExerciseTypes = () => {
+    setErrorMessage(null);
+    setSelectedExerciseTypes(['multiple_choice', 'cloze', 'sentence_writing']);
+  };
+
   const handleStartDueCards = () => {
     setErrorMessage(null);
     if (dueCards.length === 0) return;
 
     const shuffled = [...dueCards].sort(() => 0.5 - Math.random());
     const pickedCards = shuffled.slice(0, Math.min(20, shuffled.length));
-    const mixedQuestions = createRandomMixedQuestions(pickedCards);
+    const mixedQuestions = createRandomMixedQuestions(pickedCards, selectedExerciseTypes);
 
     onStart({
       sourceType: 'all',
@@ -88,11 +158,17 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
       selectedCards: pickedCards,
       questions: mixedQuestions,
       questionCount: mixedQuestions.length,
+      exerciseTypes: selectedExerciseTypes,
     });
   };
 
   const handleStart = async () => {
     setErrorMessage(null);
+
+    if (selectedExerciseTypes.length === 0) {
+      setErrorMessage('Vui lòng chọn tối thiểu ít nhất 1 hình thức kiểm tra.');
+      return;
+    }
 
     let candidateCards: CardWithProgress[] = [];
     let currentCollectionTitle: string | undefined = undefined;
@@ -129,7 +205,7 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
     const finalCount = Math.min(selectedCount, shuffled.length);
     const pickedCards = shuffled.slice(0, finalCount);
 
-    const mixedQuestions = createRandomMixedQuestions(pickedCards);
+    const mixedQuestions = createRandomMixedQuestions(pickedCards, selectedExerciseTypes);
 
     onStart({
       sourceType,
@@ -137,6 +213,7 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
       selectedCards: pickedCards,
       questions: mixedQuestions,
       questionCount: mixedQuestions.length,
+      exerciseTypes: selectedExerciseTypes,
     });
   };
 
@@ -199,37 +276,7 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
         </div>
       )}
 
-      {/* Thông tin 3 hình thức ngẫu nhiên trong bài */}
-      <div className="p-4 rounded-xl bg-surface/70 border border-border/70 space-y-2">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
-          <Shuffle className="w-3.5 h-3.5 text-brand" />
-          <span>Các hình thức xuất hiện ngẫu nhiên trong bài kiểm tra:</span>
-        </span>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-          <div className="p-2.5 rounded-lg bg-base/60 border border-border/60 flex items-center gap-2 text-xs text-text-primary">
-            <div className="w-6 h-6 rounded-md bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
-              <FileQuestion className="w-3.5 h-3.5" />
-            </div>
-            <span>Trắc nghiệm 4 đáp án</span>
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-base/60 border border-border/60 flex items-center gap-2 text-xs text-text-primary">
-            <div className="w-6 h-6 rounded-md bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
-              <PenTool className="w-3.5 h-3.5" />
-            </div>
-            <span>Điền khuyết ngữ cảnh</span>
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-base/60 border border-border/60 flex items-center gap-2 text-xs text-text-primary">
-            <div className="w-6 h-6 rounded-md bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-            <span>Đặt câu & AI chấm điểm</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Cấu hình: Nguồn từ vựng & Số lượng câu hỏi */}
+      {/* Cấu hình: Nguồn từ vựng, Hình thức kiểm tra & Số lượng câu hỏi */}
       <div className="p-5 sm:p-6 rounded-xl bg-surface/80 border border-border/70 space-y-6">
         {/* 1. NGUỒN TỪ VỰNG */}
         <div className="space-y-3">
@@ -353,11 +400,112 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
           )}
         </div>
 
-        {/* 2. SỐ LƯỢNG CÂU HỎI */}
-        <div className="space-y-2 pt-2 border-t border-border/50">
+        {/* 2. HÌNH THỨC KIỂM TRA (CHỌN 1 HOẶC NHIỀU, TỐI THIỂU 1, MẶC ĐỊNH CẢ 3) */}
+        <div className="space-y-3 pt-4 border-t border-border/50">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
+              <Shuffle className="w-3.5 h-3.5 text-brand" />
+              <span>2. Chọn hình thức kiểm tra:</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-text-secondary">
+                Đã chọn:{' '}
+                <span
+                  className={cn(
+                    'font-bold',
+                    selectedExerciseTypes.length === 3 ? 'text-brand' : 'text-text-primary'
+                  )}
+                >
+                  {selectedExerciseTypes.length}/3
+                </span>
+              </span>
+              {selectedExerciseTypes.length < 3 && (
+                <button
+                  type="button"
+                  onClick={handleSelectAllExerciseTypes}
+                  className="text-[11px] font-bold text-brand hover:underline cursor-pointer"
+                >
+                  (Chọn cả 3)
+                </button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-text-secondary">
+            Bạn có thể chọn 1 hoặc kết hợp nhiều hình thức (tối thiểu 1, mặc định chọn cả 3).
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            {EXERCISE_OPTIONS.map((opt) => {
+              const isSelected = selectedExerciseTypes.includes(opt.type);
+              const Icon = opt.icon;
+              return (
+                <div
+                  key={opt.type}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleExerciseType(opt.type)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleExerciseType(opt.type);
+                    }
+                  }}
+                  className={cn(
+                    'relative p-3.5 rounded-xl border text-left cursor-pointer transition-all duration-150 flex flex-col justify-between select-none group',
+                    isSelected
+                      ? cn('bg-surface shadow-xs', opt.activeBorder)
+                      : 'bg-surface/40 border-border/60 opacity-65 hover:opacity-100 hover:border-border hover:bg-surface/70'
+                  )}
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center border transition-colors',
+                          opt.iconColor
+                        )}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </div>
+
+                      {/* Checkbox indicator */}
+                      <div
+                        className={cn(
+                          'w-5 h-5 rounded-md flex items-center justify-center transition-all text-[11px] font-bold',
+                          isSelected
+                            ? opt.activeBadge
+                            : 'border border-border/80 bg-base/50 text-transparent group-hover:border-text-secondary/50'
+                        )}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-sm font-bold text-text-primary">
+                          {opt.title}
+                        </h4>
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-base/80 border border-border/60 text-text-secondary">
+                          {opt.subtitle}
+                        </span>
+                      </div>
+                      <p className="text-xs text-text-secondary mt-1 leading-relaxed">
+                        {opt.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3. SỐ LƯỢNG CÂU HỎI */}
+        <div className="space-y-2 pt-4 border-t border-border/50">
           <label className="text-xs font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-brand" />
-            <span>2. Số lượng câu hỏi trong bài:</span>
+            <span>3. Số lượng câu hỏi trong bài:</span>
           </label>
 
           <div className="flex items-center gap-2 pt-1">
@@ -405,7 +553,13 @@ export function PracticeSetup({ cards, onStart }: PracticeSetupProps) {
         ) : (
           <>
             <Play className="w-4 h-4 fill-white" />
-            <span>Bắt đầu bài kiểm tra tổng hợp ({selectedCount} câu)</span>
+            <span>
+              Bắt đầu bài kiểm tra ({selectedCount} câu •{' '}
+              {selectedExerciseTypes.length === 3
+                ? 'kết hợp cả 3'
+                : `${selectedExerciseTypes.length} hình thức`}
+              )
+            </span>
           </>
         )}
       </Button>

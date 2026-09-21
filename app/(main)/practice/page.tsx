@@ -19,6 +19,7 @@ import { practiceService } from '@/services/practice.service';
 import type { CardWithProgress } from '@/types/card.types';
 import type {
   LevelUpItem,
+  PracticeExerciseType,
   PracticeQuestionItem,
   PracticeSourceType,
   WateredCardItem,
@@ -35,6 +36,7 @@ interface ActiveSessionConfig {
   selectedCards: CardWithProgress[];
   questions: PracticeQuestionItem[];
   questionCount: number;
+  exerciseTypes?: PracticeExerciseType[];
 }
 
 interface SessionResultStats {
@@ -273,25 +275,26 @@ function PracticeContent() {
       )}
 
       {status === 'summary' && sessionConfig && sessionResult && (
-        <>
-          <PracticeSummary
-            mode="mixed"
-            collectionTitle={sessionConfig.collectionTitle}
-            totalQuestions={sessionResult.total}
-            correctCount={sessionResult.correct}
-            wrongCards={sessionResult.wrongCards}
-            xpEarned={sessionResult.xpEarned}
-            levelUps={sessionResult.levelUps}
-            wateredCards={sessionResult.wateredCards}
-            onRestart={handleRestart}
-          />
-          <StreakActivatedPopup
-            isOpen={streakPopupState.isOpen}
-            streakCount={streakPopupState.count}
-            onClose={() => setStreakPopupState((prev) => ({ ...prev, isOpen: false }))}
-          />
-        </>
+        <PracticeSummary
+          mode="mixed"
+          collectionTitle={sessionConfig.collectionTitle}
+          totalQuestions={sessionResult.total}
+          correctCount={sessionResult.correct}
+          wrongCards={sessionResult.wrongCards}
+          xpEarned={sessionResult.xpEarned}
+          levelUps={sessionResult.levelUps}
+          wateredCards={sessionResult.wateredCards}
+          onRestart={handleRestart}
+        />
       )}
+
+      {/* Popup Kích Hoạt Chuỗi Streak */}
+      <StreakActivatedPopup
+        isOpen={streakPopupState.isOpen}
+        streakCount={streakPopupState.count}
+        autoCloseDuration={7000}
+        onClose={() => setStreakPopupState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

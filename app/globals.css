@@ -317,6 +317,14 @@ button:focus-visible {
   border-radius: 9999px;
 }
 
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: #EA580C;
 }
