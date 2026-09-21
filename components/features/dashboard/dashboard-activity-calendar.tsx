@@ -65,22 +65,22 @@ export function DashboardActivityCalendar({
 
         {/* Các huy hiệu thống kê tóm tắt */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-[11px]">
-            <Flame className="w-3 h-3 text-amber-400" />
-            <span className="text-text-secondary">Hiện tại:</span>
-            <span className="font-bold text-amber-500 dark:text-amber-400">{streakDays}d</span>
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] text-[11px]">
+            <Flame className="w-3 h-3 text-amber-500 dark:text-amber-400" />
+            <span className="text-slate-600 dark:text-text-secondary">Hiện tại:</span>
+            <span className="font-bold text-amber-600 dark:text-amber-400">{streakDays}d</span>
           </div>
 
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-[11px]">
-            <Trophy className="w-3 h-3 text-yellow-400" />
-            <span className="text-text-secondary">Kỷ lục:</span>
-            <span className="font-bold text-yellow-500 dark:text-yellow-400">{longestStreak}d</span>
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] text-[11px]">
+            <Trophy className="w-3 h-3 text-yellow-500 dark:text-yellow-400" />
+            <span className="text-slate-600 dark:text-text-secondary">Kỷ lục:</span>
+            <span className="font-bold text-amber-600 dark:text-yellow-400">{longestStreak}d</span>
           </div>
 
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] text-[11px]">
-            <CalendarCheck className="w-3 h-3 text-emerald-400" />
-            <span className="text-text-secondary">Tổng ngày:</span>
-            <span className="font-bold text-emerald-500 dark:text-emerald-400">{activeDays}d</span>
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] text-[11px]">
+            <CalendarCheck className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
+            <span className="text-slate-600 dark:text-text-secondary">Tổng ngày:</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{activeDays}d</span>
           </div>
         </div>
       </div>
@@ -89,13 +89,13 @@ export function DashboardActivityCalendar({
       <div className="overflow-x-auto pt-3.5 pb-1 scrollbar-thin scrollbar-thumb-border">
         <div className="min-w-[670px] select-none">
           {/* Hàng nhãn tháng */}
-          <div className="flex text-[10px] font-mono text-text-secondary mb-1.5 pl-6">
+          <div className="flex text-[10px] font-mono text-slate-500 dark:text-text-secondary mb-1.5 pl-6">
             {weeks.map((_, wIdx) => {
               const monthMatch = monthLabels.find((m) => m.weekIndex === wIdx);
               return (
                 <div key={`month-${wIdx}`} className="w-[12.5px] shrink-0 text-left">
                   {monthMatch && (
-                    <span className="font-semibold text-text-secondary">
+                    <span className="font-bold text-slate-600 dark:text-text-secondary">
                       {monthMatch.label}
                     </span>
                   )}
@@ -107,7 +107,7 @@ export function DashboardActivityCalendar({
           {/* Ma trận ô vuông 7 hàng x 52 tuần */}
           <div className="flex items-start gap-1">
             {/* Cột nhãn ngày trong tuần (T2, T4, T6) */}
-            <div className="flex flex-col gap-[2.5px] text-[9px] font-mono text-text-secondary w-5 shrink-0 pt-0.5">
+            <div className="flex flex-col gap-[2.5px] text-[9px] font-mono text-slate-500 dark:text-text-secondary w-5 shrink-0 pt-0.5">
               <span className="h-[10px] leading-[10px]">T2</span>
               <span className="h-[10px] leading-[10px] opacity-0">T3</span>
               <span className="h-[10px] leading-[10px]">T4</span>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { addDays, differenceInDays, format, parseISO, startOfDay, startOfWeek, subDays } from 'date-fns';
+import { addDays, differenceInDays, differenceInCalendarDays, format, parseISO, startOfDay, startOfWeek, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
 export async function GET() {
@@ -85,15 +85,26 @@ export async function GET() {
       });
     }
 
-    // 4. Tập hợp các ngày thực sự ĐÃ HOÀN THÀNH ôn tập
-    // Quy tắc: Chỉ khi người dùng hoàn tất trọn vẹn phiên (có thưởng XP hoặc được ghi nhận streak)
-    // mới được tính là 1 lần ôn tập hoàn thành. Nhấn vào làm dở dang rồi thoát KHÔNG được tính.
+    // 4. Tập hợp các ngày thực sự ĐÃ HOÀN THÀNH ôn tập trong toàn bộ cửa sổ 1 năm (Heatmap 52 tuần)
+    // Hợp nhất dữ liệu giữa user_daily_xp, review_logs và user_streaks để không bao giờ bị mất mốc học tập
     const completedDatesSet = new Set<string>();
+
+    // 4.1. Mọi ngày có điểm trong user_daily_xp
     (yearlyDailyXp || []).forEach((x) => {
       if (x.date && (x.xp_earned || 0) > 0) {
         completedDatesSet.add(x.date);
       }
     });
+
+    // 4.2. Mọi ngày có lượt ôn tập thực tế trong review_logs
+    (yearlyLogs || []).forEach((l) => {
+      if (l.reviewed_at) {
+        const d = format(parseISO(l.reviewed_at), 'yyyy-MM-dd');
+        completedDatesSet.add(d);
+      }
+    });
+
+    // 4.3. Ngày học cuối cùng trong user_streaks
     if (userStreakRecord?.last_active_date) {
       completedDatesSet.add(userStreakRecord.last_active_date);
     }
@@ -102,10 +113,7 @@ export async function GET() {
     (yearlyLogs || []).forEach((l) => {
       if (l.reviewed_at) {
         const d = format(parseISO(l.reviewed_at), 'yyyy-MM-dd');
-        // Chỉ cộng số câu ôn tập nếu ngày đó thực sự có hoàn thành phiên ôn tập
-        if (completedDatesSet.has(d)) {
-          reviewCountsByDate.set(d, (reviewCountsByDate.get(d) || 0) + 1);
-        }
+        reviewCountsByDate.set(d, (reviewCountsByDate.get(d) || 0) + 1);
       }
     });
 
@@ -116,13 +124,20 @@ export async function GET() {
       }
     });
 
-    // 5. Tính toán chuỗi streak chuẩn xác & đồng bộ theo các phiên đã hoàn thành
+    // Đảm bảo mọi ngày có review đều có ước tính XP nếu chưa được lưu trong user_daily_xp
+    reviewCountsByDate.forEach((cnt, d) => {
+      if (!xpByDate.has(d) || (xpByDate.get(d) || 0) === 0) {
+        xpByDate.set(d, cnt * 10);
+      }
+    });
+
+    // 5. Tính toán chuỗi streak hiện tại & kỷ lục streak trong toàn bộ lịch sử 1 năm
     const todayStr = format(now, 'yyyy-MM-dd');
     const yesterdayStr = format(subDays(now, 1), 'yyyy-MM-dd');
 
     const has_reviewed_today = completedDatesSet.has(todayStr);
 
-    // Tính chuỗi ngày học liên tục thực tế từ các ngày ĐÃ HOÀN THÀNH
+    // 5.1. Tính chuỗi streak hiện tại (liên tục tới hôm nay hoặc hôm qua)
     let historyStreak = 0;
     const streakStartDay = has_reviewed_today
       ? now
@@ -156,15 +171,50 @@ export async function GET() {
           streak_days = 0;
         }
       }
+    }
 
-      // Tự động đồng bộ hóa bản ghi user_streaks nếu trạng thái streak thay đổi
-      if (userStreakRecord.current_streak !== streak_days) {
-        const updatedLongest = Math.max(userStreakRecord.longest_streak || 0, streak_days);
+    // 5.2. Thuật toán quét toàn bộ lịch sử 1 năm để tính chuỗi liên tục kỷ lục tối đa (maxConsecutiveStreak)
+    const sortedDates = Array.from(completedDatesSet).sort();
+    let maxConsecutiveStreak = 0;
+    let curConsecutive = 0;
+    let prevConsecutiveDate: Date | null = null;
+
+    for (const dStr of sortedDates) {
+      const d = parseISO(dStr);
+      if (!prevConsecutiveDate) {
+        curConsecutive = 1;
+      } else {
+        const diff = differenceInCalendarDays(d, prevConsecutiveDate);
+        if (diff === 1) {
+          curConsecutive++;
+        } else if (diff > 1) {
+          curConsecutive = 1;
+        }
+      }
+      prevConsecutiveDate = d;
+      if (curConsecutive > maxConsecutiveStreak) {
+        maxConsecutiveStreak = curConsecutive;
+      }
+    }
+
+    // Kỷ lục là giá trị lớn nhất giữa: kỷ lục đã lưu trong DB, chuỗi lịch sử liên tục tối đa, và chuỗi hiện tại
+    const longest_streak = Math.max(
+      userStreakRecord?.longest_streak || 0,
+      maxConsecutiveStreak,
+      streak_days
+    );
+
+    // Tự động đồng bộ hóa bản ghi user_streaks nếu trạng thái streak hoặc longest_streak thay đổi
+    if (userStreakRecord) {
+      if (
+        userStreakRecord.current_streak !== streak_days ||
+        (userStreakRecord.longest_streak || 0) < longest_streak
+      ) {
         supabase
           .from('user_streaks')
           .update({
             current_streak: streak_days,
-            longest_streak: updatedLongest,
+            longest_streak,
             updated_at: new Date().toISOString(),
           })
           .eq('user_id', user.id)
@@ -234,8 +284,6 @@ export async function GET() {
         level,
       });
     }
-
-    const longest_streak = Math.max(userStreakRecord?.longest_streak || 0, streak_days);
 
     return NextResponse.json({
       stats: {

@@ -52,14 +52,14 @@ export function LeaderboardPodium({
           </div>
 
           <div className="space-y-1.5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-500/15 border border-slate-500/30 text-slate-300 text-xs font-semibold">
-              <span>🔘</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-500/15 border border-slate-300 dark:border-slate-500/30 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+              <span className="text-[10px]">🔘</span>
               <span>Tuần thi đấu mới chưa có điểm</span>
             </span>
-            <h3 className="text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-100 to-amber-400 tracking-tight">
+            <h3 className="text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 dark:from-amber-300 dark:via-yellow-100 dark:to-amber-400 tracking-tight">
               Ngai Vàng Đang Chờ Đón Quán Quân!
             </h3>
-            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-sm">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-text-secondary leading-relaxed max-w-sm">
               Chưa có học viên nào ghi danh tuần này. Hãy là người đầu tiên bứt phá để vinh danh trên bục Quán quân số 1!
             </p>
           </div>

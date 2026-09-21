@@ -61,9 +61,6 @@ export function useActivityCalendar({
 
     const totalDays = differenceInCalendarDays(endSunday, startMonday) + 1;
     const computedWeeks: ActivityCellData[][] = [];
-    const months: Array<{ weekIndex: number; label: string }> = [];
-
-    let lastMonth = -1;
     let reviewsSum = 0;
     let daysWithActivity = 0;
     const todayStr = format(now, 'yyyy-MM-dd');
@@ -74,7 +71,6 @@ export function useActivityCalendar({
       const dayDate = addDays(startMonday, i);
       const dateStr = format(dayDate, 'yyyy-MM-dd');
       const dayOfWeek = (dayDate.getDay() + 6) % 7; // Thứ 2 = 0, CN = 6
-      const month = dayDate.getMonth();
 
       const item = activityMap.get(dateStr);
       const count = item?.count || 0;
@@ -107,14 +103,6 @@ export function useActivityCalendar({
         isFuture,
       });
 
-      if (month !== lastMonth && currentWeek.length === 1) {
-        months.push({
-          weekIndex: computedWeeks.length,
-          label: `Th${month + 1}`,
-        });
-        lastMonth = month;
-      }
-
       if (currentWeek.length === 7) {
         computedWeeks.push(currentWeek);
         currentWeek = [];
@@ -124,6 +112,44 @@ export function useActivityCalendar({
     if (currentWeek.length > 0) {
       computedWeeks.push(currentWeek);
     }
+
+    // Xác định vị trí nhãn tháng (Th1 - Th12) tối ưu, không bị đè chữ
+    // Đặt nhãn tại tuần chứa ngày mùng 1 của tháng, với khoảng cách tối thiểu >= 3 tuần
+    const months: Array<{ weekIndex: number; label: string }> = [];
+    let lastAddedMonth = -1;
+    let lastAddedWeekIdx = -10;
+
+    computedWeeks.forEach((week, wIdx) => {
+      const firstDayOfWeek = week[0]?.dateObj;
+      if (!firstDayOfWeek) return;
+
+      // Tìm ngày mùng 1 của tháng nằm trong tuần này
+      const firstOfMonthInWeek = week.find((day) => day.dateObj.getDate() === 1);
+      const targetMonth = firstOfMonthInWeek
+        ? firstOfMonthInWeek.dateObj.getMonth()
+        : (wIdx === 0 && firstDayOfWeek.getDate() <= 7 ? firstDayOfWeek.getMonth() : -1);
+
+      if (targetMonth !== -1 && targetMonth !== lastAddedMonth) {
+        // Đảm bảo khoảng cách tối thiểu giữa 2 nhãn tháng >= 3 tuần để tránh đè chữ
+        if (wIdx - lastAddedWeekIdx >= 3) {
+          months.push({
+            weekIndex: wIdx,
+            label: `Th${targetMonth + 1}`,
+          });
+          lastAddedMonth = targetMonth;
+          lastAddedWeekIdx = wIdx;
+        } else if (lastAddedWeekIdx === 0 && wIdx <= 2) {
+          // Nếu tuần 0 quá sát ngày đầu tháng mới, thay thế nhãn tuần 0 bằng tháng mới
+          months.pop();
+          months.push({
+            weekIndex: wIdx,
+            label: `Th${targetMonth + 1}`,
+          });
+          lastAddedMonth = targetMonth;
+          lastAddedWeekIdx = wIdx;
+        }
+      }
+    });
 
     return {
       weeks: computedWeeks,
