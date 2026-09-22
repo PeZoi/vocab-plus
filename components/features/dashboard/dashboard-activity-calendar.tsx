@@ -85,17 +85,17 @@ export function DashboardActivityCalendar({
         </div>
       </div>
 
-      {/* Vùng Lưới Heatmap có thể cuộn ngang mượt mà trên mobile */}
-      <div className="overflow-x-auto pt-3.5 pb-1 scrollbar-thin scrollbar-thumb-border">
-        <div className="min-w-[670px] select-none">
-          {/* Hàng nhãn tháng */}
-          <div className="flex text-[10px] font-mono text-slate-500 dark:text-text-secondary mb-1.5 pl-6">
+      {/* Vùng Lưới Heatmap dãn đều 100% bề ngang, vừa khít tuyệt đối, không có thanh cuộn */}
+      <div className="w-full overflow-hidden pt-3 pb-1">
+        <div className="w-full select-none py-1">
+          {/* Hàng nhãn tháng khớp chính xác từng cột tuần */}
+          <div className="flex items-center gap-[2.5px] sm:gap-[3px] text-[10px] sm:text-[11px] font-mono text-slate-500 dark:text-text-secondary mb-2 pl-6 pr-2 sm:pr-2.5 w-full h-4">
             {weeks.map((_, wIdx) => {
               const monthMatch = monthLabels.find((m) => m.weekIndex === wIdx);
               return (
-                <div key={`month-${wIdx}`} className="w-[12.5px] shrink-0 text-left">
+                <div key={`month-${wIdx}`} className="flex-1 min-w-0 relative overflow-visible">
                   {monthMatch && (
-                    <span className="font-bold text-slate-600 dark:text-text-secondary">
+                    <span className="font-bold text-slate-600 dark:text-text-secondary whitespace-nowrap absolute left-0 top-0">
                       {monthMatch.label}
                     </span>
                   )}
@@ -104,23 +104,23 @@ export function DashboardActivityCalendar({
             })}
           </div>
 
-          {/* Ma trận ô vuông 7 hàng x 52 tuần */}
-          <div className="flex items-start gap-1">
+          {/* Ma trận ô vuông 7 hàng x 52 tuần dãn đều 100% bề ngang, có khoảng đệm phải an toàn */}
+          <div className="flex items-start gap-1 w-full">
             {/* Cột nhãn ngày trong tuần (T2, T4, T6) */}
-            <div className="flex flex-col gap-[2.5px] text-[9px] font-mono text-slate-500 dark:text-text-secondary w-5 shrink-0 pt-0.5">
-              <span className="h-[10px] leading-[10px]">T2</span>
-              <span className="h-[10px] leading-[10px] opacity-0">T3</span>
-              <span className="h-[10px] leading-[10px]">T4</span>
-              <span className="h-[10px] leading-[10px] opacity-0">T5</span>
-              <span className="h-[10px] leading-[10px]">T6</span>
-              <span className="h-[10px] leading-[10px] opacity-0">T7</span>
-              <span className="h-[10px] leading-[10px] opacity-0">CN</span>
+            <div className="grid grid-rows-7 gap-[2.5px] sm:gap-[3px] text-[9.5px] sm:text-[10px] font-mono text-slate-500 dark:text-text-secondary w-5 shrink-0 pt-0.5">
+              <span className="flex items-center leading-none">T2</span>
+              <span className="opacity-0 leading-none">T3</span>
+              <span className="flex items-center leading-none">T4</span>
+              <span className="opacity-0 leading-none">T5</span>
+              <span className="flex items-center leading-none">T6</span>
+              <span className="opacity-0 leading-none">T7</span>
+              <span className="opacity-0 leading-none">CN</span>
             </div>
 
-            {/* Các cột tuần */}
-            <div className="flex gap-[2.5px] flex-1">
+            {/* Các cột tuần dãn đều toàn bộ chiều rộng thẻ, vừa khít tuyệt đối */}
+            <div className="flex gap-[2.5px] sm:gap-[3px] flex-1 w-full pr-2 sm:pr-2.5">
               {weeks.map((week, weekIdx) => (
-                <div key={`week-${weekIdx}`} className="flex flex-col gap-[2.5px]">
+                <div key={`week-${weekIdx}`} className="flex-1 min-w-0 grid grid-rows-7 gap-[2.5px] sm:gap-[3px]">
                   {week.map((day) => {
                     const colorClass = getCellColorClass(day.level, day.isFuture);
 
@@ -129,8 +129,8 @@ export function DashboardActivityCalendar({
                         key={day.date}
                         onMouseEnter={(e) => handleMouseEnter(e, day)}
                         onMouseLeave={handleMouseLeave}
-                        className={`w-[10px] h-[10px] rounded-[2px] border transition-all duration-150 cursor-pointer relative ${colorClass} ${
-                          day.isToday ? 'ring-1 ring-brand/80 ring-offset-1 ring-offset-surface' : ''
+                        className={`w-full aspect-square rounded-[2.5px] sm:rounded-[3px] border transition-all duration-150 cursor-pointer relative ${colorClass} ${
+                          day.isToday ? 'ring-2 ring-brand ring-offset-1 ring-offset-surface z-10 scale-105 shadow-xs' : ''
                         }`}
                       />
                     );
@@ -151,11 +151,11 @@ export function DashboardActivityCalendar({
         <div className="flex items-center gap-1.5 text-[11px]">
           <span>Ít</span>
           <div className="flex items-center gap-1">
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.05]" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-200 dark:bg-emerald-950/80 border border-emerald-300/80 dark:border-emerald-800/40" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-400 dark:bg-emerald-800 border border-emerald-500/80 dark:border-emerald-700/60" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-500 dark:bg-emerald-600 border border-emerald-600 dark:border-emerald-500/80" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-600 dark:bg-emerald-400 border border-emerald-700 dark:border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.3)] dark:shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
+            <div className="w-3 h-3 rounded-[2.5px] bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.05]" />
+            <div className="w-3 h-3 rounded-[2.5px] bg-emerald-200 dark:bg-emerald-950/80 border border-emerald-300/80 dark:border-emerald-800/40" />
+            <div className="w-3 h-3 rounded-[2.5px] bg-emerald-400 dark:bg-emerald-800 border border-emerald-500/80 dark:border-emerald-700/60" />
+            <div className="w-3 h-3 rounded-[2.5px] bg-emerald-500 dark:bg-emerald-600 border border-emerald-600 dark:border-emerald-500/80" />
+            <div className="w-3 h-3 rounded-[2.5px] bg-emerald-600 dark:bg-emerald-400 border border-emerald-700 dark:border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.3)] dark:shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
           </div>
           <span>Nhiều</span>
         </div>

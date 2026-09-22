@@ -8,6 +8,7 @@ import { UserAvatar } from '@/components/common/user-avatar';
 import { formatXP } from '@/utils/formatters';
 import type { LeaderboardUser } from '@/services/leaderboard.service';
 import type { LeagueTier } from '@/constants/leagues';
+import { ROUTES } from '@/constants/routes';
 
 interface LeaderboardPodiumProps {
   topUsers: LeaderboardUser[];
@@ -97,15 +98,19 @@ export function LeaderboardPodium({
           className="flex-1 flex flex-col items-center"
         >
           {second ? (
-            <div className="relative mb-2 flex flex-col items-center">
-              <div className="relative p-1 rounded-full bg-gradient-to-tr from-slate-400 via-zinc-200 to-slate-400 shadow-md shadow-slate-400/20">
+            <Link
+              href={second.id === currentUserId ? ROUTES.APP.PROFILE : ROUTES.APP.USER_PROFILE(second.id)}
+              className="relative mb-2 flex flex-col items-center group cursor-pointer"
+              title="Xem hồ sơ người dùng"
+            >
+              <div className="relative p-1 rounded-full bg-gradient-to-tr from-slate-400 via-zinc-200 to-slate-400 shadow-md shadow-slate-400/20 group-hover:ring-2 group-hover:ring-brand/40 transition-all">
                 <UserAvatar src={second.avatar_url} name={second.display_name} size="md" />
                 <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-slate-200 text-slate-800 text-[11px] font-black flex items-center justify-center border border-white shadow-xs">
                   2
                 </span>
               </div>
               <p
-                className={`text-xs font-bold mt-1.5 truncate max-w-[90px] sm:max-w-[110px] text-center ${
+                className={`text-xs font-bold mt-1.5 truncate max-w-[90px] sm:max-w-[110px] text-center group-hover:text-brand transition-colors ${
                   currentUserId === second.id ? 'text-brand' : 'text-text-primary'
                 }`}
               >
@@ -115,7 +120,7 @@ export function LeaderboardPodium({
                 <Zap className="w-3 h-3 text-slate-400 fill-slate-400" />
                 {formatXP(second.xp)}
               </span>
-            </div>
+            </Link>
           ) : (
             <div className="relative mb-2 flex flex-col items-center opacity-60">
               <div className="w-12 h-12 rounded-full border-2 border-dashed border-slate-500/40 flex items-center justify-center text-slate-400 font-extrabold text-sm">
@@ -145,7 +150,11 @@ export function LeaderboardPodium({
             transition={{ type: 'spring', stiffness: 240, damping: 18 }}
             className="flex-1 flex flex-col items-center z-10"
           >
-            <div className="relative mb-2.5 flex flex-col items-center">
+            <Link
+              href={first.id === currentUserId ? ROUTES.APP.PROFILE : ROUTES.APP.USER_PROFILE(first.id)}
+              className="relative mb-2.5 flex flex-col items-center group cursor-pointer"
+              title="Xem hồ sơ quán quân"
+            >
               {/* Floating animated Crown */}
               <motion.div
                 animate={{ y: [0, -5, 0], rotate: [0, -2, 2, 0] }}
@@ -156,7 +165,7 @@ export function LeaderboardPodium({
               </motion.div>
 
               {/* Avatar with Golden Aura (không nhấp nháy) */}
-              <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-200 to-amber-600 shadow-lg shadow-amber-500/30">
+              <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-200 to-amber-600 shadow-lg shadow-amber-500/30 group-hover:ring-2 group-hover:ring-brand/50 transition-all">
                 <UserAvatar src={first.avatar_url} name={first.display_name} size="lg" />
                 <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-yellow-300 to-amber-500 text-amber-950 text-xs font-black flex items-center justify-center border-2 border-white shadow-md">
                   1
@@ -166,7 +175,7 @@ export function LeaderboardPodium({
               <div className="flex items-center gap-1 mt-2">
                 <Sparkles className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '4s' }} />
                 <p
-                  className={`text-sm font-extrabold truncate max-w-[100px] sm:max-w-[130px] text-center ${
+                  className={`text-sm font-extrabold truncate max-w-[100px] sm:max-w-[130px] text-center group-hover:text-brand transition-colors ${
                     currentUserId === first.id ? 'text-brand' : 'text-text-primary'
                   }`}
                 >
@@ -178,7 +187,7 @@ export function LeaderboardPodium({
                 <Zap className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
                 {formatXP(first.xp)}
               </span>
-            </div>
+            </Link>
 
             {/* Gold Pillar */}
             <div className="w-full h-36 sm:h-44 rounded-t-2xl bg-gradient-to-b from-amber-400/35 via-yellow-500/20 to-amber-700/10 border-t-2 border-x border-amber-400/60 relative flex flex-col items-center justify-start pt-3 shadow-xl backdrop-blur-xs">
@@ -200,15 +209,19 @@ export function LeaderboardPodium({
           className="flex-1 flex flex-col items-center"
         >
           {third ? (
-            <div className="relative mb-2 flex flex-col items-center">
-              <div className="relative p-1 rounded-full bg-gradient-to-tr from-amber-700 via-orange-400 to-amber-800 shadow-md shadow-amber-800/20">
+            <Link
+              href={third.id === currentUserId ? ROUTES.APP.PROFILE : ROUTES.APP.USER_PROFILE(third.id)}
+              className="relative mb-2 flex flex-col items-center group cursor-pointer"
+              title="Xem hồ sơ người dùng"
+            >
+              <div className="relative p-1 rounded-full bg-gradient-to-tr from-amber-700 via-orange-400 to-amber-800 shadow-md shadow-amber-800/20 group-hover:ring-2 group-hover:ring-brand/40 transition-all">
                 <UserAvatar src={third.avatar_url} name={third.display_name} size="md" />
                 <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-700 text-amber-100 text-[11px] font-black flex items-center justify-center border border-white shadow-xs">
                   3
                 </span>
               </div>
               <p
-                className={`text-xs font-bold mt-1.5 truncate max-w-[90px] sm:max-w-[110px] text-center ${
+                className={`text-xs font-bold mt-1.5 truncate max-w-[90px] sm:max-w-[110px] text-center group-hover:text-brand transition-colors ${
                   currentUserId === third.id ? 'text-brand' : 'text-text-primary'
                 }`}
               >
@@ -218,7 +231,7 @@ export function LeaderboardPodium({
                 <Zap className="w-3 h-3 text-amber-600 fill-amber-600" />
                 {formatXP(third.xp)}
               </span>
-            </div>
+            </Link>
           ) : (
             <div className="relative mb-2 flex flex-col items-center opacity-60">
               <div className="w-12 h-12 rounded-full border-2 border-dashed border-amber-700/40 flex items-center justify-center text-amber-600 font-extrabold text-sm">

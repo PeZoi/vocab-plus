@@ -4,8 +4,8 @@ import { ROUTES } from '@/constants/routes';
 import { useReviewStats } from '@/hooks/features/review/use-review-stats';
 import { useUserProfile } from '@/hooks/features/user/use-user-profile';
 import { UserAvatar } from '@/components/common/user-avatar';
-import { LeagueBadge } from '@/components/features/leaderboard/league-badge';
-import type { LeagueTier } from '@/constants/leagues';
+import { RankCrestIcon } from '@/components/features/leaderboard/rank-crest-icon';
+import { LEAGUE_TIERS_CONFIG, type LeagueTier } from '@/constants/leagues';
 import { cn } from '@/lib/utils';
 import {
   BookOpen,
@@ -34,6 +34,7 @@ export function AppSidebar() {
   const { profile, isAdmin } = useUserProfile();
   const dueCount = data?.stats.due_count || 0;
   const userTier: LeagueTier = profile?.league || 'unranked';
+  const tierConfig = LEAGUE_TIERS_CONFIG[userTier] || LEAGUE_TIERS_CONFIG.unranked;
 
   // Nhóm 1: Học tập & Luyện tập cốt lõi
   const learningNavItems = [
@@ -313,42 +314,81 @@ export function AppSidebar() {
         )}
       </div>
 
-      {/* FOOTER: Thông tin User, Avatar, Tên & Bậc Rank */}
-      <div className="pt-2.5 mt-2 border-t border-border/70 shrink-0">
+      {/* FOOTER: Thông tin User, Avatar, Tên, Role & Bậc Rank */}
+      <div className="pt-2 mt-auto border-t border-border/60 shrink-0">
         <Link
           href={ROUTES.APP.PROFILE}
           className={cn(
-            'flex items-center gap-2.5 p-2 rounded-xl border transition-all group select-none shadow-2xs',
+            'group relative flex items-center gap-2.5 p-2 rounded-2xl border transition-all duration-200 select-none overflow-hidden outline-none',
             pathname === ROUTES.APP.PROFILE
-              ? 'bg-brand/10 border-brand/40 text-brand'
-              : 'bg-surface/50 border-border/60 hover:bg-surface/90 hover:border-brand/30 text-text-secondary hover:text-text-primary'
+              ? 'bg-gradient-to-br from-brand/10 via-brand/5 to-surface border-brand/40 shadow-xs'
+              : 'bg-surface/70 hover:bg-surface border-border/70 hover:border-brand/40 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(234,88,12,0.08)] dark:shadow-none'
           )}
           title="Xem hồ sơ cá nhân"
         >
-          <UserAvatar
-            src={profile?.avatar_url}
-            name={profile?.display_name || 'Học viên'}
-            size="sm"
-            className="ring-1 ring-border group-hover:ring-brand/40 transition-all shrink-0"
-          />
+          {/* Avatar với Gradient Ring & Online Dot */}
+          <div className="relative shrink-0">
+            <div className="p-[1.5px] rounded-full bg-gradient-to-tr from-brand/50 via-amber-400/40 to-orange-500/30 group-hover:from-brand group-hover:to-amber-400 transition-all duration-300 shadow-2xs">
+              <UserAvatar
+                src={profile?.avatar_url}
+                name={profile?.display_name || 'Học viên'}
+                size="sm"
+                className="w-8 h-8 rounded-full bg-surface border border-white/80 dark:border-white/10"
+              />
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-surface shadow-xs" />
+          </div>
 
+          {/* User Info (Tên, Role, Rank & XP) */}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-1">
-              <p className="text-xs font-semibold text-text-primary truncate group-hover:text-brand transition-colors">
+            {/* Hàng 1: Tên đầy đủ hiển thị trọn vẹn kèm huy hiệu verified */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs font-bold text-text-primary truncate tracking-tight group-hover:text-brand transition-colors">
                 {profile?.display_name || 'Học viên'}
-              </p>
+              </span>
               {isAdmin && (
-                <span className="text-[9px] font-bold text-brand bg-brand/10 px-1 py-0.2 rounded border border-brand/20 shrink-0">
-                  Admin
+                <span title="Quản trị viên" className="inline-flex shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
                 </span>
               )}
             </div>
-            <div className="mt-0.5 flex items-center">
-              <LeagueBadge tier={userTier} size="sm" className="scale-90 origin-left py-0" />
+
+            {/* Hàng 2: Bậc Rank & Huy hiệu Admin hoặc XP */}
+            <div className="mt-1 flex items-center gap-1.5">
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-bold text-[10px] uppercase tracking-wider border shadow-2xs transition-colors backdrop-blur-xs',
+                  tierConfig.badgeBg,
+                  tierConfig.badgeBorder,
+                  tierConfig.badgeText
+                )}
+              >
+                <RankCrestIcon
+                  tier={userTier}
+                  size="xs"
+                  animated={false}
+                  showGlow={false}
+                  className="w-3.5 h-3.5 shrink-0"
+                />
+                <span>{tierConfig.nameVi}</span>
+              </span>
+
+              {isAdmin ? (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                  Admin
+                </span>
+              ) : (
+                typeof profile?.xp === 'number' && profile.xp > 0 && (
+                  <span className="text-[10px] font-semibold text-text-secondary/70 truncate">
+                    {profile.xp.toLocaleString('vi-VN')} XP
+                  </span>
+                )
+              )}
             </div>
           </div>
 
-          <ChevronRight className="w-3.5 h-3.5 text-text-secondary/60 group-hover:text-text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+          {/* Chevron Action */}
+          <ChevronRight className="w-3.5 h-3.5 text-text-secondary/40 group-hover:text-brand group-hover:translate-x-0.5 transition-all shrink-0" />
         </Link>
       </div>
     </aside>

@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import { Send, CheckCircle2, Bell, BellOff, ExternalLink, Copy, Check, RefreshCw, Unlink, AlertCircle, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTelegramSettings } from '@/hooks/features/settings/use-telegram-settings';
+import { useMounted } from '@/hooks/common/use-mounted';
 import { TelegramHistoryModal } from './telegram-history-modal';
 import { toast } from 'sonner';
 
 export function TelegramSettingsCard() {
+  const mounted = useMounted();
   const {
     isLinked,
     chatId,
@@ -52,7 +54,7 @@ export function TelegramSettingsCard() {
               <h3 className="text-sm sm:text-base font-semibold text-text-primary">
                 Thông Báo Telegram
               </h3>
-              {isLinked && (
+              {mounted && !isProfileLoading && isLinked && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   <CheckCircle2 className="w-3 h-3" />
                   Đã kết nối
@@ -67,7 +69,7 @@ export function TelegramSettingsCard() {
       </div>
 
       {/* Loading state */}
-      {isProfileLoading ? (
+      {!mounted || isProfileLoading ? (
         <div className="h-20 flex items-center justify-center text-xs text-text-secondary">
           <RefreshCw className="w-4 h-4 animate-spin mr-2" /> Đang tải cài đặt Telegram...
         </div>

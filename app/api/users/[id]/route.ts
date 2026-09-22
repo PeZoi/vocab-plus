@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { subDays, format } from 'date-fns';
 import { buildActivityCalendarData } from '@/utils/activity-calendar';
-import type { AdminUserDetail, UserLearningStats } from '@/types/admin-user.types';
+import type { PublicUserProfile, UserLearningStats } from '@/types/admin-user.types';
 import type { Collection } from '@/types/collection.types';
 import type { LeagueTier } from '@/constants/leagues';
 
@@ -23,24 +23,10 @@ export async function GET(
       return NextResponse.json({ error: 'Chưa xác thực' }, { status: 401 });
     }
 
-    // Kiểm tra quyền Admin (hoặc chính chủ xem profile của mình)
-    const { data: currentProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const isAdmin = currentProfile?.role === 'admin';
-    const isSelf = user.id === targetUserId;
-
-    if (!isAdmin && !isSelf) {
-      return NextResponse.json({ error: 'Từ chối truy cập: Cần quyền Quản trị viên' }, { status: 403 });
-    }
-
-    // 1. Lấy thông tin profile
+    // 1. Lấy thông tin hồ sơ người dùng
     const { data: targetProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, display_name, avatar_url, role, xp, created_at, timezone')
       .eq('id', targetUserId)
       .single();
 
@@ -52,7 +38,7 @@ export async function GET(
     const oneYearAgo = subDays(now, 365);
     const oneYearAgoStr = format(oneYearAgo, 'yyyy-MM-dd');
 
-    // 2. Lấy dữ liệu League, Streak, User Cards, Review Logs và Public Collections song song
+    // 2. Lấy dữ liệu League, Streak, Thống kê học tập, Collections và Activity Logs song song
     const [
       { data: leagueData },
       { data: streakData },
@@ -88,7 +74,7 @@ export async function GET(
         .order('date', { ascending: false }),
     ]);
 
-    // Tính toán thống kê học tập
+    // 3. Tính toán thống kê học tập FSRS
     let masteredCount = 0;
     let learningCount = 0;
     let newCount = 0;
@@ -105,7 +91,6 @@ export async function GET(
     });
 
     const totalCards = totalCardsCount || 0;
-    // Những từ chưa có bản ghi user_cards cũng tính là new
     if (totalCards > (userCardsData || []).length) {
       newCount += totalCards - (userCardsData || []).length;
     }
@@ -118,7 +103,7 @@ export async function GET(
       total_reviews: totalReviewsCount || 0,
     };
 
-    // Tính toán Heatmap 52 tuần & Streak
+    // 4. Tính toán Heatmap 52 tuần & Streak chuẩn hóa
     const { activity_history, activity_summary, streak_days, longest_streak } =
       buildActivityCalendarData({
         yearlyLogs,
@@ -136,7 +121,9 @@ export async function GET(
       },
     }));
 
-    const detail: AdminUserDetail = {
+    const userLeague: LeagueTier = (leagueData?.league as LeagueTier) || 'unranked';
+
+    const result: PublicUserProfile = {
       id: targetProfile.id,
       display_name: targetProfile.display_name,
       avatar_url: targetProfile.avatar_url,
@@ -148,14 +135,14 @@ export async function GET(
       longest_streak: longest_streak,
       last_active_date: streakData?.last_active_date || null,
       freezes_available: streakData?.freezes_available || 0,
-      league: (leagueData?.league as LeagueTier) || 'unranked',
+      league: userLeague,
       stats,
       public_collections: publicCollections,
       activity_history,
       activity_summary,
     };
 
-    return NextResponse.json(detail);
+    return NextResponse.json(result);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Lỗi hệ thống';
     return NextResponse.json({ error: msg }, { status: 500 });

@@ -19,6 +19,7 @@ export const ROUTES = {
     LEADERBOARD: '/leaderboard',
     SETTINGS: '/settings',
     PROFILE: '/profile',
+    USER_PROFILE: (id: string) => `/profile/${id}`,
   },
   ADMIN: {
     DASHBOARD: '/admin/dashboard',

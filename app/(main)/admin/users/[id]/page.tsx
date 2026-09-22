@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAdminUserDetailQuery } from '@/hooks/features/admin/use-admin-users';
-import { UserProfileDetailView } from '@/components/features/users/user-profile-detail-view';
+import { UserProfileDetailView, UserProfileDetailSkeleton } from '@/components/features/users/user-profile-detail-view';
 import { ResetStreakDialog } from '@/components/features/admin/reset-streak-dialog';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
@@ -57,9 +57,7 @@ export default function AdminUserDetailPage() {
 
       {/* Main Content */}
       {isLoading ? (
-        <div className="p-16 text-center text-text-secondary text-xs rounded-3xl bg-surface/50 border border-border/70 animate-pulse space-y-2">
-          <p className="font-semibold text-text-primary">Đang tải thông tin người dùng...</p>
-        </div>
+        <UserProfileDetailSkeleton />
       ) : error || !detail ? (
         <div className="p-12 text-center text-text-secondary text-xs rounded-3xl bg-surface/50 border border-border/70 space-y-3">
           <p className="font-semibold text-rose-400">Không tìm thấy thông tin người dùng</p>

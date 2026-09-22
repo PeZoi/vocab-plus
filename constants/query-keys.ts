@@ -21,6 +21,7 @@ export const reviewKeys = {
 export const userKeys = {
   all: ['user'] as const,
   profile: () => [...userKeys.all, 'profile'] as const,
+  publicProfile: (id: string) => [...userKeys.all, 'public', id] as const,
 };
 
 export const aiKeys = {

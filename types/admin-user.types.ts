@@ -1,4 +1,6 @@
 import type { Collection } from './collection.types';
+import type { ActivityHistoryItem, ActivitySummary } from './review.types';
+import type { LeagueTier } from '@/constants/leagues';
 
 export interface AdminUserListItem {
   id: string;
@@ -34,9 +36,14 @@ export interface AdminUserDetail {
   longest_streak: number;
   last_active_date: string | null;
   freezes_available: number;
+  league?: LeagueTier;
   stats: UserLearningStats;
   public_collections: Collection[];
+  activity_history?: ActivityHistoryItem[];
+  activity_summary?: ActivitySummary;
 }
+
+export type PublicUserProfile = AdminUserDetail;
 
 export interface ResetStreakPayload {
   target_streak?: number;

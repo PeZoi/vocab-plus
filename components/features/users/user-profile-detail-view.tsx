@@ -23,6 +23,9 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
+import { DashboardActivityCalendar } from '@/components/features/dashboard/dashboard-activity-calendar';
+import { LeagueBadge } from '@/components/features/leaderboard/league-badge';
+export { UserProfileDetailSkeleton } from '@/components/features/users/user-profile-skeleton';
 
 interface UserProfileDetailViewProps {
   detail: AdminUserDetail;
@@ -70,6 +73,7 @@ export function UserProfileDetailView({
                 <h1 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight truncate">
                   {detail.display_name || 'Người dùng chưa đặt tên'}
                 </h1>
+                {detail.league && <LeagueBadge tier={detail.league} size="sm" />}
                 {detail.role === 'admin' ? (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand/15 text-brand border border-brand/30">
                     <ShieldCheck className="w-3 h-3" />
@@ -82,9 +86,11 @@ export function UserProfileDetailView({
                 )}
               </div>
 
-              <p className="text-xs font-mono text-text-secondary/80 truncate">
-                ID: {detail.id}
-              </p>
+              {isAdminView && (
+                <p className="text-xs font-mono text-text-secondary/80 truncate">
+                  ID: {detail.id}
+                </p>
+              )}
 
               <div className="flex items-center gap-3 text-xs text-text-secondary pt-0.5 flex-wrap">
                 <span className="flex items-center gap-1">
@@ -145,7 +151,7 @@ export function UserProfileDetailView({
       <div className="space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-text-secondary px-1 flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-brand" />
-          Chỉ số học tập FSRS
+          Chỉ số học tập
         </h3>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
@@ -180,7 +186,7 @@ export function UserProfileDetailView({
           {/* Đang học */}
           <div className="p-4 rounded-2xl bg-surface/80 border border-border/70 space-y-1 shadow-xs">
             <div className="flex items-center justify-between text-text-secondary">
-              <span className="text-xs font-medium">Đang học FSRS</span>
+              <span className="text-xs font-medium">Đang học</span>
               <Clock className="w-4 h-4 text-sky-400" />
             </div>
             <p className="text-2xl font-black text-sky-400 font-mono">
@@ -207,7 +213,17 @@ export function UserProfileDetailView({
         </div>
       </div>
 
-      {/* 3. Danh sách Bộ từ vựng Công khai (Public Collections) */}
+      {/* 3. Nhật ký hoạt động 52 tuần */}
+      <div className="space-y-3 pt-1">
+        <DashboardActivityCalendar
+          activityHistory={detail.activity_history || []}
+          activitySummary={detail.activity_summary}
+          streakDays={detail.current_streak || 0}
+          longestStreak={detail.longest_streak || 0}
+        />
+      </div>
+
+      {/* 4. Danh sách Bộ từ vựng Công khai (Public Collections) */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-xs font-bold uppercase tracking-wider text-text-secondary flex items-center gap-2">

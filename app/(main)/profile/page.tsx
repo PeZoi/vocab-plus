@@ -28,14 +28,18 @@ import { RankLottieIcon } from '@/components/features/leaderboard/rank-lottie-ic
 import { Button } from '@/components/ui/button';
 import { formatXP } from '@/utils/formatters';
 import { LEAGUE_TIERS_CONFIG, type LeagueTier } from '@/constants/leagues';
+import { DashboardActivityCalendar } from '@/components/features/dashboard/dashboard-activity-calendar';
 import { ROUTES } from '@/constants/routes';
+import { OwnProfileSkeleton } from '@/components/features/users/user-profile-skeleton';
 
 export default function ProfilePage() {
-  const { profile, isAdmin } = useUserProfile();
-  const { data: reviewData } = useReviewStats();
+  const { profile, isAdmin, isLoading: isProfileLoading } = useUserProfile();
+  const { data: reviewData, isLoading: isReviewLoading } = useReviewStats();
   const { data: leaderboardData } = useLeaderboardQuery('weekly');
   const { signOut, isLoading: isSigningOut } = useGoogleAuth();
   const countdown = useRankCountdown();
+
+  const isInitialLoading = isProfileLoading || (isReviewLoading && !reviewData);
 
   const userTier: LeagueTier = profile?.league || 'unranked';
   const tierMeta = LEAGUE_TIERS_CONFIG[userTier] || LEAGUE_TIERS_CONFIG.unranked;
@@ -48,12 +52,16 @@ export default function ProfilePage() {
   const promoteXp = leaderboardData?.promoteThreshold ?? tierMeta.defaultPromoteXp;
   const stayXp = leaderboardData?.stayThreshold ?? tierMeta.defaultStayXp;
 
+  if (isInitialLoading) {
+    return <OwnProfileSkeleton />;
+  }
+
   return (
     <motion.div
       variants={pageVariants}
       initial="initial"
       animate="animate"
-      className="max-w-2xl mx-auto space-y-6 pb-24"
+      className="max-w-4xl mx-auto space-y-6 pb-24"
     >
       {/* 1. Header Profile Card */}
       <div className="relative p-6 sm:p-7 rounded-3xl bg-surface/90 border border-border/80 shadow-md overflow-hidden">
@@ -245,7 +253,15 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* 4. Action Buttons */}
+      {/* 4. Nhật ký hoạt động 52 tuần */}
+      <DashboardActivityCalendar
+        activityHistory={reviewData?.stats.activity_history || []}
+        activitySummary={reviewData?.stats.activity_summary}
+        streakDays={reviewData?.stats.streak_days || 0}
+        longestStreak={reviewData?.stats.longest_streak || 0}
+      />
+
+      {/* 5. Action Buttons */}
       <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
         <Link
           href={ROUTES.APP.REVIEW}

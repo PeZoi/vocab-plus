@@ -19,3 +19,11 @@ export function useUserProfile() {
     error: query.error,
   };
 }
+
+export function useOtherUserProfileQuery(id: string) {
+  return useQuery({
+    queryKey: userKeys.publicProfile(id),
+    queryFn: () => userService.getPublicProfile(id),
+    enabled: Boolean(id),
+  });
+}

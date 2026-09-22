@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { SeasonHistoryTab } from '@/components/features/leaderboard/season-history-tab';
 import type { LeagueTier, ZoneType } from '@/constants/leagues';
 import { LEAGUE_TIERS_CONFIG, LEAGUE_TIER_ORDER } from '@/constants/leagues';
+import { ROUTES } from '@/constants/routes';
 
 type Timeframe = 'daily' | 'weekly' | 'all_time';
 
@@ -402,21 +403,32 @@ export default function LeaderboardPage() {
                       {renderRankBadge(user.rank, user.xp)}
                     </div>
 
-                    <UserAvatar src={user.avatar_url} name={user.display_name} size="md" />
+                    <Link
+                      href={isCurrentUser ? ROUTES.APP.PROFILE : ROUTES.APP.USER_PROFILE(user.id)}
+                      className="flex items-center gap-3 sm:gap-4 min-w-0 group"
+                      title="Xem hồ sơ người dùng"
+                    >
+                      <UserAvatar
+                        src={user.avatar_url}
+                        name={user.display_name}
+                        size="md"
+                        className="group-hover:ring-2 group-hover:ring-brand/40 transition-all shrink-0"
+                      />
 
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p
-                          className={`font-semibold text-sm truncate max-w-[120px] sm:max-w-[180px] ${
-                            isCurrentUser ? 'text-brand' : 'text-text-primary'
-                          }`}
-                        >
-                          {user.display_name || 'Học viên ẩn danh'}
-                        </p>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p
+                            className={`font-semibold text-sm truncate max-w-[120px] sm:max-w-[180px] group-hover:text-brand transition-colors ${
+                              isCurrentUser ? 'text-brand' : 'text-text-primary'
+                            }`}
+                          >
+                            {user.display_name || 'Học viên ẩn danh'}
+                          </p>
 
-                        {timeframe === 'weekly' && renderZoneBadge(user.zone, user.xp)}
+                          {timeframe === 'weekly' && renderZoneBadge(user.zone, user.xp)}
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   </div>
 
                   <div className="flex flex-col items-end shrink-0">
