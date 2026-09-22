@@ -70,7 +70,7 @@ export function AppSidebar() {
     },
     {
       label: 'Tạo story',
-      href: ROUTES.APP.IMPORT,
+      href: ROUTES.APP.STORY,
       icon: BookOpenText,
       tag: 'AI',
     },
