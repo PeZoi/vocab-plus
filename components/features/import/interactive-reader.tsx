@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Bookmark, Check, Type, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WordQuickPopover } from './word-quick-popover';
+import { StoryQuizSection } from './story-quiz/story-quiz-section';
 import { useSaveImportedTextMutation } from '@/hooks/features/import/use-import-mutations';
 import type { ReaderToken } from '@/utils/text-extractor';
 import type { ReadingStats } from '@/types/imported-text.types';
@@ -125,7 +126,7 @@ export function InteractiveReader({
             className={cn(
               'rounded-lg text-xs gap-1.5 transition-all',
               isSavedLocally
-                ? 'text-emerald-400 bg-emerald-500/10 border-transparent'
+                ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-transparent font-medium'
                 : 'border-border bg-base hover:bg-surface-hover text-text-primary'
             )}
           >
@@ -174,7 +175,7 @@ export function InteractiveReader({
                     isSelected
                       ? 'bg-brand/25 text-brand ring-1 ring-brand font-semibold shadow-xs'
                       : isKnown
-                      ? 'text-emerald-300 font-medium hover:bg-emerald-500/15 decoration-emerald-500/40 underline decoration-dotted underline-offset-4'
+                      ? 'text-emerald-700 dark:text-emerald-400 font-semibold hover:bg-emerald-500/15 decoration-emerald-600/50 dark:decoration-emerald-400/50 underline decoration-dotted underline-offset-4'
                       : 'hover:text-brand hover:bg-brand/10 hover:shadow-xs'
                   )}
                 >
@@ -185,6 +186,9 @@ export function InteractiveReader({
           </p>
         ))}
       </div>
+
+      {/* AI Reading Comprehension & Quiz Section */}
+      <StoryQuizSection rawText={rawText} storyTitle={title} />
 
       {/* Word Quick Popover Modal */}
       <WordQuickPopover
