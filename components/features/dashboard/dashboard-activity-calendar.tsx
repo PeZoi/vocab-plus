@@ -120,7 +120,7 @@ export function DashboardActivityCalendar({
             {/* Các cột tuần dãn đều toàn bộ chiều rộng thẻ, vừa khít tuyệt đối */}
             <div className="flex gap-[2.5px] sm:gap-[3px] flex-1 w-full pr-2 sm:pr-2.5">
               {weeks.map((week, weekIdx) => (
-                <div key={`week-${weekIdx}`} className="flex-1 min-w-0 grid grid-rows-7 gap-[2.5px] sm:gap-[3px]">
+                <div key={`week-${weekIdx}`} className="flex-1 min-w-0 grid grid-rows-7 gap-[2.5px] sm:gap-0.75">
                   {week.map((day) => {
                     const colorClass = getCellColorClass(day.level, day.isFuture);
 
@@ -129,8 +129,8 @@ export function DashboardActivityCalendar({
                         key={day.date}
                         onMouseEnter={(e) => handleMouseEnter(e, day)}
                         onMouseLeave={handleMouseLeave}
-                        className={`w-full aspect-square rounded-[2.5px] sm:rounded-[3px] border transition-all duration-150 cursor-pointer relative ${colorClass} ${
-                          day.isToday ? 'ring-2 ring-brand ring-offset-1 ring-offset-surface z-10 scale-105 shadow-xs' : ''
+                        className={`w-full aspect-square rounded-[1.5px] sm:rounded-[2px] border transition-all duration-150 cursor-pointer relative ${colorClass} ${
+                          day.isToday ? 'ring-1 ring-brand ring-offset-1 ring-offset-surface z-10 shadow-xs' : ''
                         }`}
                       />
                     );

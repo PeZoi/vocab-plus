@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import {
+  ChevronLeft,
+  ChevronRight,
   GraduationCap,
   RotateCcw,
   Sparkles,
@@ -63,6 +65,18 @@ export function PracticeSummary({
       }
     }
   }, [levelUps]);
+
+  const gardenScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollGarden = (direction: 'left' | 'right') => {
+    if (gardenScrollRef.current) {
+      const scrollAmount = 300;
+      gardenScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   const getModeLabel = (m: PracticeMode) => {
     switch (m) {
@@ -207,6 +221,30 @@ export function PracticeSummary({
                 </h3>
               </div>
             </div>
+
+            {/* Nút điều hướng cuộn ngang nhanh */}
+            {sortedWateredCards.length > 3 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleScrollGarden('left')}
+                  className="w-7 h-7 rounded-lg border border-border/80 bg-base/50 hover:bg-surface-hover flex items-center justify-center text-text-secondary hover:text-text-primary transition-all active:scale-95 cursor-pointer select-none"
+                  title="Cuộn sang trái"
+                  aria-label="Cuộn sang trái"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleScrollGarden('right')}
+                  className="w-7 h-7 rounded-lg border border-border/80 bg-base/50 hover:bg-surface-hover flex items-center justify-center text-text-secondary hover:text-text-primary transition-all active:scale-95 cursor-pointer select-none"
+                  title="Cuộn sang phải"
+                  aria-label="Cuộn sang phải"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Banner Thông Báo Thăng Cấp (nếu có từ vựng lên level) */}
@@ -227,7 +265,10 @@ export function PracticeSummary({
           )}
 
           {/* Danh sách từ vựng được tưới nước: sắp xếp từ tăng cấp lên đầu, cuộn ngang mượt mà */}
-          <div className="flex items-stretch gap-3 overflow-x-auto no-scrollbar pb-1.5 pt-1 px-1 -mx-1 snap-x snap-mandatory">
+          <div
+            ref={gardenScrollRef}
+            className="flex items-stretch gap-3 overflow-x-auto custom-scrollbar pb-3 pt-1 px-1 -mx-1 snap-x snap-mandatory"
+          >
             {sortedWateredCards.map(({ card, oldLevel, newLevel, isLevelUp }) => (
               <div
                 key={card.id}
