@@ -15,6 +15,7 @@ import {
   Cpu,
   FolderKanban,
   GraduationCap,
+  Headphones,
   Layers,
   LayoutDashboard,
   Plus,
@@ -53,6 +54,12 @@ export function AppSidebar() {
       label: 'Ôn tập & Kiểm tra',
       href: ROUTES.APP.PRACTICE,
       icon: GraduationCap,
+    },
+    {
+      label: 'Luyện nghe Podcast',
+      href: ROUTES.APP.LISTENING,
+      icon: Headphones,
+      tag: 'Mới',
     },
   ];
 

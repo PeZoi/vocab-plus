@@ -16,6 +16,7 @@ export const ROUTES = {
     COLLECTION_DETAIL: (id: string) => `/collections/${id}`,
     ADD: '/add',
     STORY: '/story',
+    LISTENING: '/listening',
     IMPORT: '/story',
     LEADERBOARD: '/leaderboard',
     SETTINGS: '/settings',
