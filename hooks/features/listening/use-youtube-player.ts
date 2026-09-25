@@ -82,22 +82,20 @@ export function useYouTubePlayer({
   // Lưu trữ ranh giới phân đoạn đang phát [start, end]
   const activeSegmentRef = useRef<{ start: number; end: number } | null>(null);
   const onSegmentEndRef = useRef(onSegmentEnd);
-  onSegmentEndRef.current = onSegmentEnd;
-
   const onTimeUpdateRef = useRef(onTimeUpdate);
-  onTimeUpdateRef.current = onTimeUpdate;
-
   const onFallbackTriggeredRef = useRef(onFallbackTriggered);
-  onFallbackTriggeredRef.current = onFallbackTriggered;
-
   const isLoopingRef = useRef(isLooping);
-  isLoopingRef.current = isLooping;
-
   const autoPauseAtEndRef = useRef(autoPauseAtEnd);
-  autoPauseAtEndRef.current = autoPauseAtEnd;
-
   const isCompletedRef = useRef(isCurrentSegmentCompleted);
-  isCompletedRef.current = isCurrentSegmentCompleted;
+
+  useEffect(() => {
+    onSegmentEndRef.current = onSegmentEnd;
+    onTimeUpdateRef.current = onTimeUpdate;
+    onFallbackTriggeredRef.current = onFallbackTriggered;
+    isLoopingRef.current = isLooping;
+    autoPauseAtEndRef.current = autoPauseAtEnd;
+    isCompletedRef.current = isCurrentSegmentCompleted;
+  });
 
   // 1. Tải YouTube IFrame API Script an toàn một lần duy nhất
   useEffect(() => {
@@ -237,7 +235,6 @@ export function useYouTubePlayer({
     }
     const audio = audioRef.current;
     audio.src = `/api/listening/stream?videoId=${videoId}`;
-    audio.playbackRate = playbackRate;
 
     const handleCanPlay = () => setIsReady(true);
     const handlePlay = () => setIsPlaying(true);
@@ -294,6 +291,13 @@ export function useYouTubePlayer({
       audio.pause();
     };
   }, [isAudioFallback, videoId]);
+
+  // Đồng bộ tốc độ phát cho chế độ Audio Fallback mà không làm reload audio
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
 
   // 4. Theo dõi thời gian thực & kiểm soát vòng lặp A-B theo segment (Chỉ chạy timer khi đang Play trên YouTube)
   useEffect(() => {

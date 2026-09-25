@@ -32,14 +32,6 @@ export function useListeningSession({
   const [internalDifficulty, setDifficulty] = useState<ListeningDifficulty>(
     externalDifficulty || initialDifficulty
   );
-
-  // Đồng bộ ngay khi difficulty từ ngoài thay đổi
-  useEffect(() => {
-    if (externalDifficulty) {
-      setDifficulty(externalDifficulty);
-    }
-  }, [externalDifficulty]);
-
   const difficulty = externalDifficulty || internalDifficulty;
   const [isLooping, setIsLooping] = useState(false);
   const [autoPauseAtEnd, setAutoPauseAtEnd] = useState(false);
@@ -150,13 +142,15 @@ export function useListeningSession({
   const currentSegment = segments[currentIndex] || null;
 
   const onPlaySegmentRef = useRef(onPlaySegment);
-  onPlaySegmentRef.current = onPlaySegment;
+  useEffect(() => {
+    onPlaySegmentRef.current = onPlaySegment;
+  });
 
   // 1a. Cấu trúc từ khoét lỗ gốc (CHỈ TẠO LẠI khi đổi câu hoặc đổi difficulty)
   const baseWordClozeItems: WordClozeItem[] = useMemo(() => {
     if (!currentSegment || difficulty !== 'easy') return [];
     return generateWordCloze(currentSegment.text);
-  }, [currentSegment?.id, currentSegment?.text, difficulty]);
+  }, [currentSegment, difficulty]);
 
   // 1b. Gán câu trả lời của user (KHÔNG gọi lại generateWordCloze khi người dùng gõ chữ)
   const wordClozeItems: WordClozeItem[] = useMemo(() => {
@@ -165,21 +159,19 @@ export function useListeningSession({
 
     return baseWordClozeItems.map((item) => {
       const stateAns = wordClozeState[item.index];
-      const refAns = currentSegment ? savedWordAnswersRef.current[currentSegment.id]?.[item.index] : undefined;
 
       // Thứ tự ưu tiên:
       // 1. Text đang gõ trong state
-      // 2. Text đã lưu trong ref cho segment này
-      // 3. Nếu câu đã Đạt (completed), tự động hiển thị từ đúng (cleanedWord)
+      // 2. Nếu câu đã Đạt (completed), tự động hiển thị từ đúng (cleanedWord)
       const userAns =
-        (stateAns !== undefined && stateAns !== '')
+        stateAns !== undefined && stateAns !== ''
           ? stateAns
-          : (refAns !== undefined && refAns !== '')
-          ? refAns
-          : (isCompleted && item.isMasked ? item.cleanedWord : '');
+          : isCompleted && item.isMasked
+          ? item.cleanedWord
+          : '';
 
       const isMatch = userAns ? checkWordMatch(item.cleanedWord, userAns) : false;
-      const isCorrect = isCompleted ? true : (userAns ? isMatch : undefined);
+      const isCorrect = isCompleted ? true : userAns ? isMatch : undefined;
 
       return {
         ...item,
@@ -268,7 +260,14 @@ export function useListeningSession({
       prevIndexRef.current = currentIndex;
       onPlaySegmentRef.current?.(currentSegment.start, currentSegment.end);
     }
-  }, [currentIndex, currentSegment?.id, difficulty]);
+  }, [
+    currentIndex,
+    currentSegment,
+    difficulty,
+    completedSegmentIds,
+    baseWordClozeItems,
+    chunkClozeItem,
+  ]);
 
   // Cập nhật câu trả lời cho chế độ Dễ
   const setWordAnswer = useCallback((wordIndex: number, value: string) => {

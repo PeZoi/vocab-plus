@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Mic, MicOff, Volume2 } from 'lucide-react';
 import { cleanWord } from '@/lib/listening/cloze-generator';
@@ -50,7 +50,6 @@ interface IWindowSpeech extends Window {
 export function ShadowingModal({ isOpen, onClose, sentence }: ShadowingModalProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [userTranscript, setUserTranscript] = useState('');
-  const [matchScore, setMatchScore] = useState<number | null>(null);
   const [hasSpeechSupport, setHasSpeechSupport] = useState(true);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -62,7 +61,9 @@ export function ShadowingModal({ isOpen, onClose, sentence }: ShadowingModalProp
     const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRec) {
-      setHasSpeechSupport(false);
+      setTimeout(() => {
+        setHasSpeechSupport(false);
+      }, 0);
       return;
     }
 
@@ -98,9 +99,9 @@ export function ShadowingModal({ isOpen, onClose, sentence }: ShadowingModalProp
     };
   }, []);
 
-  // Tính điểm so khớp khi người dùng ngừng nói
-  useEffect(() => {
-    if (!userTranscript || !sentence) return;
+  // Tính điểm so khớp khi người dùng nói (Derived State)
+  const matchScore = useMemo(() => {
+    if (!userTranscript || !sentence) return null;
 
     const expectedTokens = sentence.split(/\s+/).map((w) => cleanWord(w).toLowerCase()).filter(Boolean);
     const actualTokens = userTranscript.split(/\s+/).map((w) => cleanWord(w).toLowerCase()).filter(Boolean);
@@ -113,7 +114,7 @@ export function ShadowingModal({ isOpen, onClose, sentence }: ShadowingModalProp
     });
 
     const score = Math.round((matchCount / Math.max(expectedTokens.length, 1)) * 100);
-    setMatchScore(Math.min(100, score));
+    return Math.min(100, score);
   }, [userTranscript, sentence]);
 
   const toggleRecording = () => {
@@ -124,7 +125,6 @@ export function ShadowingModal({ isOpen, onClose, sentence }: ShadowingModalProp
       setIsRecording(false);
     } else {
       setUserTranscript('');
-      setMatchScore(null);
       try {
         recognitionRef.current.start();
         setIsRecording(true);

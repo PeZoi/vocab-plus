@@ -19,8 +19,11 @@ import { YouTubePlayerCard } from '@/components/features/listening/youtube-playe
 import { DictationWorkspace } from '@/components/features/listening/dictation-workspace';
 import { TranscriptSyncSidebar } from '@/components/features/listening/transcript-sync-sidebar';
 import { ListeningSummaryModal } from '@/components/features/listening/listening-summary-modal';
+import { ListeningVocabContextMenu } from '@/components/features/listening/listening-vocab-context-menu';
+import { WordQuickPopover } from '@/components/features/import/word-quick-popover';
 import { useYouTubePlayer } from '@/hooks/features/listening/use-youtube-player';
 import { useListeningSession } from '@/hooks/features/listening/use-listening-session';
+import { useListeningVocabSelection } from '@/hooks/features/listening/use-listening-vocab-selection';
 import { listeningService } from '@/services/listening.service';
 import { CURATED_PODCASTS } from '@/constants/curated-podcasts';
 import { formatTimestamp } from '@/utils/youtube';
@@ -68,8 +71,21 @@ export default function ListeningPage() {
   }, []);
 
   useEffect(() => {
-    loadUserHistory();
-  }, [loadUserHistory]);
+    let isMounted = true;
+    listeningService
+      .getUserHistory()
+      .then((history) => {
+        if (isMounted) setHistoryList(history);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsLoadingHistory(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Ref để gọi handlePlaySegment từ useListeningSession mà không lo TDZ
   const playSegmentHandlerRef = useRef<(start: number, end: number) => void>(() => {});
@@ -83,7 +99,6 @@ export default function ListeningPage() {
     isLooping,
     toggleLooping,
     autoPauseAtEnd,
-    setAutoPauseAtEnd,
     toggleAutoPause,
     showHint,
     setShowHint,
@@ -109,8 +124,24 @@ export default function ListeningPage() {
     onPlaySegment: (start, end) => playSegmentHandlerRef.current(start, end),
   });
 
+  // Hook bôi đen text để tra cứu & lưu từ vựng bằng AI context-aware (giống Story)
+  const {
+    textSelection,
+    activeToken,
+    activeContextSentence,
+    handleTextSelection,
+    handleOpenVocabPopover,
+    handleCloseVocabPopover,
+    getKnownCardInfo,
+  } = useListeningVocabSelection({
+    currentSegmentText: currentSegment?.text,
+  });
+
   const currentIndexRef = useRef(currentIndex);
-  currentIndexRef.current = currentIndex;
+
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  });
 
   // 2. Tìm câu trong podcast tương ứng với mốc thời gian hiện tại của video
   const findSegmentIndexAtTime = useCallback((time: number, segList: TimedSegment[]): number => {
@@ -201,18 +232,18 @@ export default function ListeningPage() {
     onTimeUpdate: handleTimeUpdate,
   });
 
-  setActiveSegmentBoundsRef.current = setActiveSegmentBounds;
-
-  // Cập nhật playSegmentHandlerRef
-  playSegmentHandlerRef.current = (start: number, end: number) => {
-    // Nếu video đang phát và thời gian hiện tại đã nằm trong khoảng phân đoạn này,
-    // chỉ cần cập nhật ranh giới phân đoạn mà không cần seekTo gây giật âm thanh
-    if (isPlaying && currentTime >= start - 0.2 && currentTime <= end) {
-      setActiveSegmentBounds(start, end);
-      return;
-    }
-    playSegment(start, end);
-  };
+  useEffect(() => {
+    setActiveSegmentBoundsRef.current = setActiveSegmentBounds;
+    playSegmentHandlerRef.current = (start: number, end: number) => {
+      // Nếu video đang phát và thời gian hiện tại đã nằm trong khoảng phân đoạn này,
+      // chỉ cần cập nhật ranh giới phân đoạn mà không cần seekTo gây giật âm thanh
+      if (isPlaying && currentTime >= start - 0.2 && currentTime <= end) {
+        setActiveSegmentBounds(start, end);
+        return;
+      }
+      playSegment(start, end);
+    };
+  });
 
   // Bắt đầu phát phân đoạn khi bấm nút Phát
   const handlePlay = useCallback(() => {
@@ -276,7 +307,7 @@ export default function ListeningPage() {
   }, [checkCurrentAnswer, currentIndex, segments, isPlaying, currentSegment, currentTime, goToSegment, seekTo, playSegment, play]);
 
   // Đồng bộ video ID lên URL query (?v=...) và lưu vào localStorage để giữ trạng thái khi F5
-  const updateVideoUrlParam = (videoId: string) => {
+  const updateVideoUrlParam = useCallback((videoId: string) => {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem('vocab_last_listening_video_id', videoId);
@@ -286,10 +317,10 @@ export default function ListeningPage() {
     } catch {
       // ignore
     }
-  };
+  }, []);
 
   // Xử lý nạp link YouTube từ form
-  const handleLoadUrl = async (url: string) => {
+  const handleLoadUrl = useCallback(async (url: string) => {
     try {
       setIsLoading(true);
       const res = await listeningService.fetchTranscript(url);
@@ -321,7 +352,7 @@ export default function ListeningPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [updateVideoUrlParam]);
 
   // Chọn podcast từ thư viện gợi ý
   const handleSelectCuratedPodcast = (podcast: CuratedPodcast) => {
@@ -345,33 +376,37 @@ export default function ListeningPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const targetId = params.get('v') || localStorage.getItem('vocab_last_listening_video_id');
+    const timer = setTimeout(() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const targetId = params.get('v') || localStorage.getItem('vocab_last_listening_video_id');
 
-      if (targetId && targetId !== CURATED_PODCASTS[0].youtubeId) {
-        const curatedMatch = CURATED_PODCASTS.find((p) => p.youtubeId === targetId);
-        if (curatedMatch) {
-          setActiveYoutubeId(curatedMatch.youtubeId);
-          setVideoMetadata({
-            id: curatedMatch.youtubeId,
-            title: curatedMatch.title,
-            channelTitle: curatedMatch.channelName,
-            thumbnailUrl: curatedMatch.thumbnailUrl,
-            cefrLevel: curatedMatch.cefrLevel,
-            category: curatedMatch.topic,
-          });
-          setSegments(curatedMatch.sampleSegments || []);
-          setViewMode('workspace');
-        } else {
-          // Tải từ API (đã có Supabase cache chỉ 30ms)
-          handleLoadUrl(targetId);
+        if (targetId && targetId !== CURATED_PODCASTS[0].youtubeId) {
+          const curatedMatch = CURATED_PODCASTS.find((p) => p.youtubeId === targetId);
+          if (curatedMatch) {
+            setActiveYoutubeId(curatedMatch.youtubeId);
+            setVideoMetadata({
+              id: curatedMatch.youtubeId,
+              title: curatedMatch.title,
+              channelTitle: curatedMatch.channelName,
+              thumbnailUrl: curatedMatch.thumbnailUrl,
+              cefrLevel: curatedMatch.cefrLevel,
+              category: curatedMatch.topic,
+            });
+            setSegments(curatedMatch.sampleSegments || []);
+            setViewMode('workspace');
+          } else {
+            // Tải từ API (đã có Supabase cache chỉ 30ms)
+            handleLoadUrl(targetId);
+          }
         }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
-    }
-  }, []);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [handleLoadUrl]);
 
   // Chọn bài nghe từ danh sách bài đã nghe / đang làm dở
   const handleSelectHistoryPodcast = async (youtubeId: string, diff: ListeningDifficulty) => {
@@ -721,7 +756,7 @@ export default function ListeningPage() {
               onDictationAnswerChange={setDictationAnswer}
               onCheckAnswer={handleCheckAnswer}
               onNextSegment={nextSegment}
-              podcastTitle={videoMetadata.title}
+              onTextSelection={() => handleTextSelection(currentSegment?.text)}
             />
           </div>
 
@@ -739,6 +774,7 @@ export default function ListeningPage() {
                   playSegment(seg.start, seg.end);
                 }
               }}
+              onTextSelection={(contextSentence) => handleTextSelection(contextSentence)}
             />
           </div>
         </div>
@@ -816,6 +852,22 @@ export default function ListeningPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Floating Context Menu khi bôi đen từ/cụm từ */}
+      <ListeningVocabContextMenu
+        textSelection={textSelection}
+        onAddVocabulary={handleOpenVocabPopover}
+      />
+
+      {/* Word Quick Popover: Tự động phân tích AI theo ngữ cảnh nguyên câu (giống Story) */}
+      <WordQuickPopover
+        key={activeToken ? `${activeToken.clean}-${activeToken.id}` : 'empty-listening-popover'}
+        token={activeToken}
+        contextSentence={activeContextSentence || currentSegment?.text || ''}
+        knownCard={activeToken ? getKnownCardInfo(activeToken.clean) : undefined}
+        onClose={handleCloseVocabPopover}
+        autoAnalyze={true}
+      />
     </div>
   );
 }

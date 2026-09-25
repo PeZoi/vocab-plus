@@ -33,6 +33,7 @@ interface WordQuickPopoverProps {
   contextSentence: string;
   knownCard?: CardWithProgress;
   onClose: () => void;
+  autoAnalyze?: boolean;
 }
 
 export function WordQuickPopover({
@@ -40,6 +41,7 @@ export function WordQuickPopover({
   contextSentence,
   knownCard,
   onClose,
+  autoAnalyze = false,
 }: WordQuickPopoverProps) {
   const router = useRouter();
   const { mutateAsync: analyzeWord, isPending: isAnalyzing } = useAiAnalyzer();
@@ -83,6 +85,31 @@ export function WordQuickPopover({
       image_url: selectedImageUrl || null,
     } as unknown as CardWithProgress;
   }, [analyzedData, contextSentence, selectedImageUrl, effectiveWord]);
+
+  // Tự động phân tích AI ngay khi mở popup nếu autoAnalyze = true
+  React.useEffect(() => {
+    if (!autoAnalyze || !token || knownCard || analyzedData || isAnalyzing) {
+      return;
+    }
+
+    let isMounted = true;
+    analyzeWord({ word: token.clean, context_sentence: contextSentence })
+      .then((res) => {
+        if (isMounted) {
+          setAnalyzedData(res);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          const msg = err instanceof Error ? err.message : 'Có lỗi khi phân tích từ vựng.';
+          setErrorMsg(msg);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [autoAnalyze, token, knownCard, analyzedData, isAnalyzing, analyzeWord, contextSentence]);
 
   if (!token) return null;
 

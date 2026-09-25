@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import {
   Play,
   Pause,
@@ -118,15 +119,17 @@ export function YouTubePlayerCard({
             <div className="relative z-10 flex flex-col items-center gap-3">
               <div className="relative group">
                 <div
-                  className={`w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-brand/40 shadow-xl transition-all duration-300 ${
+                  className={`relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-brand/40 shadow-xl transition-all duration-300 ${
                     isPlaying ? 'scale-105 ring-4 ring-brand/20 shadow-brand/20' : 'opacity-85'
                   }`}
                 >
                   {thumbnailUrl ? (
-                    <img
+                    <Image
                       src={thumbnailUrl}
                       alt={videoTitle || 'Podcast Thumbnail'}
-                      className="w-full h-full object-cover"
+                      fill
+                      unoptimized
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-base flex items-center justify-center">

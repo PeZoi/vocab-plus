@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Volume2, CheckCircle2, BookmarkPlus, Search, ListFilter } from 'lucide-react';
+import { Volume2, CheckCircle2, Search, ListFilter } from 'lucide-react';
 import { formatTimestamp } from '@/utils/youtube';
 import type { TimedSegment } from '@/types/listening.types';
 
@@ -10,7 +10,7 @@ interface TranscriptSyncSidebarProps {
   currentSegmentIndex: number;
   completedSegmentIds: Set<string>;
   onSelectSegment: (index: number) => void;
-  onSaveWordClick?: (word: string, contextSentence: string) => void;
+  onTextSelection?: (contextSentence?: string) => void;
 }
 
 export function TranscriptSyncSidebar({
@@ -18,7 +18,7 @@ export function TranscriptSyncSidebar({
   currentSegmentIndex,
   completedSegmentIds,
   onSelectSegment,
-  onSaveWordClick,
+  onTextSelection,
 }: TranscriptSyncSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const activeItemRef = useRef<HTMLDivElement | null>(null);
@@ -87,7 +87,9 @@ export function TranscriptSyncSidebar({
                 key={segment.id}
                 ref={isActive ? activeItemRef : null}
                 onClick={() => onSelectSegment(originalIndex)}
-                className={`group p-3 rounded-xl border text-left transition-all duration-150 cursor-pointer flex flex-col gap-1.5 ${
+                onMouseUp={() => onTextSelection?.(segment.text)}
+                data-sentence={segment.text}
+                className={`group p-3 rounded-xl border text-left transition-all duration-150 cursor-pointer flex flex-col gap-1.5 select-text ${
                   isActive
                     ? 'bg-brand/10 border-brand/50 shadow-sm shadow-brand/5'
                     : 'bg-base/60 border-border/60 hover:bg-surface-hover hover:border-border'

@@ -25,8 +25,10 @@ export function ConnectedSpeechModal({
     if (!isOpen || !sentence) return;
 
     let isMounted = true;
-    setLoading(true);
-    setError(null);
+    const timer = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+    }, 0);
 
     listeningService
       .fetchConnectedSpeech(sentence)
@@ -50,6 +52,7 @@ export function ConnectedSpeechModal({
 
     return () => {
       isMounted = false;
+      clearTimeout(timer);
     };
   }, [isOpen, sentence]);
 

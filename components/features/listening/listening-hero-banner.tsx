@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
 import { Headphones, Sparkles, ArrowRight, ClipboardCopy, Loader2 } from 'lucide-react';
 import type { ListeningDifficulty } from '@/types/listening.types';
 

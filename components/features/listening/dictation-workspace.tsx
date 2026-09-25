@@ -9,14 +9,12 @@ import {
   CheckCircle2,
   Mic,
   ArrowRight,
-  BookmarkPlus,
 } from 'lucide-react';
 import { WordClozeView } from './word-cloze-view';
 import { ChunkClozeView } from './chunk-cloze-view';
 import { FullDictationView } from './full-dictation-view';
 import { ConnectedSpeechModal } from './connected-speech-modal';
 import { ShadowingModal } from './shadowing-modal';
-import { SaveToFlashcardModal } from './save-to-flashcard-modal';
 import type {
   TimedSegment,
   ListeningDifficulty,
@@ -45,7 +43,7 @@ interface DictationWorkspaceProps {
   onDictationAnswerChange: (val: string) => void;
   onCheckAnswer: () => boolean;
   onNextSegment: () => void;
-  podcastTitle?: string;
+  onTextSelection?: () => void;
 }
 
 export function DictationWorkspace({
@@ -68,23 +66,11 @@ export function DictationWorkspace({
   onDictationAnswerChange,
   onCheckAnswer,
   onNextSegment,
-  podcastTitle,
+  onTextSelection,
 }: DictationWorkspaceProps) {
   const [isConnectedSpeechOpen, setIsConnectedSpeechOpen] = useState(false);
   const [isShadowingOpen, setIsShadowingOpen] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-  const [vocabWordToSave, setVocabWordToSave] = useState('');
-
-  const handleOpenSaveModal = (customWord?: string) => {
-    if (customWord) {
-      setVocabWordToSave(customWord);
-    } else {
-      const firstMasked = wordClozeItems.find((i) => i.isMasked);
-      setVocabWordToSave(firstMasked ? firstMasked.cleanedWord : '');
-    }
-    setIsSaveModalOpen(true);
-  };
 
   if (!currentSegment) {
     return (
@@ -99,7 +85,11 @@ export function DictationWorkspace({
   };
 
   return (
-    <div className="rounded-2xl bg-surface border border-border/70 p-4 sm:p-6 space-y-5 shadow-xs">
+    <div
+      onMouseUp={onTextSelection}
+      data-sentence={currentSegment.text}
+      className="rounded-2xl bg-surface border border-border/70 p-4 sm:p-6 space-y-5 shadow-xs select-text"
+    >
       {/* Header: Segment Counter & Badges */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/50">
         <div className="flex items-center gap-2">
@@ -236,19 +226,8 @@ export function DictationWorkspace({
           </button>
         </div>
 
-        {/* Nút Mở rộng: Lưu Flashcard & Nối âm & Shadowing & Câu tiếp theo */}
+        {/* Nút Mở rộng: Nối âm & Shadowing & Câu tiếp theo */}
         <div className="flex items-center gap-2">
-          {/* Nút Thêm vào Flashcard SRS */}
-          <button
-            type="button"
-            onClick={() => handleOpenSaveModal()}
-            className="h-10 px-3 rounded-xl bg-base hover:bg-surface-hover border border-border text-text-secondary hover:text-brand text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Lưu từ vựng trong câu vào bộ thẻ Flashcard FSRS"
-          >
-            <BookmarkPlus className="w-4 h-4 text-brand" />
-            <span className="hidden sm:inline">Lưu Flashcard</span>
-          </button>
-
           {/* Mẹo nối âm AI */}
           <button
             type="button"
@@ -282,16 +261,6 @@ export function DictationWorkspace({
           </button>
         </div>
       </div>
-
-      {/* Save to Flashcard Modal */}
-      <SaveToFlashcardModal
-        isOpen={isSaveModalOpen}
-        onClose={() => setIsSaveModalOpen(false)}
-        defaultWord={vocabWordToSave}
-        sentence={currentSegment.text}
-        vietnameseTranslation={currentSegment.vietnameseTranslation}
-        podcastTitle={podcastTitle}
-      />
 
       {/* Connected Speech Modal */}
       <ConnectedSpeechModal
