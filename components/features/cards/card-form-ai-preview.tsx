@@ -295,22 +295,22 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
               <motion.div
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-900 dark:text-amber-200"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                  <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <div className="min-w-0 leading-relaxed">
                     {useOriginalWord ? (
                       <span>
                         Đang giữ nguyên từ ban đầu bạn nhập:{' '}
-                        <strong className="text-amber-100 font-semibold">{analysisResult.original_word}</strong>{' '}
-                        <span className="text-amber-300/70">(từ gốc AI đề xuất: {analysisResult.word})</span>
+                        <strong className="text-amber-950 dark:text-amber-100 font-semibold">{analysisResult.original_word}</strong>{' '}
+                        <span className="text-amber-800/80 dark:text-amber-300/70">(từ gốc AI đề xuất: {analysisResult.word})</span>
                       </span>
                     ) : (
                       <span>
                         AI đã tự động chuyển về từ gốc:{' '}
-                        <strong className="text-amber-100 font-semibold">{analysisResult.word}</strong>{' '}
-                        <span className="text-amber-300/70">
+                        <strong className="text-amber-950 dark:text-amber-100 font-semibold">{analysisResult.word}</strong>{' '}
+                        <span className="text-amber-800/80 dark:text-amber-300/70">
                           (từ ban đầu: <span className="line-through opacity-75">{analysisResult.original_word}</span>)
                         </span>
                       </span>
@@ -327,7 +327,7 @@ export function CardFormAiPreview({ onSuccess }: { onSuccess?: () => void }) {
                     setUseOriginalWord(nextUseOriginal);
                     setWordInput(nextUseOriginal ? analysisResult.original_word! : analysisResult.word);
                   }}
-                  className="h-7 px-2.5 text-xs border-amber-500/40 text-amber-200 hover:bg-amber-500/20 hover:text-white shrink-0 self-start sm:self-auto transition-colors cursor-pointer"
+                  className="h-7 px-2.5 text-xs border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 hover:text-amber-950 dark:hover:text-white shrink-0 self-start sm:self-auto transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1" />
                   {useOriginalWord

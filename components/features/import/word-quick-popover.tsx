@@ -194,12 +194,12 @@ export function WordQuickPopover({
     const parts = contextSentence.split(regex);
 
     return (
-      <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+      <p className="text-xs sm:text-sm text-text-primary leading-relaxed font-normal">
         {parts.map((part, i) =>
           part.toLowerCase() === word.toLowerCase() ? (
             <span
               key={i}
-              className="text-brand font-bold bg-brand/10 px-1 py-0.5 rounded border border-brand/20"
+              className="text-brand font-bold bg-brand/10 px-1 py-0.5 rounded border border-brand/30 dark:border-brand/20"
             >
               {part}
             </span>
@@ -253,8 +253,8 @@ export function WordQuickPopover({
                       className={cn(
                         'text-[11px] font-semibold py-0.5 px-2 border uppercase tracking-wider',
                         activeCard.card_type === 'idiom'
-                          ? 'bg-purple-500/15 text-purple-300 border-purple-500/30'
-                          : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                          ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30'
+                          : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
                       )}
                     >
                       {activeCard.card_type === 'idiom' ? 'thành ngữ' : 'cụm động từ'}
@@ -267,7 +267,7 @@ export function WordQuickPopover({
                   )}
                 </div>
                 {activeCard?.ipa && (
-                  <span className="text-xs font-mono text-text-secondary mt-1 block">
+                  <span className="text-xs font-mono font-medium text-text-secondary mt-1 block">
                     {formatIPA(activeCard.ipa)}
                   </span>
                 )}
@@ -276,7 +276,7 @@ export function WordQuickPopover({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -285,18 +285,18 @@ export function WordQuickPopover({
           {/* Body Content */}
           <div className="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[65vh] custom-scrollbar">
             {/* Context Sentence */}
-            <div className="p-3.5 rounded-xl bg-base border border-border/60 space-y-1.5">
-              <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider block">
+            <div className="p-3.5 rounded-xl bg-base/70 dark:bg-base border border-border/70 space-y-1.5">
+              <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block">
                 Ngữ cảnh trong bài đọc
               </span>
               {renderHighlightedSentence()}
 
               {activeCard?.example_translation && (
-                <div className="pt-2 border-t border-border/40">
-                  <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider block mb-0.5">
+                <div className="pt-2 border-t border-border/50">
+                  <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block mb-0.5">
                     Dịch nghĩa ngữ cảnh:
                   </span>
-                  <p className="text-xs text-text-secondary italic leading-relaxed">
+                  <p className="text-xs text-text-secondary italic leading-relaxed font-medium">
                     {activeCard.example_translation}
                   </p>
                 </div>
@@ -305,21 +305,21 @@ export function WordQuickPopover({
 
             {/* Base Form / Spelling Notice Banner with Revert Button */}
             {analyzedData && analyzedData.is_corrected && analyzedData.original_word && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-amber-200 animate-in fade-in-50 duration-200">
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-amber-900 dark:text-amber-200 animate-in fade-in-50 duration-200">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                  <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <div className="min-w-0 leading-relaxed">
                     {useOriginalWord ? (
                       <span>
                         Đang giữ nguyên từ trong bài:{' '}
-                        <strong className="text-amber-100 font-semibold">{analyzedData.original_word}</strong>{' '}
-                        <span className="text-amber-300/70">(từ gốc AI đề xuất: {analyzedData.word})</span>
+                        <strong className="text-amber-950 dark:text-amber-100 font-semibold">{analyzedData.original_word}</strong>{' '}
+                        <span className="text-amber-800/80 dark:text-amber-300/70">(từ gốc AI đề xuất: {analyzedData.word})</span>
                       </span>
                     ) : (
                       <span>
                         AI đã đưa về từ gốc:{' '}
-                        <strong className="text-amber-100 font-semibold">{analyzedData.word}</strong>{' '}
-                        <span className="text-amber-300/70">
+                        <strong className="text-amber-950 dark:text-amber-100 font-semibold">{analyzedData.word}</strong>{' '}
+                        <span className="text-amber-800/80 dark:text-amber-300/70">
                           (từ trong bài: <span className="line-through opacity-75">{analyzedData.original_word}</span>)
                         </span>
                       </span>
@@ -331,7 +331,7 @@ export function WordQuickPopover({
                   variant="outline"
                   size="sm"
                   onClick={() => setUseOriginalWord(!useOriginalWord)}
-                  className="h-7 px-2.5 text-[10px] sm:text-xs border-amber-500/40 text-amber-200 hover:bg-amber-500/20 hover:text-white shrink-0 self-start sm:self-auto cursor-pointer transition-colors"
+                  className="h-7 px-2.5 text-[10px] sm:text-xs border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 hover:text-amber-950 dark:hover:text-white shrink-0 self-start sm:self-auto cursor-pointer transition-colors"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1" />
                   {useOriginalWord
@@ -354,35 +354,35 @@ export function WordQuickPopover({
 
             {/* Definitions & Preview Card Details */}
             {activeCard ? (
-              <div className="space-y-3 p-4 rounded-xl bg-surface-hover/40 border border-border/70 animate-in fade-in-50 duration-200">
+              <div className="space-y-3 p-4 rounded-xl bg-base/70 dark:bg-surface-hover/40 border border-border/80 animate-in fade-in-50 duration-200">
                 {/* Definitions (English-First Bilingual) */}
                 <div className="space-y-2">
-                  <span className="text-[10px] font-semibold text-brand uppercase tracking-wider block">
+                  <span className="text-[10px] font-bold text-brand uppercase tracking-wider block">
                     Định nghĩa từ vựng
                   </span>
                   {activeCard.definition_en ? (
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       <div className="flex items-start gap-2">
-                        <span className="text-[10px] font-bold text-slate-400 bg-base px-1.5 py-0.5 rounded border border-border shrink-0 mt-0.5">
+                        <span className="text-[10px] font-bold text-text-secondary bg-surface dark:bg-base px-1.5 py-0.5 rounded border border-border shrink-0 mt-0.5 shadow-2xs">
                           EN
                         </span>
-                        <p className="text-sm font-semibold text-white leading-relaxed">
+                        <p className="text-sm font-semibold text-text-primary leading-relaxed">
                           {activeCard.definition_en}
                         </p>
                       </div>
                       {activeCard.definition && (
-                        <div className="flex items-start gap-2 pt-1 border-t border-border/40">
-                          <span className="text-[10px] font-bold text-slate-400 bg-base px-1.5 py-0.5 rounded border border-border shrink-0 mt-0.5">
+                        <div className="flex items-start gap-2 pt-1.5 border-t border-border/50">
+                          <span className="text-[10px] font-bold text-text-secondary bg-surface dark:bg-base px-1.5 py-0.5 rounded border border-border shrink-0 mt-0.5 shadow-2xs">
                             VI
                           </span>
-                          <p className="text-xs text-slate-300 leading-relaxed">
+                          <p className="text-xs font-medium text-text-secondary leading-relaxed">
                             {activeCard.definition}
                           </p>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-semibold text-text-primary leading-relaxed">
                       {activeCard.definition}
                     </p>
                   )}
@@ -390,11 +390,11 @@ export function WordQuickPopover({
 
                 {/* Mnemonic (Mẹo nhớ) */}
                 {activeCard.mnemonic && (
-                  <div className="p-3 rounded-lg bg-brand/5 border border-brand/20 flex items-start gap-2.5 text-xs">
+                  <div className="p-3 rounded-lg bg-brand/10 dark:bg-brand/5 border border-brand/25 dark:border-brand/20 flex items-start gap-2.5 text-xs">
                     <Lightbulb className="w-4 h-4 text-brand shrink-0 mt-0.5" />
                     <div className="space-y-0.5">
-                      <span className="font-semibold text-brand text-[11px] block">Mẹo nhớ (Mnemonic):</span>
-                      <p className="text-text-primary/90 italic text-[11.5px] leading-relaxed">
+                      <span className="font-bold text-brand text-[11px] block">Mẹo nhớ (Mnemonic):</span>
+                      <p className="text-text-primary italic text-[11.5px] leading-relaxed">
                         {activeCard.mnemonic}
                       </p>
                     </div>
@@ -403,8 +403,8 @@ export function WordQuickPopover({
 
                 {/* Collocations */}
                 {Array.isArray(collocations) && collocations.length > 0 && (
-                  <div className="space-y-1.5 pt-2 border-t border-border/40">
-                    <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider block">
+                  <div className="space-y-1.5 pt-2 border-t border-border/50">
+                    <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block">
                       Cụm từ thông dụng (Collocations):
                     </span>
                     <div className="flex flex-wrap gap-1.5">
@@ -414,10 +414,10 @@ export function WordQuickPopover({
                         return (
                           <span
                             key={idx}
-                            className="text-[11px] px-2 py-0.5 rounded-md bg-base border border-border/60 text-text-primary"
+                            className="text-[11px] px-2.5 py-1 rounded-md bg-surface border border-border/80 text-text-primary shadow-2xs font-medium"
                           >
-                            <strong className="text-brand font-medium">{phrase}</strong>
-                            {meaning && <span className="text-text-secondary ml-1">({meaning})</span>}
+                            <strong className="text-brand font-semibold">{phrase}</strong>
+                            {meaning && <span className="text-text-secondary ml-1 font-normal">({meaning})</span>}
                           </span>
                         );
                       })}
@@ -427,13 +427,13 @@ export function WordQuickPopover({
 
                 {/* Tags */}
                 {activeCard.tags && activeCard.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pt-2 border-t border-border/40">
+                  <div className="flex flex-wrap gap-1 pt-2 border-t border-border/50">
                     {activeCard.tags
                       .filter((tag) => typeof tag === 'string' && tag.trim().length > 0)
                       .map((tag, idx) => (
                         <span
                           key={`tag-${tag}-${idx}`}
-                          className="text-[10px] text-brand/80 bg-brand/10 px-2 py-0.5 rounded border border-brand/20 font-medium"
+                          className="text-[10px] text-brand bg-brand/10 px-2 py-0.5 rounded border border-brand/25 font-semibold"
                         >
                           {tag}
                         </span>
