@@ -85,36 +85,53 @@ export async function translateBatch(texts: string[], batchSize = 15): Promise<R
 }
 
 /**
- * Lấy CaptionTracks thông qua YouTube Innertube Android Client (Không bị chặn, không cần đăng nhập)
+ * Lấy CaptionTracks thông qua YouTube Innertube Android Client hoặc MWeb Client
  */
 async function fetchCaptionTracks(videoId: string): Promise<CaptionTrackInfo[]> {
-  try {
-    const res = await fetch('https://www.youtube.com/youtubei/v1/player', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'com.google.android.youtube/20.10.38 (Linux; U; Android 14)',
-      },
-      body: JSON.stringify({
-        context: {
-          client: {
-            clientName: 'ANDROID',
-            clientVersion: '20.10.38',
-          },
-        },
-        videoId,
-      }),
-    });
+  const clients = [
+    {
+      clientName: 'ANDROID',
+      clientVersion: '20.10.38',
+      userAgent: 'com.google.android.youtube/20.10.38 (Linux; U; Android 14)',
+    },
+    {
+      clientName: 'MWEB',
+      clientVersion: '2.20240313.01.00',
+      userAgent:
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+    },
+  ];
 
-    if (res.ok) {
-      const data = (await res.json()) as InnertubeResponse;
-      const tracks = data.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-      if (Array.isArray(tracks) && tracks.length > 0) {
-        return tracks;
+  for (const c of clients) {
+    try {
+      const res = await fetch('https://www.youtube.com/youtubei/v1/player', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': c.userAgent,
+        },
+        body: JSON.stringify({
+          context: {
+            client: {
+              clientName: c.clientName,
+              clientVersion: c.clientVersion,
+              hl: 'en',
+            },
+          },
+          videoId,
+        }),
+      });
+
+      if (res.ok) {
+        const data = (await res.json()) as InnertubeResponse;
+        const tracks = data.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+        if (Array.isArray(tracks) && tracks.length > 0) {
+          return tracks;
+        }
       }
+    } catch {
+      // Thử client tiếp theo
     }
-  } catch {
-    // ignore
   }
 
   // Fallback: Quét HTML thông thường
@@ -156,27 +173,12 @@ async function fetchRawCues(videoId: string): Promise<RawCue[]> {
 
   if (!chosenTrack || !chosenTrack.baseUrl) return [];
 
-  // Định dạng srv1 chuẩn XML của YouTube transcript
-  const targetUrl = `${chosenTrack.baseUrl.replace(/&fmt=\w+/g, '')}&fmt=srv1`;
+  const rawCues: RawCue[] = [];
+  const regex = /<text\s+start="([\d.]+)"(?:\s+dur="([\d.]+)")?[^>]*>([\s\S]*?)<\/text>/gi;
 
-  try {
-    const subRes = await fetch(targetUrl, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      },
-    });
-
-    if (!subRes.ok) return [];
-
-    const rawText = await subRes.text();
-    if (!rawText || rawText.trim().length === 0) return [];
-
-    const rawCues: RawCue[] = [];
-    const regex = /<text\s+start="([\d.]+)"(?:\s+dur="([\d.]+)")?[^>]*>([\s\S]*?)<\/text>/gi;
+  const parseXml = (xml: string) => {
     let match: RegExpExecArray | null;
-
-    while ((match = regex.exec(rawText)) !== null) {
+    while ((match = regex.exec(xml)) !== null) {
       const start = parseFloat(match[1]);
       const duration = match[2] ? parseFloat(match[2]) : 2.5;
       const text = cleanTranscriptText(match[3]);
@@ -184,11 +186,78 @@ async function fetchRawCues(videoId: string): Promise<RawCue[]> {
         rawCues.push({ start, duration, text });
       }
     }
+  };
 
-    return rawCues;
+  const parseJson3 = (raw: string) => {
+    try {
+      const json3 = JSON.parse(raw) as {
+        events?: {
+          tStartMs?: number;
+          dDurationMs?: number;
+          segs?: { utf8?: string }[];
+        }[];
+      };
+      if (Array.isArray(json3.events)) {
+        for (const ev of json3.events) {
+          if (!ev.segs || ev.segs.length === 0) continue;
+          const text = cleanTranscriptText(ev.segs.map((s) => s.utf8 || '').join(''));
+          if (text) {
+            rawCues.push({
+              start: (ev.tStartMs || 0) / 1000,
+              duration: (ev.dDurationMs || 0) / 1000,
+              text,
+            });
+          }
+        }
+      }
+    } catch {
+      // ignore json parse error
+    }
+  };
+
+  const userAgent =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+
+  // 1. Thử định dạng srv1 chuẩn XML
+  const targetUrl = `${chosenTrack.baseUrl.replace(/&fmt=\w+/g, '')}&fmt=srv1`;
+
+  try {
+    const subRes = await fetch(targetUrl, {
+      headers: { 'User-Agent': userAgent },
+    });
+
+    if (subRes.ok) {
+      const rawText = await subRes.text();
+      if (rawText && rawText.trim().length > 0) {
+        parseXml(rawText);
+        if (rawCues.length > 0) return rawCues;
+      }
+    }
   } catch {
-    return [];
+    // fallback
   }
+
+  // 2. Fallback: Gọi trực tiếp baseUrl gốc không đổi param fmt
+  try {
+    const origRes = await fetch(chosenTrack.baseUrl, {
+      headers: { 'User-Agent': userAgent },
+    });
+
+    if (origRes.ok) {
+      const origText = await origRes.text();
+      if (origText && origText.trim().length > 0) {
+        if (origText.trim().startsWith('{')) {
+          parseJson3(origText);
+        } else {
+          parseXml(origText);
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return rawCues;
 }
 
 /**
