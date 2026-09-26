@@ -175,3 +175,63 @@ export async function POST(req: Request) {
   }
 }
 
+export async function DELETE(req: Request) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Chưa đăng nhập' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const clearAll = searchParams.get('clearAll') === 'true';
+    const youtubeId = searchParams.get('youtubeId');
+    const difficulty = searchParams.get('difficulty') as ListeningDifficulty | null;
+
+    if (clearAll) {
+      const { error } = await supabase
+        .from('user_listening_progress')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, message: 'Đã xóa toàn bộ lịch sử nghe' });
+    }
+
+    if (!youtubeId) {
+      return NextResponse.json(
+        { error: 'Thiếu tham số youtubeId hoặc clearAll' },
+        { status: 400 }
+      );
+    }
+
+    let query = supabase
+      .from('user_listening_progress')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('youtube_id', youtubeId);
+
+    if (difficulty) {
+      query = query.eq('difficulty', difficulty);
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Đã xóa bài nghe thành công' });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Lỗi xóa tiến độ nghe';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+

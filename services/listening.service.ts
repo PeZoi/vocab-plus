@@ -77,5 +77,26 @@ export const listeningService = {
     const res: ProgressResponse = await apiClient.get('/listening/progress');
     return res.list || [];
   },
+
+  /**
+   * Xóa một bài nghe khỏi lịch sử học
+   */
+  deleteProgress: async (
+    youtubeId: string,
+    difficulty?: ListeningDifficulty
+  ): Promise<{ success: boolean; message?: string; error?: string }> => {
+    return apiClient.delete('/listening/progress', {
+      params: { youtubeId, difficulty },
+    });
+  },
+
+  /**
+   * Xóa toàn bộ lịch sử nghe của người dùng
+   */
+  clearAllHistory: async (): Promise<{ success: boolean; message?: string; error?: string }> => {
+    return apiClient.delete('/listening/progress', {
+      params: { clearAll: true },
+    });
+  },
 };
 

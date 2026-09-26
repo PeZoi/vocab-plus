@@ -11,7 +11,9 @@ import {
   ArrowLeft,
   CheckCircle2,
   X,
+  Loader2,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Modal } from '@/components/ui/modal';
 import { ListeningHeroBanner } from '@/components/features/listening/listening-hero-banner';
 import { ListeningEmptyGuide } from '@/components/features/listening/listening-empty-guide';
@@ -396,6 +398,43 @@ export default function ListeningPage() {
     await handleLoadUrl(youtubeId, true);
   };
 
+  // Xóa một bài nghe khỏi danh sách lịch sử
+  const handleDeletePodcast = async (youtubeId: string, diff: ListeningDifficulty) => {
+    try {
+      const res = await listeningService.deleteProgress(youtubeId, diff);
+      if (res.success) {
+        toast.success('Đã xóa bài học khỏi danh sách gần đây.');
+        // Nếu bài đang xem trước trùng với bài vừa xóa, làm sạch lựa chọn
+        if (activeYoutubeId === youtubeId && difficulty === diff) {
+          handleClearSelectedVideo();
+        }
+        await loadUserHistory();
+      } else {
+        toast.error(res.error || 'Không thể xóa bài học.');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi khi xóa bài học';
+      toast.error(msg);
+    }
+  };
+
+  // Xóa toàn bộ lịch sử bài học đã nghe
+  const handleClearAllHistory = async () => {
+    try {
+      const res = await listeningService.clearAllHistory();
+      if (res.success) {
+        toast.success('Đã xóa toàn bộ lịch sử nghe.');
+        handleClearSelectedVideo();
+        await loadUserHistory();
+      } else {
+        toast.error(res.error || 'Không thể xóa lịch sử nghe.');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi khi xóa lịch sử nghe';
+      toast.error(msg);
+    }
+  };
+
   // Chuyển sang khu vực lựa chọn video (tự động pause & cập nhật lại lịch sử)
   const handleBackToSelection = () => {
     pause();
@@ -496,6 +535,30 @@ export default function ListeningPage() {
             selectedDifficulty={difficulty}
             onChangeDifficulty={(diff) => setDifficulty(diff)}
           />
+
+          {/* Skeleton Xem Trước Video Đang Tải Phụ Đề */}
+          {isLoading && !videoMetadata && (
+            <div className="relative overflow-hidden rounded-3xl bg-surface border border-brand/35 p-5 sm:p-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse">
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                <Skeleton className="w-full sm:w-52 aspect-video rounded-2xl shrink-0" />
+                <div className="space-y-2 text-center sm:text-left flex-1 min-w-0">
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <Skeleton className="h-5 w-20 rounded-md" />
+                    <Skeleton className="h-4 w-28 rounded-md" />
+                  </div>
+                  <Skeleton className="h-5 w-60 sm:w-80 rounded-lg" />
+                  <div className="flex items-center justify-center sm:justify-start gap-2 text-xs text-text-secondary">
+                    <Loader2 className="w-3.5 h-3.5 text-brand animate-spin" />
+                    <span>Đang kết nối YouTube, bóc tách phụ đề & tạo bài tập...</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+                <Skeleton className="h-11 w-32 rounded-xl" />
+                <Skeleton className="h-11 w-44 rounded-2xl" />
+              </div>
+            </div>
+          )}
 
           {/* Card Xác Nhận & Xem Trước Video Đang Chọn (Chỉ hiện khi ĐÃ CÓ link video) */}
           {videoMetadata && segments.length > 0 && (
@@ -614,6 +677,8 @@ export default function ListeningPage() {
           <RecentListeningShelf
             historyList={historyList}
             onSelectPodcast={handleSelectHistoryPodcast}
+            onDeletePodcast={handleDeletePodcast}
+            onClearAllHistory={handleClearAllHistory}
             isLoading={isLoadingHistory}
           />
 
