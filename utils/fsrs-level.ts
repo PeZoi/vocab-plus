@@ -201,9 +201,9 @@ export function canCardLevelUp(
 
 /**
  * Ánh xạ kết quả Quiz phản xạ sang thang điểm FSRS (1 - 4)
- * - Sai: Again (1)
- * - Trắc nghiệm đúng: Good (3) (tránh đoán mò trắc nghiệm làm méo mó độ khó)
- * - Tự luận / Gõ từ đúng nhanh (< 4000ms): Easy (4)
+ * - Sai: 1 (Chưa nhớ / Sai phản xạ)
+ * - Trắc nghiệm đúng: 3 (Chuẩn mực)
+ * - Tự luận / Gõ từ đúng nhanh (< 4000ms): 4 (Phản xạ tức thì)
  */
 export function mapQuizResultToFSRS(
   isCorrect: boolean,
@@ -211,15 +211,15 @@ export function mapQuizResultToFSRS(
   questionType: string = 'multiple_choice'
 ): ReviewRating {
   if (!isCorrect) {
-    return 1; // Again
+    return 1;
   }
 
-  // Trắc nghiệm nhiều lựa chọn: đúng được ghi nhận là Good (3) chuẩn mực
+  // Trắc nghiệm nhiều lựa chọn: đúng được ghi nhận mức 3 chuẩn mực
   if (questionType === 'multiple_choice') {
     return 3;
   }
 
-  // Đối với câu hỏi tự luận / gõ từ / đặt câu: nếu gõ đúng và nhanh (< 4 giây) -> Easy (4)
+  // Đối với câu hỏi tự luận / gõ từ / đặt câu: nếu gõ đúng và nhanh (< 4 giây) -> mức 4
   if (
     (questionType === 'typing' || questionType === 'sentence_writing' || questionType === 'cloze_typing') &&
     responseTimeMs > 0 &&
@@ -228,7 +228,7 @@ export function mapQuizResultToFSRS(
     return 4;
   }
 
-  return 3; // Good
+  return 3;
 }
 
 /**

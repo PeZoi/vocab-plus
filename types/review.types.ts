@@ -3,7 +3,7 @@ import type { Tables } from './database.types';
 
 export type ReviewLog = Tables<'review_logs'>;
 
-export type ReviewRating = 1 | 2 | 3 | 4; // 1: Again, 2: Hard, 3: Good, 4: Easy
+export type ReviewRating = 1 | 2 | 3 | 4; // Thang điểm phản xạ FSRS nội bộ (1: Sai, 3: Đúng chuẩn, 4: Phản xạ nhanh)
 
 export interface ReviewCardItem {
   card: Card;

@@ -24,7 +24,7 @@ export { Rating, State, createEmptyCard };
 export type { FSRSCard, RecordLog };
 
 /**
- * Tính toán trạng thái tiếp theo cho 4 lựa chọn (Again, Hard, Good, Easy)
+ * Tính toán các trạng thái lịch ôn tập tiếp theo theo mô hình FSRS
  */
 export function calculateNextReviews(
   card: FSRSCard,

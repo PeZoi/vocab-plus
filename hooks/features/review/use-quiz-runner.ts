@@ -229,7 +229,7 @@ export function useQuizRunner({
             statsRef.current.levelDowns.push(downResult);
           }
 
-          // Gọi API submit FSRS Rating.Again (1) và lưu Promise
+          // Gọi API submit FSRS khi trả lời sai (rating 1) và lưu Promise
           const submitPromise = reviewService.submitReview({
             card_id: card.id,
             rating: 1,
