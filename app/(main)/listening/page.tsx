@@ -10,10 +10,11 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle2,
+  X,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { ListeningHeroBanner } from '@/components/features/listening/listening-hero-banner';
-import { CuratedPodcastShelf } from '@/components/features/listening/curated-podcast-shelf';
+import { ListeningEmptyGuide } from '@/components/features/listening/listening-empty-guide';
 import { RecentListeningShelf } from '@/components/features/listening/recent-listening-shelf';
 import { YouTubePlayerCard } from '@/components/features/listening/youtube-player-card';
 import { DictationWorkspace } from '@/components/features/listening/dictation-workspace';
@@ -25,10 +26,8 @@ import { useYouTubePlayer } from '@/hooks/features/listening/use-youtube-player'
 import { useListeningSession } from '@/hooks/features/listening/use-listening-session';
 import { useListeningVocabSelection } from '@/hooks/features/listening/use-listening-vocab-selection';
 import { listeningService } from '@/services/listening.service';
-import { CURATED_PODCASTS } from '@/constants/curated-podcasts';
 import { formatTimestamp } from '@/utils/youtube';
 import type {
-  CuratedPodcast,
   ListeningDifficulty,
   TimedSegment,
   VideoMetadata,
@@ -39,18 +38,9 @@ type ListeningViewMode = 'selection' | 'workspace';
 
 export default function ListeningPage() {
   const [viewMode, setViewMode] = useState<ListeningViewMode>('selection');
-  const [activeYoutubeId, setActiveYoutubeId] = useState<string>(CURATED_PODCASTS[0].youtubeId);
-  const [videoMetadata, setVideoMetadata] = useState<VideoMetadata>({
-    id: CURATED_PODCASTS[0].youtubeId,
-    title: CURATED_PODCASTS[0].title,
-    channelTitle: CURATED_PODCASTS[0].channelName,
-    thumbnailUrl: CURATED_PODCASTS[0].thumbnailUrl,
-    cefrLevel: CURATED_PODCASTS[0].cefrLevel,
-    category: CURATED_PODCASTS[0].topic,
-  });
-  const [segments, setSegments] = useState<TimedSegment[]>(
-    CURATED_PODCASTS[0].sampleSegments || []
-  );
+  const [activeYoutubeId, setActiveYoutubeId] = useState<string>('');
+  const [videoMetadata, setVideoMetadata] = useState<VideoMetadata | null>(null);
+  const [segments, setSegments] = useState<TimedSegment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [difficulty, setDifficulty] = useState<ListeningDifficulty>('medium');
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -319,60 +309,67 @@ export default function ListeningPage() {
     }
   }, []);
 
-  // Xử lý nạp link YouTube từ form
-  const handleLoadUrl = useCallback(async (url: string) => {
-    try {
-      setIsLoading(true);
-      const res = await listeningService.fetchTranscript(url);
+  // Xử lý nạp link YouTube từ form hoặc khôi phục dữ liệu video
+  const handleLoadUrl = useCallback(
+    async (url: string, autoEnterWorkspace = true) => {
+      try {
+        setIsLoading(true);
+        const res = await listeningService.fetchTranscript(url);
 
-      if (res.success && res.metadata) {
-        setActiveYoutubeId(res.metadata.id);
-        setVideoMetadata(res.metadata);
-        updateVideoUrlParam(res.metadata.id);
+        if (res.success && res.metadata) {
+          setActiveYoutubeId(res.metadata.id);
+          setVideoMetadata(res.metadata);
+          updateVideoUrlParam(res.metadata.id);
 
-        if (res.segments && res.segments.length > 0) {
-          setSegments(res.segments);
-          toast.success(`Đã tải thành công phụ đề: ${res.metadata.title}`, {
-            description: `Tìm thấy ${res.segments.length} câu hoàn chỉnh. Đang mở phòng luyện nghe!`,
-          });
-          // Tự động chuyển sang phòng luyện nghe khi nạp thành công
-          setViewMode('workspace');
+          if (res.segments && res.segments.length > 0) {
+            setSegments(res.segments);
+            if (autoEnterWorkspace) {
+              toast.success(`Đã tải thành công phụ đề: ${res.metadata.title}`, {
+                description: `Tìm thấy ${res.segments.length} câu hoàn chỉnh. Đang mở phòng luyện nghe!`,
+              });
+              // Chuyển sang phòng luyện nghe khi người dùng chủ động nạp
+              setViewMode('workspace');
+            }
+          } else {
+            if (autoEnterWorkspace) {
+              toast.info(res.message || 'Không tìm thấy phụ đề tiếng Anh cho video này.');
+            }
+            setSegments([]);
+          }
         } else {
-          toast.info(res.message || 'Không tìm thấy phụ đề tiếng Anh cho video này.', {
-            description: 'Đang tải lại podcast mẫu để bạn tiếp tục luyện tập.',
-          });
-          setSegments(CURATED_PODCASTS[0].sampleSegments || []);
+          if (autoEnterWorkspace) {
+            toast.error(res.message || 'Không thể tải phụ đề cho video này.');
+          }
         }
-      } else {
-        toast.error(res.message || 'Không thể tải phụ đề cho video này.');
+      } catch (err: unknown) {
+        if (autoEnterWorkspace) {
+          const msg = err instanceof Error ? err.message : 'Lỗi kết nối';
+          toast.error(msg);
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi kết nối';
-      toast.error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [updateVideoUrlParam]);
+    },
+    [updateVideoUrlParam]
+  );
 
-  // Chọn podcast từ thư viện gợi ý
-  const handleSelectCuratedPodcast = (podcast: CuratedPodcast) => {
-    setActiveYoutubeId(podcast.youtubeId);
-    updateVideoUrlParam(podcast.youtubeId);
-    setVideoMetadata({
-      id: podcast.youtubeId,
-      title: podcast.title,
-      channelTitle: podcast.channelName,
-      thumbnailUrl: podcast.thumbnailUrl,
-      cefrLevel: podcast.cefrLevel,
-      category: podcast.topic,
-    });
-    setSegments(podcast.sampleSegments || []);
-    toast.success(`Đã chọn: ${podcast.title}`, {
-      description: `Nhấn "Vào Luyện Nghe Ngay" để bắt đầu làm bài tập ${podcast.sampleSegments?.length || 0} câu.`,
-    });
+  // Hủy video đang chọn để quay lại trạng thái chưa chọn link
+  const handleClearSelectedVideo = () => {
+    setActiveYoutubeId('');
+    setVideoMetadata(null);
+    setSegments([]);
+    try {
+      localStorage.removeItem('vocab_last_listening_video_id');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('v');
+      window.history.replaceState(null, '', url.toString());
+    } catch {
+      // ignore
+    }
+    toast.info('Đã hủy video đang chọn. Bạn có thể dán link mới vào ô bên trên.');
   };
 
-  // Tự động khôi phục video đang học từ URL query (?v=...) hoặc localStorage khi F5
+  // Tự động khôi phục video đang học từ URL query (?v=...) hoặc localStorage khi F5 (chỉ nạp dữ liệu xem trước, không tự động chuyển sang workspace)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -381,24 +378,9 @@ export default function ListeningPage() {
         const params = new URLSearchParams(window.location.search);
         const targetId = params.get('v') || localStorage.getItem('vocab_last_listening_video_id');
 
-        if (targetId && targetId !== CURATED_PODCASTS[0].youtubeId) {
-          const curatedMatch = CURATED_PODCASTS.find((p) => p.youtubeId === targetId);
-          if (curatedMatch) {
-            setActiveYoutubeId(curatedMatch.youtubeId);
-            setVideoMetadata({
-              id: curatedMatch.youtubeId,
-              title: curatedMatch.title,
-              channelTitle: curatedMatch.channelName,
-              thumbnailUrl: curatedMatch.thumbnailUrl,
-              cefrLevel: curatedMatch.cefrLevel,
-              category: curatedMatch.topic,
-            });
-            setSegments(curatedMatch.sampleSegments || []);
-            setViewMode('workspace');
-          } else {
-            // Tải từ API (đã có Supabase cache chỉ 30ms)
-            handleLoadUrl(targetId);
-          }
+        if (targetId) {
+          // Tải thông tin video và phụ đề vào bộ nhớ xem trước, không tự động chuyển sang workspace
+          handleLoadUrl(targetId, false);
         }
       } catch {
         // ignore
@@ -411,26 +393,7 @@ export default function ListeningPage() {
   // Chọn bài nghe từ danh sách bài đã nghe / đang làm dở
   const handleSelectHistoryPodcast = async (youtubeId: string, diff: ListeningDifficulty) => {
     setDifficulty(diff);
-    const curatedMatch = CURATED_PODCASTS.find((p) => p.youtubeId === youtubeId);
-    if (curatedMatch) {
-      setActiveYoutubeId(curatedMatch.youtubeId);
-      updateVideoUrlParam(curatedMatch.youtubeId);
-      setVideoMetadata({
-        id: curatedMatch.youtubeId,
-        title: curatedMatch.title,
-        channelTitle: curatedMatch.channelName,
-        thumbnailUrl: curatedMatch.thumbnailUrl,
-        cefrLevel: curatedMatch.cefrLevel,
-        category: curatedMatch.topic,
-      });
-      setSegments(curatedMatch.sampleSegments || []);
-      setViewMode('workspace');
-      toast.success(`Đang mở: ${curatedMatch.title}`, {
-        description: 'Đang khôi phục đúng câu bạn đang làm dở...',
-      });
-    } else {
-      await handleLoadUrl(youtubeId);
-    }
+    await handleLoadUrl(youtubeId, true);
   };
 
   // Chuyển sang khu vực lựa chọn video (tự động pause & cập nhật lại lịch sử)
@@ -443,9 +406,11 @@ export default function ListeningPage() {
   // Bắt đầu vào khu vực luyện nghe
   const handleEnterWorkspace = () => {
     setViewMode('workspace');
-    if (segments[0]) {
+    // Nhảy tới đúng câu đang học dở / active câu chưa hoàn thành (currentSegment)
+    const targetSeg = currentSegment || segments[0];
+    if (targetSeg) {
       setTimeout(() => {
-        seekTo(segments[0].start);
+        seekTo(targetSeg.start);
       }, 150);
     }
   };
@@ -532,108 +497,118 @@ export default function ListeningPage() {
             onChangeDifficulty={(diff) => setDifficulty(diff)}
           />
 
-          {/* Card Xác Nhận & Xem Trước Video Đang Chọn */}
-          {(() => {
-            const selectedPodcast = CURATED_PODCASTS.find((p) => p.youtubeId === activeYoutubeId);
-            const displayDuration =
-              selectedPodcast?.duration ||
-              (segments.length > 0 ? formatTimestamp(segments[segments.length - 1].end) : '08:55');
+          {/* Card Xác Nhận & Xem Trước Video Đang Chọn (Chỉ hiện khi ĐÃ CÓ link video) */}
+          {videoMetadata && segments.length > 0 && (
+            (() => {
+              const displayDuration =
+                segments.length > 0 ? formatTimestamp(segments[segments.length - 1].end) : '08:55';
 
-            return (
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-surface via-surface to-brand/10 border border-brand/40 p-5 sm:p-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-                  <div className="relative w-full sm:w-52 aspect-video rounded-2xl overflow-hidden bg-black shrink-0 border border-border/80 shadow-md">
-                    <Image
-                      src={videoMetadata.thumbnailUrl || 'https://img.youtube.com/vi/s2EYIDY8wSM/hqdefault.jpg'}
-                      alt={videoMetadata.title}
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/80 text-[10px] font-mono text-white flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-brand" />
-                      <span>{displayDuration}</span>
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5 text-center sm:text-left">
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                      <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase bg-brand/15 text-brand border border-brand/30">
-                        Level: {videoMetadata.cefrLevel || 'A1'}
-                      </span>
-                      <span className="text-xs text-text-secondary font-medium">
-                        Kênh: {videoMetadata.channelTitle}
+              return (
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-surface via-surface to-brand/10 border border-brand/40 p-5 sm:p-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in-50 duration-200">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                    <div className="relative w-full sm:w-52 aspect-video rounded-2xl overflow-hidden bg-black shrink-0 border border-border/80 shadow-md">
+                      <Image
+                        src={videoMetadata.thumbnailUrl || 'https://img.youtube.com/vi/s2EYIDY8wSM/hqdefault.jpg'}
+                        alt={videoMetadata.title}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                      <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/80 text-[10px] font-mono text-white flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-brand" />
+                        <span>{displayDuration}</span>
                       </span>
                     </div>
 
-                    <h3 className="text-sm sm:text-base font-bold text-text-primary line-clamp-2 leading-snug">
-                      {videoMetadata.title}
-                    </h3>
+                    <div className="space-y-1.5 text-center sm:text-left">
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                        <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase bg-brand/15 text-brand border border-brand/30">
+                          Level: {videoMetadata.cefrLevel || 'A1'}
+                        </span>
+                        <span className="text-xs text-text-secondary font-medium">
+                          Kênh: {videoMetadata.channelTitle}
+                        </span>
+                      </div>
 
-                    <p className="text-xs text-text-secondary">
-                      Trạng thái phụ đề:{' '}
-                      <strong className="text-emerald-500 font-semibold">
-                        Đã sẵn sàng trọn vẹn {segments.length} câu bài tập
-                      </strong>
-                    </p>
-                  </div>
-                </div>
+                      <h3 className="text-sm sm:text-base font-bold text-text-primary line-clamp-2 leading-snug">
+                        {videoMetadata.title}
+                      </h3>
 
-                {/* Chọn chế độ & Nút Vào Luyện Nghe Ngay */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
-                  <div className="flex items-center justify-center p-1 rounded-xl bg-base border border-border gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setDifficulty('easy')}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        difficulty === 'easy'
-                          ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 shadow-xs'
-                          : 'text-text-secondary hover:text-text-primary'
-                      }`}
-                      title="Chế độ điền các từ khóa còn thiếu"
-                    >
-                      🟢 Dễ (Từ)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDifficulty('medium')}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        difficulty === 'medium'
-                          ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 shadow-xs'
-                          : 'text-text-secondary hover:text-text-primary'
-                      }`}
-                      title="Chế độ điền cụm từ ngữ pháp"
-                    >
-                      🟡 Vừa (Cụm)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDifficulty('hard')}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        difficulty === 'hard'
-                          ? 'bg-red-500/15 text-red-500 border border-red-500/30 shadow-xs'
-                          : 'text-text-secondary hover:text-text-primary'
-                      }`}
-                      title="Chế độ chép chính tả trọn vẹn cả câu"
-                    >
-                      🔴 Khó (Cả câu)
-                    </button>
+                      <p className="text-xs text-text-secondary">
+                        Trạng thái phụ đề:{' '}
+                        <strong className="text-emerald-500 font-semibold">
+                          Đã sẵn sàng trọn vẹn {segments.length} câu bài tập
+                        </strong>
+                      </p>
+                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleEnterWorkspace}
-                    className="h-12 px-6 rounded-2xl bg-brand hover:bg-brand-hover text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand/25 transition-all cursor-pointer shrink-0 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <Headphones className="w-4 h-4" />
-                    <span>Vào Luyện Nghe Ngay</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  {/* Chọn chế độ & Nút Vào Luyện Nghe Ngay */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
+                    <div className="flex items-center justify-center p-1 rounded-xl bg-base border border-border gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setDifficulty('easy')}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          difficulty === 'easy'
+                            ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 shadow-xs'
+                            : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                        title="Chế độ điền các từ khóa còn thiếu"
+                      >
+                        🟢 Dễ (Từ)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDifficulty('medium')}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          difficulty === 'medium'
+                            ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 shadow-xs'
+                            : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                        title="Chế độ điền cụm từ ngữ pháp"
+                      >
+                        🟡 Vừa (Cụm)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDifficulty('hard')}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          difficulty === 'hard'
+                            ? 'bg-red-500/15 text-red-500 border border-red-500/30 shadow-xs'
+                            : 'text-text-secondary hover:text-text-primary'
+                        }`}
+                        title="Chế độ chép chính tả trọn vẹn cả câu"
+                      >
+                        🔴 Khó (Cả câu)
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleEnterWorkspace}
+                      className="h-12 px-6 rounded-2xl bg-brand hover:bg-brand-hover text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand/25 transition-all cursor-pointer shrink-0 w-full sm:w-auto hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Headphones className="w-4 h-4" />
+                      <span>Vào Luyện Nghe Ngay</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleClearSelectedVideo}
+                      className="h-12 px-3 rounded-2xl bg-base hover:bg-surface-hover border border-border text-text-secondary hover:text-text-primary text-xs font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                      title="Hủy chọn video này để nhập link khác"
+                    >
+                      <X className="w-4 h-4 text-text-secondary" />
+                      <span className="hidden sm:inline">Đổi link</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()
+          )}
 
           {/* Danh sách bài học đang dở & đã nghe gần đây */}
           <RecentListeningShelf
@@ -642,11 +617,10 @@ export default function ListeningPage() {
             isLoading={isLoadingHistory}
           />
 
-          {/* Thư viện Podcast Tuyển Chọn (A1 - C1) */}
-          <CuratedPodcastShelf
-            onSelectPodcast={handleSelectCuratedPodcast}
-            activeYoutubeId={activeYoutubeId}
-          />
+          {/* Các bước chỉ dẫn: CHỈ HIỆN KHI CHƯA CÓ LINK VÀ CHƯA CÓ BÀI HỌC NÀO TRONG LỊCH SỬ */}
+          {!videoMetadata && (!historyList || historyList.length === 0) && !isLoadingHistory && (
+            <ListeningEmptyGuide />
+          )}
         </div>
       )}
 
@@ -786,7 +760,7 @@ export default function ListeningPage() {
         onClose={() => setIsSummaryOpen(false)}
         totalSegments={totalSegments}
         completedCount={completedSegmentIds.size}
-        podcastTitle={videoMetadata.title}
+        podcastTitle={videoMetadata?.title || 'Bài luyện nghe'}
         onRestart={() => {
           goToSegment(0);
           if (segments[0]) {

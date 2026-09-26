@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { CURATED_PODCASTS } from '@/constants/curated-podcasts';
 import type { ListeningDifficulty } from '@/types/listening.types';
 
 export async function GET(req: Request) {
@@ -77,17 +76,15 @@ export async function GET(req: Request) {
 
     const enrichedList = progressList.map((p) => {
       const podcast = podcastMap.get(p.youtube_id);
-      const curatedMatch = CURATED_PODCASTS.find((c) => c.youtubeId === p.youtube_id);
 
-      const title = podcast?.title || curatedMatch?.title || 'Bài luyện nghe YouTube';
-      const channelName = podcast?.channel_name || curatedMatch?.channelName || 'YouTube Creator';
+      const title = podcast?.title || 'Bài luyện nghe YouTube';
+      const channelName = podcast?.channel_name || 'YouTube Creator';
       const thumbnailUrl =
         podcast?.thumbnail_url ||
-        curatedMatch?.thumbnailUrl ||
         `https://img.youtube.com/vi/${p.youtube_id}/hqdefault.jpg`;
       const totalSegments = Array.isArray(podcast?.segments)
         ? podcast.segments.length
-        : curatedMatch?.sampleSegments?.length || 0;
+        : (p.completed_segment_ids?.length || 0);
 
       return {
         id: p.id,

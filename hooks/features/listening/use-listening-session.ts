@@ -74,10 +74,21 @@ export function useListeningSession({
 
           const isFinished = segments.length > 0 && completedSet.size >= segments.length;
 
+          // Xác định vị trí tiến độ học tập thực tế cần lưu vào DB:
+          // Luôn là câu đầu tiên chưa hoàn thành (nếu chưa hoàn thành hết bài).
+          // Nhờ đó, nếu người dùng click vào câu 10 rồi thoát ra, hệ thống vẫn lưu đúng tiến độ câu tiếp theo cần học (ví dụ câu 2).
+          let effectiveIndex = indexToSave;
+          if (segments.length > 0 && !isFinished) {
+            const firstUncompletedIndex = segments.findIndex((seg) => !completedSet.has(seg.id));
+            if (firstUncompletedIndex !== -1) {
+              effectiveIndex = firstUncompletedIndex;
+            }
+          }
+
           await listeningService.saveProgress({
             youtubeId,
             difficulty,
-            currentIndex: indexToSave,
+            currentIndex: effectiveIndex,
             completedSegmentIds: Array.from(completedSet),
             savedAnswers: savedAnswersPayload,
             isFinished,
@@ -87,7 +98,7 @@ export function useListeningSession({
         }
       }, 1500);
     },
-    [youtubeId, difficulty, segments.length]
+    [youtubeId, difficulty, segments]
   );
 
   // Phục hồi tiến độ học từ Supabase khi mở video hoặc đổi difficulty
@@ -104,8 +115,10 @@ export function useListeningSession({
         const p = res.progress;
 
         // Phục hồi danh sách câu đã hoàn thành
-        if (Array.isArray(p.completedSegmentIds) && p.completedSegmentIds.length > 0) {
-          setCompletedSegmentIds(new Set(p.completedSegmentIds));
+        const loadedCompletedIds = Array.isArray(p.completedSegmentIds) ? p.completedSegmentIds : [];
+        const completedSet = new Set<string>(loadedCompletedIds);
+        if (completedSet.size > 0) {
+          setCompletedSegmentIds(completedSet);
         }
 
         // Phục hồi câu trả lời đã lưu
@@ -120,12 +133,22 @@ export function useListeningSession({
           if (answers.dictation) savedDictationAnswersRef.current = answers.dictation;
         }
 
-        // Phục hồi vị trí câu đang học dở
-        if (typeof p.currentIndex === 'number' && p.currentIndex >= 0 && p.currentIndex < segments.length) {
-          setCurrentIndex(p.currentIndex);
-          if (p.currentIndex > 0 || (p.completedSegmentIds && p.completedSegmentIds.length > 0)) {
-            toast.success(`Đã khôi phục tiến độ học tập (Câu ${p.currentIndex + 1}/${segments.length})`);
+        // Phục hồi vị trí câu đang học dở:
+        // Luôn ưu tiên câu đầu tiên chưa hoàn thành trong bài tập.
+        // Ví dụ: đã làm câu 1 nhưng câu 2 chưa làm thì active câu 2, kể cả trước đó người dùng có click vào câu 10
+        let targetIndex = 0;
+        if (segments.length > 0) {
+          const firstUncompletedIndex = segments.findIndex((seg) => !completedSet.has(seg.id));
+          if (firstUncompletedIndex !== -1) {
+            targetIndex = firstUncompletedIndex;
+          } else if (typeof p.currentIndex === 'number' && p.currentIndex >= 0 && p.currentIndex < segments.length) {
+            targetIndex = p.currentIndex;
           }
+        }
+
+        setCurrentIndex(targetIndex);
+        if (completedSet.size > 0 || targetIndex > 0) {
+          toast.success(`Đã khôi phục tiến độ học tập (Câu ${targetIndex + 1}/${segments.length})`);
         }
       } catch {
         // Bỏ qua nếu user chưa đăng nhập
@@ -137,7 +160,7 @@ export function useListeningSession({
     return () => {
       isCancelled = true;
     };
-  }, [youtubeId, difficulty, segments.length]);
+  }, [youtubeId, difficulty, segments]);
 
   const currentSegment = segments[currentIndex] || null;
 

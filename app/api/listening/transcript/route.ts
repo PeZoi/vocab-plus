@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { extractYouTubeId, cleanTranscriptText } from '@/utils/youtube';
-import { CURATED_PODCASTS } from '@/constants/curated-podcasts';
 import { extractTranscriptPureTS } from '@/lib/youtube/transcript-extractor';
 import type { TimedSegment, VideoMetadata } from '@/types/listening.types';
 
@@ -216,27 +215,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Kiểm tra trong danh mục mẫu Curated Podcasts
-    const curatedMatch = CURATED_PODCASTS.find((p) => p.youtubeId === videoId);
-    if (curatedMatch && curatedMatch.sampleSegments && curatedMatch.sampleSegments.length > 0) {
-      const metadata: VideoMetadata = {
-        id: videoId,
-        title: curatedMatch.title,
-        channelTitle: curatedMatch.channelName,
-        thumbnailUrl: curatedMatch.thumbnailUrl,
-        cefrLevel: curatedMatch.cefrLevel,
-        category: curatedMatch.topic,
-      };
-
-      return NextResponse.json({
-        success: true,
-        metadata,
-        segments: curatedMatch.sampleSegments,
-        isCurated: true,
-      });
-    }
-
-    // 2. Kiểm tra trong Supabase Cache (listening_podcasts)
+    // 1. Kiểm tra trong Supabase Cache (listening_podcasts)
     try {
       const supabase = await createClient();
       const { data: dbPodcast } = await supabase
